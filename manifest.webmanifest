@@ -1,0 +1,28 @@
+{
+  "id": "./",
+  "name": "Mesa · partida de D&D",
+  "short_name": "Mesa",
+  "description": "Partida de D&D en red: una vista para el DM, otra para cada jugador y otra para la tele.",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0a0c11",
+  "theme_color": "#0a0c11",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Llevar la partida (DM)", "short_name": "DM", "url": "./?role=dm", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Jugar con mi personaje", "short_name": "Jugador", "url": "./?role=player", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Pantalla de la mesa", "short_name": "Pantalla", "url": "./?role=screen", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
