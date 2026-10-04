@@ -668,6 +668,11 @@ const EN = {
   "VD 0 a 1/2": "CR 0 to 1/2", "VD 1 a 2": "CR 1 to 2", "VD 3 a 4": "CR 3 to 4", "VD 5 a 8": "CR 5 to 8",
   "VD 9 a 16": "CR 9 to 16", "VD 17 o más": "CR 17 or higher",
   "No hay ninguna criatura así.": "No creature matches.", "1 criatura": "1 creature",
+
+  /* Ficha del personaje y de las criaturas, al estilo de D&D Beyond */
+  "Puntos de golpe": "Hit Points", "Actuales": "Current", "Máximos": "Max", "Temp.": "Temp",
+  "Competencia": "Proficiency", "Desafío": "Challenge", "Recursos": "Resources",
+  "Sin estados": "No conditions", "Salvaciones de muerte": "Death saves",
   "Volver a la ficha de serie": "Back to the stock stat block",
   "Humanoide": "Humanoid", "Bestia": "Beast", "Muerto viviente": "Undead", "Monstruosidad": "Monstrosity",
   "Gigante": "Giant", "Dragón": "Dragon", "Aberración": "Aberration", "Infernal": "Fiend", "Hada": "Fey",
@@ -686,6 +691,9 @@ for (const b of CATALOG) {
     es.forEach((line, i) => {
       pair(line, en[i]);
       pair(line.split(" — ")[0], (en[i] || "").split(" — ")[0]);
+      /* el resto del rasgo, que la ficha en pergamino pinta con mayúscula */
+      const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+      pair(cap(line.split(" — ").slice(1).join(" — ")), cap((en[i] || "").split(" — ").slice(1).join(" — ")));
     });
   }
 }
@@ -813,6 +821,7 @@ const PATTERNS = [
   [/^(.+) \(pantalla\)$/, (m, who) => `${word(who)} (screen)`],
   [/^VD (.+) · (\d+) PX$/, "CR $1 · $2 XP"],
   [/^CA (\d+)$/, "AC $1"],
+  [/^(\S+) \((\d+) PX\)$/, "$1 ($2 XP)"],
   [/^(\d+) pies · (\d+) casillas?$/, "$1 feet · $2 squares"],
   [/^(\d+) de (\d+) pies$/, "$1 of $2 feet"],
   [/^Dado de golpe \((\d+)\)$/, "Hit die ($1)"],

@@ -16,6 +16,7 @@ import { langPicker } from "./i18n.js";
 import { icon, withIcon } from "./icons.js";
 import { rollHitPoints } from "./dice.js";
 import { TYPE_NAMES, typeOf, crValue, CATALOG_BY_ID } from "./catalog.js";
+import { statBlockHTML } from "./statblock.js";
 
 let tab = "mesa";
 let shownTab = null;
@@ -386,7 +387,7 @@ function cardHTML(c) {
         <b class="tnum">${c.hp}</b><span>/ ${c.maxHp}</span>
         ${c.tempHp ? `<span class="temp">+${c.tempHp} temporales</span>` : ""}
         <span class="spacer"></span>
-        <span class="pill">CA <b>${c.ac}</b></span>
+        <span class="ac-shield" title="Clase de armadura"><small>CA</small><b class="tnum">${c.ac}</b></span>
       </div>
       ${hpBar(c.id, p)}
     </div>
@@ -422,10 +423,10 @@ function detailHTML(c) {
   const block = (title, text) => text ? `<div class="block"><h4>${title}</h4>${lines(text).map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
   return `
   <div class="detail">
-    <div class="abilities">
+    ${monster ? "" : `<div class="abilities">
       ${ABILITIES.map(([k, l]) => `<button class="abil" data-act="checkAbility" data-ability="${k}">
-        <span>${l}</span><b class="tnum">${c[k]}</b><small>${sign(modOf(c[k]))}</small></button>`).join("")}
-    </div>
+        <span>${l}</span><b class="tnum">${sign(modOf(c[k]))}</b><small class="tnum">${c[k]}</small></button>`).join("")}
+    </div>`}
     <div class="row">
       <button class="btn sm" data-act="rollInitOne">Iniciativa</button>
       <button class="btn sm" data-act="rollSave">Salvación…</button>
@@ -448,8 +449,8 @@ function detailHTML(c) {
       <span class="set bad">Fallos ${[0, 1, 2].map(i => `<button data-act="death" data-kind="fail" data-n="${i + 1}" class="${c.deathFail > i ? "on" : ""}"></button>`).join("")}</span>
       <button class="btn sm" data-act="deathRoll">${withIcon("skull", "Tirar salvación de muerte", 16)}</button>
     </div>` : ""}
-    ${block("Sentidos", c.senses)}${block("Idiomas", c.languages)}${block("Resistencias", c.resistances)}
-    ${block("Rasgos", c.traits)}${block("Acciones", c.actions)}
+    ${monster ? statBlockHTML(c, { hp: String(c.maxHp), act: "checkAbility" })
+      : block("Sentidos", c.senses) + block("Idiomas", c.languages) + block("Resistencias", c.resistances) + block("Rasgos", c.traits) + block("Acciones", c.actions)}
     ${block("Ataques", c.weapons)}${block("Conjuros", c.spells)}${block("Equipo", c.inventory)}${block("Notas", c.notes)}
   </div>`;
 }
@@ -963,7 +964,6 @@ function renderBestiary() {
     .filter(b => !beastType || typeOf(b.sizeType) === beastType)
     .filter(b => { const v = crValue(b.cr); return v >= lo && v <= hi; })
     .sort((a, b) => crValue(a.cr) - crValue(b.cr) || a.name.localeCompare(b.name, "es"));
-  const block = (title, text) => text ? `<div class="block"><h4>${title}</h4>${lines(text).map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
   const count = `<p class="beast-count">${list.length === 1 ? "1 criatura" : list.length + " criaturas"}</p>`;
   host.innerHTML = (list.length ? count : "") + list.map(b => {
     const draft = beastDraft.get(b.id) || { qty: 1, rollHp: true };
@@ -980,11 +980,7 @@ function renderBestiary() {
       </div>
       <details ${beastOpen.has(b.id) ? "open" : ""}>
         <summary>Ficha</summary>
-        <div class="detail">
-          <div class="abilities">${ABILITIES.map(([k, l]) => `<span class="abil"><span>${l}</span><b class="tnum">${b[k]}</b><small>${sign(modOf(b[k]))}</small></span>`).join("")}</div>
-          ${block("Velocidad", b.speed + " pies")}${block("Sentidos", b.senses)}${block("Idiomas", b.languages)}
-          ${block("Resistencias", b.resistances)}${block("Rasgos", b.traits)}${block("Acciones", b.actions)}
-        </div>
+        ${statBlockHTML(b)}
       </details>
       <div class="go">
         <input type="number" min="1" max="20" value="${esc(draft.qty)}" data-qty aria-label="Cantidad">

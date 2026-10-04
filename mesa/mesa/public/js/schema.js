@@ -52,7 +52,7 @@ export const ABILITIES = [["str", "FUE"], ["dex", "DES"], ["con", "CON"], ["int"
 const CHAR_DEFAULTS = {
   id: "", kind: "pc", name: "", claimedBy: "",
   className: "", race: "", level: 1, background: "", alignment: "", player: "",
-  color: "#c89b4a", avatarId: "",
+  color: "#c53131", avatarId: "",
   hp: 10, maxHp: 10, tempHp: 0, ac: 10, initiative: 0, speed: 30, proficiency: 2,
   str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10,
   saves: [], skills: [], passivePerception: 0,
