@@ -1782,7 +1782,20 @@ fieldset { border-radius: 4px; }
 .switch { border-radius: 999px; }
 
 /* ---------- Entrada ---------- */
-.gate .panel { background: rgba(22, 27, 31, .97); border: 1px solid var(--frame); }
+.gate .panel {
+  position: relative; z-index: 1;
+  background: rgba(16, 19, 22, .78); border: 1px solid var(--frame);
+  backdrop-filter: blur(10px) saturate(1.1); -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .65), 0 0 0 1px rgba(0, 0, 0, .4);
+}
+/* La escena de fondo: noche, luna, castillo y un dragón (art/entrada.svg) */
+.gate { position: relative; isolation: isolate; overflow: hidden; }
+.gate-bg { position: fixed; inset: 0; z-index: 0; background: #05070d; }
+.gate-bg img { width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%; display: block; }
+.gate-bg::after {           /* oscurece donde va el panel, para que se lea */
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 520px 70% at 50% 50%, rgba(5, 7, 13, .55), transparent 75%);
+}
 .gate h1 { font-family: var(--sans); text-transform: uppercase; letter-spacing: .24em; font-size: 32px; }
 .gate .sub { font-family: var(--sans); text-transform: uppercase; letter-spacing: .08em; }
 .gate-logo { box-shadow: 0 10px 30px rgba(200, 155, 74, .3); }

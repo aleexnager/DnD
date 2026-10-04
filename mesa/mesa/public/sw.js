@@ -26,6 +26,7 @@ const SHELL = [
   "css/mesa.css",
   "fonts/roboto.woff2", "fonts/roboto-italic.woff2",
   "manifest.webmanifest",
+  "art/entrada.svg",
   "icons/icon.svg",
   "icons/icon-192.png",
   "js/main.js", "js/net.js", "js/util.js", "js/i18n.js", "js/icons.js",

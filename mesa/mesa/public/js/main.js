@@ -61,6 +61,7 @@ async function gate(wanted) {
 
   app().className = "gate";
   app().innerHTML = `
+    <div class="gate-bg" aria-hidden="true"><img src="art/entrada.svg" alt=""></div>
     <div class="panel">
       <div class="gate-logo">${icon("shield", 30)}</div>
       <h1>Mesa</h1>
