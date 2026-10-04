@@ -185,6 +185,15 @@ export function createHost(base) {
         if (!c) throw new Error("sesión caducada");
         return storeImage(base, msg.blob);
       }
+      case "wallmodel": {
+        if (!c || c.role !== "dm") throw new Error("Solo el DM");
+        return (await kvGet("wallmodel")) || null;
+      }
+      case "wallmodelSet": {
+        if (!c || c.role !== "dm") throw new Error("Solo el DM");
+        await kvSet("wallmodel", msg.model || null);
+        return true;
+      }
       case "leave": {
         ports.delete(msg.token);
         if (c) engine.setOnline(c, false);

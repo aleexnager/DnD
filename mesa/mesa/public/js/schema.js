@@ -269,8 +269,9 @@ const MAP_DEFAULTS = {
      imagen se estira para llenar columnas × filas, como siempre. */
   imgGrid: null,
   /* Muros libres: trazos que no siguen la cuadrícula (una sala redonda, una
-     cueva, un edificio girado). Puntos en casillas, con decimales. Cortan la
-     vista y el paso igual que un muro normal. */
+     cueva, un edificio girado). Puntos en casillas, con decimales, y el mismo
+     tipo que un borde: muro, puerta, puerta abierta o ventana. Se comportan
+     igual que los muros de la cuadrícula. */
   walls: []
 };
 export function normalizeMap(raw = {}) {
@@ -317,6 +318,7 @@ export function normalizeWall(raw = {}) {
   const pts = Array.isArray(raw.points) ? raw.points : [];
   return {
     id: raw.id || uid(),
+    type: ["wall", "door", "doorOpen", "window"].includes(raw.type) ? raw.type : "wall",
     points: pts.slice(0, 400)
       .filter(p => Array.isArray(p) && Number.isFinite(+p[0]) && Number.isFinite(+p[1]))
       .map(p => [Math.round(+p[0] * 100) / 100, Math.round(+p[1] * 100) / 100])

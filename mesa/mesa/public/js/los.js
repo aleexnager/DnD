@@ -38,8 +38,10 @@ function diagonals(map) {
     if (dir === "d") add(x, y, x + 1, y + 1); else add(x + 1, y, x, y + 1);
     cells.add(cellKey(x, y));
   }
-  for (const w of free)
+  for (const w of free) {
+    if (!BLOCKS[w.type || "wall"]) continue;          // puerta abierta o ventana: no corta
     for (let i = 1; i < w.points.length; i++) add(w.points[i - 1][0], w.points[i - 1][1], w.points[i][0], w.points[i][1]);
+  }
   const buckets = new Map();
   segs.forEach((w, i) => {
     for (let by = Math.floor(w.miny / BUCKET); by <= Math.floor(w.maxy / BUCKET); by++)
@@ -422,7 +424,7 @@ function cellParts(map, x, y) {
 export function roomsOf(map) {
   const painted = map.rooms || {};
   let hit = roomCache.get(painted);
-  if (hit && hit.edges === map.edges) return hit.rooms;
+  if (hit && hit.edges === map.edges && hit.walls === map.walls) return hit.rooms;
   const of = new Map();      // casilla -> salas que la tocan
   const rooms = [];
   const seen = new Set();    // "x,y#trozo"
@@ -442,6 +444,7 @@ export function roomsOf(map) {
           const nk = cellKey(nx, ny);
           if (!painted[nk] || String(painted[nk]) !== id) continue;     // otra sala, u otra cosa
           if (edgeBetween(map, x, y, nx, ny)) continue;                   // un muro o una puerta la parte
+          if (freeBetween(map, x, y, nx, ny)) continue;                   // también un muro libre, de cualquier tipo
           const np = partFacing(map, nx, ny, (dir + 2) % 4);
           if (seen.has(nk + "#" + np)) continue;
           seen.add(nk + "#" + np);
@@ -452,10 +455,24 @@ export function roomsOf(map) {
       rooms.push([...cells]);
     }
   }
-  hit = { edges: map.edges, rooms: { of, list: rooms } };
+  hit = { edges: map.edges, walls: map.walls, rooms: { of, list: rooms } };
   roomCache.set(painted, hit);
   return hit.rooms;
 }
+/* ¿Algún muro libre, abierto o cerrado, entre los centros de dos casillas? */
+function freeBetween(map, x0, y0, x1, y1) {
+  const ax = x0 + 0.5, ay = y0 + 0.5, bx = x1 + 0.5, by = y1 + 0.5;
+  for (const w of map.walls || []) {
+    for (let i = 1; i < w.points.length; i++) {
+      const [px, py] = w.points[i - 1], [qx, qy] = w.points[i];
+      const d1 = (bx - ax) * (py - ay) - (by - ay) * (px - ax), d2 = (bx - ax) * (qy - ay) - (by - ay) * (qx - ax);
+      const d3 = (qx - px) * (ay - py) - (qy - py) * (ax - px), d4 = (qx - px) * (by - py) - (qy - py) * (bx - px);
+      if (d1 * d2 <= 0 && d3 * d4 < 0) return true;
+    }
+  }
+  return false;
+}
+
 /* Cualquier borde dibujado, abierto o cerrado: separa salas */
 function edgeBetween(map, x1, y1, x2, y2) {
   let key = null;

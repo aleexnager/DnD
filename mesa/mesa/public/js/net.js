@@ -105,6 +105,18 @@ const http = {
     if (!res.ok) throw new Error(data.error || "No se pudo subir la imagen");
     return data.imageId;
   },
+  async wallModel(token) {
+    const res = await fetch("api/wallmodel?token=" + encodeURIComponent(token));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "No se pudo leer lo aprendido");
+    return data.model;
+  },
+  async saveWallModel(token, model) {
+    const res = await fetch("api/wallmodel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, model }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "No se pudo guardar lo aprendido");
+    return true;
+  },
   async rtc(token, to, data) {
     const res = await fetch("api/rtc", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, to, data }) });
     return res.ok;
@@ -200,6 +212,14 @@ export async function sendRtc(to, data) {
   const t = await transport();
   if (!t.rtc || !store.session) return false;
   try { return await t.rtc(store.session.token, to, data); } catch { return false; }
+}
+
+/* Lo aprendido por la propuesta de muros (null: nada todavía) */
+export async function getWallModel() {
+  return (await transport()).wallModel(store.session.token);
+}
+export async function saveWallModel(model) {
+  return (await transport()).saveWallModel(store.session.token, model);
 }
 
 export async function uploadImage(blob) {

@@ -358,14 +358,13 @@ export class MapView {
         cv.setPointerCapture(e.pointerId);
         return this.draw();
       }
-      if (this.mode === "dm" && this.tool === "erase") {
-        const hit = this.freeWallAt(p.fx, p.fy);
-        if (hit) {
-          this.painting = "eraseFree";
-          this.opts.onWallErase && this.opts.onWallErase(hit.id);
-          cv.setPointerCapture(e.pointerId);
-          return;
-        }
+      /* Sobre un muro libre, la goma y la puerta actúan sobre él */
+      if (this.mode === "dm" && (this.tool === "erase" || this.tool === "door") && this.freeWallAt(p.fx, p.fy)) {
+        if (this.tool === "door") return this.opts.onWallDoor && this.opts.onWallDoor(p.fx, p.fy);
+        this.painting = "eraseFree";
+        this.opts.onWallCut && this.opts.onWallCut(p.fx, p.fy);
+        cv.setPointerCapture(e.pointerId);
+        return;
       }
       if (this.mode === "dm" && (this.tool === "wall" || this.tool === "door" || this.tool === "erase")) {
         this.painting = this.tool;
@@ -457,9 +456,9 @@ export class MapView {
         return this.draw();
       }
       if (this.painting === "diag") { this.diagonalTo(p); return; }
-      if (this.painting === "eraseFree") {
-        const hit = this.freeWallAt(p.fx, p.fy);
-        if (hit && this.opts.onWallErase) this.opts.onWallErase(hit.id);
+      if (this.painting === "eraseFree" || (this.painting === "erase" && this.freeWallAt(p.fx, p.fy))) {
+        if (this.freeWallAt(p.fx, p.fy) && this.opts.onWallCut) this.opts.onWallCut(p.fx, p.fy);
+        if (this.painting === "eraseFree") this.opts.onEdge && this.opts.onEdge(this.edgeAt(p.fx, p.fy, true), "erase");
         return;
       }
       if (this.wallStroke) {
@@ -547,9 +546,9 @@ export class MapView {
       }
       if (this.painting) { this.painting = null; this.lastPaint = null; this.diag = null; return; }
       if (this.wallStroke) {
-        /* Se simplifica con más margen que un dibujo: un muro quiere tramos
-           rectos, y cada tramo de más es trabajo para la línea de visión */
-        const pts = simplify(this.wallStroke.points, 0.12);
+        /* Se simplifica casi como un dibujo: sigue la forma que se traza, sin
+           cientos de puntos que no aportan nada */
+        const pts = simplify(this.wallStroke.points, 0.05).slice(0, 400);
         this.wallStroke = null;
         if (pts.length > 1 && Math.hypot(pts[0][0] - pts[pts.length - 1][0], pts[0][1] - pts[pts.length - 1][1]) + pts.length > 2.3
           && this.opts.onWall) this.opts.onWall(pts);
@@ -875,16 +874,21 @@ export class MapView {
       ctx.setLineDash([]);
     }
 
-    /* Muros libres (a los jugadores solo les llegan los que ya conocen) */
+    /* Muros libres, con los mismos colores que los de la cuadrícula (a los
+       jugadores solo les llegan los que ya conocen) */
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = thick;
-    ctx.strokeStyle = COLORS.wall;
     for (const w of map.walls || []) {
+      const type = w.type || "wall";
+      ctx.strokeStyle = type === "door" ? COLORS.door : type === "doorOpen" ? COLORS.doorOpen : COLORS.wall;
+      ctx.setLineDash(type === "doorOpen" ? [thick, thick * 1.6] : type === "window" ? [thick * 0.6, thick] : []);
       ctx.beginPath();
       w.points.forEach(([px, py], i) => (i ? ctx.lineTo(X(px), Y(py)) : ctx.moveTo(X(px), Y(py))));
       ctx.stroke();
     }
+    ctx.setLineDash([]);
+    ctx.strokeStyle = COLORS.wall;
     if (this.wallStroke) {
       ctx.save();
       ctx.globalAlpha = 0.75;

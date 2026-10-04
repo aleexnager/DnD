@@ -11,7 +11,7 @@ import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret } fro
 import { openCharEditor, openConditions } from "./char-editor.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
-import { openGridFit, openWallFit } from "./gridfit.js";
+import { openGridFit, openWallFit, teachFromMap, forgetLearned, learnedCount } from "./gridfit.js";
 import { langPicker } from "./i18n.js";
 import { icon, withIcon } from "./icons.js";
 import { rollHitPoints } from "./dice.js";
@@ -1125,7 +1125,8 @@ function renderMap() {
       },
       onEdge: (key, tool) => paintEdge(key, tool),
       onWall: points => op("wall.add", { mapId: activeMap().id, wall: { points } }),
-      onWallErase: id => op("wall.remove", { mapId: activeMap().id, id }),
+      onWallCut: (x, y) => op("wall.cut", { mapId: activeMap().id, x, y, r: 0.3 }),
+      onWallDoor: (x, y) => op("wall.door", { mapId: activeMap().id, x, y }),
       onPaintCell: (x, y, brush) => {
         const k = x + "," + y, mapId = activeMap().id;
         op("map.cells", { mapId, patch: { [k]: brush === "none" ? null : brush } });
@@ -1168,9 +1169,9 @@ function renderMap() {
         wall: "Arrastra por los bordes de las casillas",
         diag: "Arrastra por las casillas: la diagonal (\\ o /) la marca dónde empiezas",
         draw: "Dibuja con el ratón o el dedo; elige color y si lo ve la party",
-        freewall: "Traza la pared siguiendo el plano; con Mayúsculas sale recta. Corta la vista y el paso",
-        door: "Pulsa un borde o un muro diagonal: cerrada, abierta, sin puerta",
-        erase: "Arrastra para quitar muros y puertas; pulsa un muro libre para quitarlo entero",
+        freewall: "Traza la pared como un dibujo; con Mayúsculas sale recta. Es un muro como los demás: Puerta y Borrar también valen",
+        door: "Pulsa un borde, un muro diagonal o un muro libre: cerrada, abierta, sin puerta",
+        erase: "Arrastra para quitar muros y puertas, también trozos de muro libre",
         pin: "Pulsa donde quieras clavar la nota",
         portal: "Pulsa donde esté la escalera"
       }[mapTool] || "";
@@ -1421,6 +1422,10 @@ function openMapSettings(map) {
       <button type="button" class="btn sm" id="imgBtn">Imagen de fondo</button>
       <button type="button" class="btn sm" id="fitGrid">Encajar cuadrícula con el plano</button>
       <button type="button" class="btn sm" id="fitWalls">Muros y puertas del plano</button>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <button type="button" class="btn sm" id="teachWalls" title="Cuando los muros de este plano estén bien puestos, la propuesta aprende de ellos para los próximos planos">Enseñar con este plano</button>
+      <button type="button" class="btn sm" id="forgetWalls">Olvidar lo aprendido</button>
       <input type="file" id="imgFile" accept="image/*" hidden>
     </div>
     <fieldset>
@@ -1486,6 +1491,12 @@ function openMapSettings(map) {
   });
   body.querySelector("#fitGrid").addEventListener("click", () => openGridFit(activeMap(), { onApply }));
   body.querySelector("#fitWalls").addEventListener("click", () => openWallFit(activeMap()));
+  body.querySelector("#teachWalls").addEventListener("click", () => teachFromMap(activeMap()));
+  body.querySelector("#forgetWalls").addEventListener("click", async () => {
+    const n = await learnedCount();
+    if (!n) return toast("Todavía no ha aprendido de ningún plano");
+    if (await confirmBox(`¿Olvidar lo aprendido de ${n} ${n === 1 ? "plano" : "planos"}? La propuesta de muros vuelve a la de serie.`, { okLabel: "Olvidar" })) forgetLearned();
+  });
   body.querySelector("#resetFog").addEventListener("click", () => patchMap(map.id, { explored: [] }));
   body.querySelector("#clearWalls").addEventListener("click", () => patchMap(map.id, { edges: {} }));
   body.querySelector("#clearCells").addEventListener("click", () => patchMap(map.id, { cells: {} }));

@@ -176,3 +176,34 @@ test("un bloque blanco cruzando el pasillo es una puerta", () => {
   assert.equal(r.edges["16,6,v"], "door");
   assert.equal(r.edges["16,7,v"], "door");
 });
+
+/* ---------- Aprender de un plano corregido ---------- */
+import { learnFromMap, BASE_MODEL, wallProbabilities, edgeFeatures, labelEdges } from "../public/js/wallfind.js";
+
+test("enseñar con un plano corregido acerca la propuesta a lo enseñado", () => {
+  const { data, W, H } = plan2();
+  const m = measureWalls(data, W, H, grid2, 3);
+  const r = classifyWalls(m);
+  const X = edgeFeatures(m, r.floor, r.score, r.rules);
+  /* El DM deja como muro solo el contorno del pasillo de abajo */
+  const mine = {};
+  for (let x = 13; x < 20; x++) { mine[`${x},6,h`] = "wall"; mine[`${x},8,h`] = "wall"; }
+  const y = labelEdges(m, mine, []);
+  const before = wallProbabilities(m, r.floor, r.score, BASE_MODEL, r.rules);
+  const learned = learnFromMap(BASE_MODEL, X, y, { weight: 20, mapId: "x" });
+  const after = wallProbabilities(m, r.floor, r.score, learned, r.rules);
+  const mean = (p, want) => { let s = 0, n = 0; y.forEach((v, i) => { if (v === want) { s += p[i]; n++; } }); return s / n; };
+  assert.ok(mean(after, 1) > mean(before, 1), "los muros enseñados no suben");
+  assert.ok(mean(after, 0) < mean(before, 0), "lo que no es muro no baja");
+  assert.equal(learned.maps.length, 1);
+  assert.equal(learned.H.length, BASE_MODEL.w.length + 1);
+});
+
+test("un muro libre cuenta como muro al enseñar", () => {
+  const { data, W, H } = plan2();
+  const m = measureWalls(data, W, H, grid2, 3);
+  const y = labelEdges(m, {}, [{ points: [[13, 6], [20, 6]] }]);
+  const keys = m.edges.filter((e, i) => y[i]).map(e => e.key);
+  assert.ok(keys.includes("15,6,h") && keys.includes("19,6,h"), keys.join(" "));
+  assert.ok(!keys.includes("15,7,h"));
+});

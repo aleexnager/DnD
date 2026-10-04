@@ -14,6 +14,7 @@
 import { emptyDoc, migrate, cellKey, normalizeChar, normalizeMap, normalizeShape, normalizePin, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier } from "./schema.js";
 import { visibleCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells } from "./los.js";
 import { roll, detail } from "./dice.js";
+import { cutWalls, doorAt } from "./freewalls.js";
 import { critDamage } from "./attacks-core.js";
 
 export const ROLES = ["dm", "player", "screen"];
@@ -822,6 +823,25 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         if (w.points.length < 2) return null;
         if ((mp.walls || []).length >= MAX_WALLS) return "Este mapa ya tiene demasiados muros trazados";
         mp.walls = [...(mp.walls || []), w];
+        break;
+      }
+      /* La goma: quita el trozo de muro libre que toca */
+      case "wall.cut": {
+        if (!dm) return "Solo el DM";
+        const mp = doc.maps.find(x => x.id === (op.mapId || doc.session.activeMapId));
+        if (!mp) return "No existe ese mapa";
+        if (!Number.isFinite(+op.x) || !Number.isFinite(+op.y)) return null;
+        mp.walls = cutWalls(mp.walls || [], +op.x, +op.y, Math.min(1, Math.max(0.1, +op.r || 0.3))).slice(0, MAX_WALLS);
+        break;
+      }
+      /* La herramienta Puerta sobre un muro libre: puerta, abierta, sin puerta */
+      case "wall.door": {
+        if (!dm) return "Solo el DM";
+        const mp = doc.maps.find(x => x.id === (op.mapId || doc.session.activeMapId));
+        if (!mp) return "No existe ese mapa";
+        if (!Number.isFinite(+op.x) || !Number.isFinite(+op.y)) return null;
+        const next = doorAt(mp.walls || [], +op.x, +op.y);
+        if (next) mp.walls = next.slice(0, MAX_WALLS);
         break;
       }
       case "wall.remove": {

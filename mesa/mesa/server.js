@@ -42,6 +42,7 @@ const PORT = Number(process.env.PORT || arg("port", 8080));
 const DATA = path.resolve(HERE, arg("data", "data"));
 const IMAGES = path.join(DATA, "images");
 const STATE_FILE = path.join(DATA, "mesa.json");
+const WALL_MODEL_FILE = path.join(DATA, "wallmodel.json");   // lo aprendido de planos corregidos
 const CERT = process.env.MESA_CERT || arg("cert", "");
 const KEY = process.env.MESA_KEY || arg("key", "");
 const INTERNET = argv.includes("--internet") || process.env.MESA_INTERNET === "1";
@@ -290,6 +291,32 @@ const handler = async (req, res) => {
       if (!client.voice || !target || !target.voice) return json(res, 409, { error: "Esa persona no está en la voz" });
       send(target, "rtc", { from: client.id, data: body.data });
       return json(res, 200, { ok: true });
+    }
+
+    /* Lo que la propuesta de muros ha aprendido de los planos que ha
+       corregido el DM. Vale para todas las partidas de este servidor. */
+    if (p === "/api/wallmodel") {
+      const token = req.method === "GET" ? url.searchParams.get("token") : null;
+      const body = req.method === "POST" ? JSON.parse((await readBody(req, 512 * 1024)).toString() || "{}") : {};
+      const client = clients.get(token || body.token || "");
+      if (!client || client.role !== "dm") return json(res, 403, { error: "Solo el DM" });
+      if (req.method === "GET") {
+        const saved = existsSync(WALL_MODEL_FILE) ? JSON.parse(await readFile(WALL_MODEL_FILE, "utf8")) : null;
+        return json(res, 200, { model: saved });
+      }
+      if (req.method === "POST") {
+        const m = body.model;
+        if (m === null) {
+          if (existsSync(WALL_MODEL_FILE)) await writeFile(WALL_MODEL_FILE, "null");
+          return json(res, 200, { ok: true });
+        }
+        const nums = a => Array.isArray(a) && a.every(v => Number.isFinite(v));
+        if (!m || !nums(m.w) || !Number.isFinite(m.bias) || !Array.isArray(m.H) || m.H.length !== m.w.length + 1
+          || !m.H.every(nums) || !Array.isArray(m.names)) return json(res, 400, { error: "Modelo no válido" });
+        await writeFile(WALL_MODEL_FILE + ".tmp", JSON.stringify(m));
+        await rename(WALL_MODEL_FILE + ".tmp", WALL_MODEL_FILE);
+        return json(res, 200, { ok: true });
+      }
     }
 
     if (p === "/api/image" && req.method === "POST") {
