@@ -593,6 +593,7 @@ export function normalizeSound(raw = {}) {
     x: Math.trunc(num(raw.x)), y: Math.trunc(num(raw.y)),
     name: String(raw.name || "").slice(0, 60),
     audioId: /^[\w.-]{1,64}$/.test(String(raw.audioId || "")) ? String(raw.audioId) : "",
+    lib: /^[a-z0-9-]{1,40}$/.test(String(raw.lib || "")) ? String(raw.lib) : "",   // uno de la biblioteca de Mesa
     fileName: String(raw.fileName || "").slice(0, 80),
     volume: clamp(num(raw.volume, 0.7), 0, 1),
     radius: clamp(num(raw.radius, 6), 1, 60),            // alcance, en casillas

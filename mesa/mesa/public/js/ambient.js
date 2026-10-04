@@ -9,12 +9,22 @@
 
 import { imgURL, toast } from "./util.js";
 import { icon, withIcon } from "./icons.js";
+import { libSound } from "./sound-library.js";
 
 const KEY = "mesa.ambient";
 const FADE = 0.8;                 // segundos del fundido
 let ctx = null, master = null;
-const buffers = new Map();        // audioId -> Promise<AudioBuffer>
-const playing = new Map();        // id -> { node, gain, filter, audioId }
+const buffers = new Map();        // clave -> Promise<AudioBuffer>
+const playing = new Map();        // id -> { node, gain, filter, key }
+
+/* Un sonido es un audio subido por el DM (audioId) o uno de la biblioteca
+   (lib): su clave y de dónde se descarga */
+const keyOf = s => s.lib ? "lib:" + s.lib : s.audioId;
+function urlOf(s) {
+  if (!s.lib) return imgURL(s.audioId);
+  const it = libSound(s.lib);
+  return it ? new URL(it.file, document.baseURI).href : "";
+}
 let wanted = [];
 let warned = false;
 
@@ -69,18 +79,33 @@ function unlock() {
 }
 for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, unlock, { capture: true, passive: true });
 
-function load(audioId) {
-  if (!buffers.has(audioId)) {
-    const p = fetch(imgURL(audioId))
+function load(s) {
+  const key = keyOf(s);
+  if (!buffers.has(key)) {
+    const url = urlOf(s);
+    const p = (url ? fetch(url) : Promise.reject(new Error("No existe ese sonido")))
       .then(r => { if (!r.ok) throw new Error("No se encuentra el audio"); return r.arrayBuffer(); })
       .then(data => new Promise((ok, ko) => ctx.decodeAudioData(data, ok, ko)));
-    p.catch(() => buffers.delete(audioId));     // si falla, se reintenta la próxima vez
-    buffers.set(audioId, p);
+    p.catch(() => buffers.delete(key));     // si falla, se reintenta la próxima vez
+    buffers.set(key, p);
   }
-  return buffers.get(audioId);
+  return buffers.get(key);
 }
 
-/* Deja sonando exactamente esta lista: [{ id, audioId, gain, muffled }] */
+/* Los de la biblioteca saben cuánto dura su bucle. Si el navegador deja el
+   relleno del MP3 (unas 1105 muestras delante y algo detrás), el bucle se
+   recorta a su medida para que no se oiga el hueco al dar la vuelta. */
+const MP3_DELAY = 1105 / 44100;
+function loopPoints(node, s) {
+  const it = s.lib && libSound(s.lib);
+  if (!it) return;
+  const extra = node.buffer.duration - it.len;
+  if (extra < 0.002) return;
+  node.loopStart = Math.min(MP3_DELAY, extra);
+  node.loopEnd = node.loopStart + it.len;
+}
+
+/* Deja sonando exactamente esta lista: [{ id, audioId o lib, gain, muffled }] */
 export function syncAmbient(list) {
   wanted = list || [];
   const c = wanted.length || playing.size ? context() : null;
@@ -102,7 +127,7 @@ export function syncAmbient(list) {
 
   for (const s of wanted) {
     const p = playing.get(s.id);
-    if (p && p.audioId === s.audioId) {
+    if (p && p.key === keyOf(s)) {
       p.gain.gain.setTargetAtTime(s.gain, now, FADE / 3);
       p.filter.frequency.setTargetAtTime(s.muffled ? 700 : 20000, now, FADE / 3);
       continue;
@@ -113,17 +138,18 @@ export function syncAmbient(list) {
     filter.type = "lowpass";
     filter.frequency.value = s.muffled ? 700 : 20000;
     filter.connect(gain).connect(master);
-    const slot = { node: null, gain, filter, audioId: s.audioId };
+    const slot = { node: null, gain, filter, key: keyOf(s) };
     playing.set(s.id, slot);
-    load(s.audioId).then(buffer => {
+    load(s).then(buffer => {
       if (playing.get(s.id) !== slot) return;          // ya no hace falta
       const node = c.createBufferSource();
       node.buffer = buffer;
       node.loop = true;
+      loopPoints(node, s);
       node.connect(filter);
       /* Cada fuente empieza en un punto distinto del bucle: diez antorchas
          con el mismo audio no suenan como una sola */
-      node.start(0, Math.random() * buffer.duration);
+      node.start(0, (node.loopStart || 0) + Math.random() * ((node.loopEnd || buffer.duration) - (node.loopStart || 0)));
       slot.node = node;
       const cur = wanted.find(x => x.id === s.id);
       gain.gain.setTargetAtTime(cur ? cur.gain : 0, c.currentTime, FADE / 3);
@@ -139,10 +165,13 @@ export const ambientState = () => ({
 
 /* Para escuchar un archivo en el editor antes de ponerlo */
 let preview = null;
-export function previewSound(audioId, volume = 0.8) {
+export function previewSound(src, volume = 0.8) {
   stopPreview();
-  if (!audioId) return null;
-  preview = new Audio(imgURL(audioId));
+  const s = typeof src === "string" ? { audioId: src } : src || {};
+  const url = (s.audioId || s.lib) && urlOf(s);
+  if (!url) return null;
+  preview = new Audio(url);
+  preview.loop = true;
   preview.volume = volume;
   preview.play().catch(() => {});
   return preview;

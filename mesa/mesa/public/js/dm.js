@@ -21,6 +21,7 @@ import { statBlockHTML } from "./statblock.js";
 import { sheetTabsHTML, attackTableHTML, handleSheetAct } from "./sheet.js";
 import { listEditor, linesToEntries, entriesToLines } from "./list-editor.js";
 import { ambientToggle, previewSound, stopPreview } from "./ambient.js";
+import { SOUND_LIBRARY, SOUND_CATS, libSound } from "./sound-library.js";
 
 let tab = "mesa";
 let shownTab = null;
@@ -1443,17 +1444,25 @@ function editSound(seed) {
   const map = activeMap();
   const existing = (map.sounds || []).find(s => s.x === seed.x && s.y === seed.y);
   const snd = normalizeSound(existing || { ...seed, radius: 6 });
-  let audioId = snd.audioId, fileName = snd.fileName;
+  let audioId = snd.audioId, fileName = snd.fileName, lib = snd.lib;
+  const libName = id => (libSound(id) || {}).name || "";
+  const srcName = () => lib ? `${libName(lib)} · biblioteca` : fileName || (audioId ? "Audio subido" : "Sin audio todavía");
   const inRoom = Object.prototype.hasOwnProperty.call(map.rooms || {}, seed.x + "," + seed.y);
   const body = el(`<div class="sound-edit">
     <label class="field"><span>Nombre</span><input name="name" value="${esc(snd.name)}" placeholder="Hoguera, río, taberna…"></label>
     <div class="sound-file">
       <button type="button" class="btn sm" data-sf="pick">${withIcon("upload", "Elegir audio", 15)}</button>
-      <span class="sound-file-name" id="sfName">${esc(fileName || (audioId ? "Audio subido" : "Sin audio todavía"))}</span>
-      <button type="button" class="icon-btn" data-sf="play" title="Escuchar" aria-label="Escuchar" ${audioId ? "" : "disabled"}>${icon("play")}</button>
+      <span class="sound-file-name" id="sfName">${esc(srcName())}</span>
+      <button type="button" class="icon-btn" data-sf="play" title="Escuchar" aria-label="Escuchar" ${audioId || lib ? "" : "disabled"}>${icon("play")}</button>
       <input type="file" id="sfFile" accept="audio/*" hidden>
     </div>
     <p class="prose small-note">MP3, OGG, WAV o M4A, hasta 15 MB. Mejor un bucle que empiece y acabe igual: sonará sin cortes.</p>
+    <details class="sound-lib" ${!audioId ? "open" : ""}>
+      <summary>${icon("music", 15)}<span>Biblioteca de Mesa</span><small class="tnum">${SOUND_LIBRARY.length}</small></summary>
+      <div class="lib-cats" role="tablist">${SOUND_CATS.map(([k, l], i) => `<button type="button" role="tab" data-lcat="${k}" aria-selected="${i === 0}">${l}</button>`).join("")}</div>
+      <div class="lib-list"></div>
+      <p class="prose small-note">Sonidos y música hechos para Mesa: se pueden usar sin pedir permiso a nadie.</p>
+    </details>
     <div class="cols2">
       <label class="field"><span>Cómo se oye</span><select name="mode">
         ${SOUND_MODES_UI.map(([k, l]) => `<option value="${k}" ${k === snd.mode ? "selected" : ""}>${l}</option>`).join("")}
@@ -1475,12 +1484,49 @@ function editSound(seed) {
   };
   body.querySelector('[name="mode"]').addEventListener("change", paintMode);
   paintMode();
+
+  /* La biblioteca: por categorías, con escucha y «Usar» */
+  let cat = (lib && (libSound(lib) || {}).cat) || SOUND_CATS[0][0];
+  let hearing = "";
+  const paintLib = () => {
+    body.querySelectorAll("[data-lcat]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.lcat === cat)));
+    body.querySelector(".lib-list").innerHTML = SOUND_LIBRARY.filter(x => x.cat === cat).map(x => `<div class="lib-item ${x.id === lib ? "on" : ""}">
+        <button type="button" class="icon-btn" data-lplay="${x.id}" aria-pressed="${x.id === hearing}" title="Escuchar o parar" aria-label="Escuchar o parar">${icon("play", 15)}</button>
+        <span class="lib-name"><b>${esc(x.name)}</b><small class="tnum">${Math.round(x.len)} s</small></span>
+        <button type="button" class="btn sm ${x.id === lib ? "primary" : ""}" data-luse="${x.id}">${x.id === lib ? "Elegido" : "Usar"}</button>
+      </div>`).join("");
+  };
+  paintLib();
+  on(body, "click", "[data-lcat]", (e, b) => { cat = b.dataset.lcat; paintLib(); });
+  /* Escuchar y, pulsando otra vez, parar */
+  on(body, "click", "[data-lplay]", (e, b) => {
+    body.querySelectorAll("[data-lplay]").forEach(x => x.setAttribute("aria-pressed", "false"));
+    if (hearing === b.dataset.lplay) { stopPreview(); hearing = ""; return; }
+    const vol = +body.querySelector('[name="volume"]').value / 100;
+    if (previewSound({ lib: b.dataset.lplay }, vol)) { hearing = b.dataset.lplay; b.setAttribute("aria-pressed", "true"); }
+  });
+  on(body, "click", "[data-luse]", (e, b) => {
+    const it = libSound(b.dataset.luse);
+    const nameBox = body.querySelector('[name="name"]');
+    if (!nameBox.value.trim() || nameBox.value === libName(lib)) nameBox.value = it.name;
+    lib = it.id; audioId = ""; fileName = "";
+    /* Lo que suele ir bien con ese sonido; el DM lo cambia si quiere */
+    body.querySelector('[name="mode"]').value = it.mode;
+    body.querySelector('[name="radius"]').value = it.radius;
+    body.querySelector('[name="volume"]').value = Math.round(it.volume * 100);
+    paintMode();
+    body.querySelector("#sfName").textContent = srcName();
+    playBtn.disabled = false;
+    paintLib();
+  });
   const file = body.querySelector("#sfFile");
   const playBtn = body.querySelector('[data-sf="play"]');
   on(body, "click", "[data-sf]", (e, b) => {
     if (b.dataset.sf === "pick") return file.click();
     const vol = +body.querySelector('[name="volume"]').value / 100;
-    const a = previewSound(audioId, vol);
+    hearing = "";
+    body.querySelectorAll("[data-lplay]").forEach(x => x.setAttribute("aria-pressed", "false"));
+    const a = previewSound({ audioId, lib }, vol);
     if (a) toast("Sonando de prueba. Se para al cerrar la ventana");
   });
   file.addEventListener("change", async () => {
@@ -1491,6 +1537,8 @@ function editSound(seed) {
       body.querySelector("#sfName").textContent = "Subiendo…";
       audioId = await uploadImage(f);
       fileName = f.name;
+      lib = "";
+      paintLib();
       body.querySelector("#sfName").textContent = f.name;
       playBtn.disabled = false;
       if (!body.querySelector('[name="name"]').value) body.querySelector('[name="name"]').value = f.name.replace(/\.[a-z0-9]+$/i, "");
@@ -1506,8 +1554,8 @@ function editSound(seed) {
       { label: "Guardar", tone: "primary", run: host => {
         stopPreview();
         const v = n => host.querySelector(`[name="${n}"]`);
-        if (!audioId) { toast("Elige un archivo de audio para este sonido", "bad"); return false; }
-        op("sound.set", { mapId: map.id, sound: { ...snd, audioId, fileName,
+        if (!audioId && !lib) { toast("Elige un audio tuyo o uno de la biblioteca", "bad"); return false; }
+        op("sound.set", { mapId: map.id, sound: { ...snd, audioId, fileName, lib,
           name: v("name").value.trim(), mode: v("mode").value, volume: +v("volume").value / 100,
           radius: +v("radius").value || 6, falloff: v("falloff").checked, walls: v("walls").checked, on: v("on").checked } });
       } }

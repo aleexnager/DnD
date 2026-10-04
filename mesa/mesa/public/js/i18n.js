@@ -677,6 +677,35 @@ const EN = {
   "Cómo se tira": "Roll mode", "Tirada secreta": "Secret roll", "Solo la ves tú": "Only you see it",
   "Mensajes nuevos": "New messages",
   "Encuadrar salas": "Frame rooms",
+  /* Tiradas al estilo de Beyond20: efectos, extras del ataque y teclas */
+  "Efectos": "Effects", "Efectos activos": "Active effects", "Añadir o quitar efectos": "Add or remove effects",
+  "Mientras estén encendidos se suman solos a las tiradas: el ataque, el daño, las salvaciones o las pruebas.":
+    "While they're on they add themselves to rolls: attacks, damage, saving throws or ability checks.",
+  "Habituales": "Common", "A medida": "Custom", "Al daño": "To damage",
+  "A las salvaciones": "To saving throws", "A las pruebas": "To ability checks", "Bendición del templo": "Temple blessing",
+  "Hecho": "Done", "Ningún efecto todavía.": "No effects yet.", "Caben doce efectos": "Twelve effects at most",
+  "Ponle un nombre": "Give it a name", "Escribe al menos una fórmula, como 1d4 o 2": "Write at least one formula, like 1d4 or 2",
+  "No entiendo esa fórmula. Prueba con 1d4, 2 o -1d4": "I don't understand that formula. Try 1d4, 2 or -1d4",
+  "Perdición": "Bane", "Guía": "Guidance", "Resistencia": "Resistance", "Marca del cazador": "Hunter's Mark",
+  "Maleficio": "Hex", "Arma mágica +1": "Magic Weapon +1", "Favor divino": "Divine Favor",
+  "Se suma:": "Adds:", "Castigo divino": "Divine Smite", "Espacio para el castigo": "Slot for the smite", "Daño extra": "Extra damage",
+  "Mayús": "Shift", "ventaja": "advantage", "desventaja": "disadvantage", "en secreto": "in secret", "solo al DM": "DM only",
+  "ataque furtivo": "sneak attack",
+  /* Biblioteca de sonidos */
+  "Biblioteca de Mesa": "Mesa library", "biblioteca": "library", "Usar": "Use", "Elegido": "Chosen", "Escuchar o parar": "Play or stop",
+  "Sonidos y música hechos para Mesa: se pueden usar sin pedir permiso a nadie.": "Sounds and music made for Mesa: free to use without asking anyone.",
+  "Elige un audio tuyo o uno de la biblioteca": "Choose your own audio or one from the library",
+  "Clima": "Weather", "Fuego y forja": "Fire and forge", "Lugares": "Places", "Bajo tierra": "Underground",
+  "Magia": "Magic", "Música": "Music",
+  "Lluvia": "Rain", "Tormenta": "Storm", "Lluvia desde dentro": "Rain from indoors", "Viento en la llanura": "Wind on the plains",
+  "Ventisca": "Blizzard", "Bosque de día": "Forest by day", "Bosque oscuro": "Dark forest", "Noche en el campo": "Night in the countryside",
+  "Arroyo": "Stream", "Cascada": "Waterfall", "Olas en la costa": "Waves on the shore", "Pantano": "Swamp", "Hoguera": "Campfire",
+  "Antorchas y braseros": "Torches and braziers", "Campamento de noche": "Camp at night", "Forja": "Forge", "Lava y volcán": "Lava and volcano",
+  "Taberna llena": "Busy tavern", "Plaza de la ciudad": "Town square", "Templo y coro": "Temple and choir", "Biblioteca": "Library",
+  "Barco en alta mar": "Ship at sea", "Cueva con goteo": "Dripping cave", "Mazmorra": "Dungeon", "Cripta": "Crypt", "Alcantarillas": "Sewers",
+  "Energía arcana": "Arcane energy", "Giga de taberna": "Tavern jig", "Viaje y exploración": "Travel and exploration",
+  "Descanso junto al fuego": "Rest by the fire", "Bosque feérico": "Fey forest", "Misterio": "Mystery", "Lamento": "Lament",
+  "Combate": "Combat", "Batalla épica": "Epic battle", "Terror": "Horror",
   /* Creador de personajes */
   "Una furia primordial que convierte cada golpe en una avalancha.": "A primal fury that turns every blow into an avalanche.",
   "Magia tejida con palabras y música para inspirar o confundir.": "Magic woven from words and music to inspire or confound.",
@@ -972,6 +1001,21 @@ const SPELL_PARTS = [
   [/^(\d+) puntos de sueño$/, "$1 points of sleep"]
 ];
 const PATTERNS = [
+  /* Tiradas: efectos, extras y detalles del ataque */
+  [/^Efectos de (.+)$/, "$1's effects"],
+  [/^(.+) ya está en la lista$/, (m, n) => `${word(n)} is already on the list`],
+  [/^Tirar (\S+)$/, "Roll $1"],
+  [/^(.+) con (ventaja|desventaja)$/, (m, w, k) => `${w.includes(" · ") ? pieces(w) : translateOne(w) ?? w} with ${k === "ventaja" ? "advantage" : "disadvantage"}`],
+  [/^[+-]\S+ (?:ataque|daño|salvación|prueba)(?:, [+-]\S+ (?:ataque|daño|salvación|prueba))*$/,
+    m => m.replace(/ataque|daño|salvación|prueba/g, w => ({ ataque: "attack", daño: "damage", salvación: "save", prueba: "check" })[w])],
+  [/^(.+?)(  \|  .+)$/, (m, head, rest) => head + rest.split("  |  ").slice(1).map(part => "  |  " + part
+    .replace(/^daño /, "damage ")
+    .split(", ").map(x => x
+      .replace(/^castigo divino de nivel (\d+)$/, "divine smite (level $1)")
+      .replace(/^sin espacios de nivel (\d+) para el castigo$/, "no level $1 slots for the smite")
+      .replace(/^daño extra (\S+)$/, "extra damage $1")
+      .replace(/^ataque furtivo$/, "sneak attack")
+      .replace(/^.+$/, w => EN[w] || w)).join(", ")).join("")],
   /* Creador de personajes */
   [/^Elige (\d+) habilidad(?:es)? más de tu (clase|especie|trasfondo)$/, (m, n, w) => `Choose ${n} more ${n === "1" ? "skill" : "skills"} from your ${{ clase: "class", especie: "species", trasfondo: "background" }[w]}`],
   [/^Elige (\d+) características? más para subir \+1$/, (m, n) => `Choose ${n} more ${n === "1" ? "ability" : "abilities"} to raise by +1`],
@@ -1126,7 +1170,7 @@ const PATTERNS = [
   [/^La party toma un descanso (corto|largo)$/, (m, k) => `The party takes a ${k === "corto" ? "short" : "long"} rest`],
   [/^(.+?) pierde la concentración$/, "$1 loses concentration"],
   [/^(.+?) (cae|encaja el golpe)$/, (m, who, v) => `${who} ${v === "cae" ? "goes down" : "takes the hit"}`],
-  [/^(.+?) contra (.+?): (\d+)( · .+)?$/, (m, atk, tgt, n, tail) => `${atk} against ${tgt}: ${n}${(tail || "")
+  [/^(.+?) contra (.+?): (\d+)( · .+)?$/, (m, atk, tgt, n, tail) => `${word(atk)} against ${tgt}: ${n}${(tail || "")
     .replace("· ¡CRÍTICO!", "· CRITICAL!").replace("· impacta", "· hits").replace("· falla", "· misses")
     .replace("· pifia", "· fumble").replace(/de daño/, "damage")}`],
   /* «Engaño +4»: una habilidad o característica con su modificador */

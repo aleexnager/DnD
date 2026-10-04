@@ -35,7 +35,7 @@ export function wallBetween(map, x0, y0, x1, y1) {
 
 /* Lo que oye alguien en una casilla: volumen de 0 a 1 y si llega apagado */
 export function hearAt(map, s, x, y) {
-  if (!s.on || !s.audioId) return { gain: 0, muffled: false };
+  if (!s.on || !(s.audioId || s.lib)) return { gain: 0, muffled: false };
   if (s.mode === "map") return { gain: s.volume, muffled: false };
   if (s.mode === "room") {
     const rooms = roomsOf(map);
@@ -62,7 +62,7 @@ export function soundsHeard(map, listeners) {
       const h = hearAt(map, s, x, y);
       if (h.gain > best.gain) best = h;
     }
-    if (best.gain > 0.005) out.push({ id: s.id, audioId: s.audioId, gain: Math.round(best.gain * 1000) / 1000, muffled: best.muffled });
+    if (best.gain > 0.005) out.push({ id: s.id, audioId: s.audioId, lib: s.lib, gain: Math.round(best.gain * 1000) / 1000, muffled: best.muffled });
   }
   return out;
 }
