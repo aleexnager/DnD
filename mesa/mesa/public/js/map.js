@@ -366,6 +366,21 @@ export class MapView {
         cv.setPointerCapture(e.pointerId);
         return;
       }
+      /* Muro libre: se traza como un dibujo. Con Mayúsculas, en línea recta
+         desde donde se empezó. */
+      if (this.mode === "dm" && this.tool === "freewall") {
+        this.wallStroke = { points: [[p.fx, p.fy]], straight: e.shiftKey };
+        cv.setPointerCapture(e.pointerId);
+        return this.draw();
+      }
+      /* Sobre un muro libre, la goma y la puerta actúan sobre él */
+      if (this.mode === "dm" && (this.tool === "erase" || this.tool === "door") && this.freeWallAt(p.fx, p.fy)) {
+        if (this.tool === "door") return this.opts.onWallDoor && this.opts.onWallDoor(p.fx, p.fy);
+        this.painting = "eraseFree";
+        this.opts.onWallCut && this.opts.onWallCut(p.fx, p.fy);
+        cv.setPointerCapture(e.pointerId);
+        return;
+      }
       if (this.mode === "dm" && (this.tool === "wall" || this.tool === "door" || this.tool === "erase")) {
         this.painting = this.tool;
         /* La puerta vale también en diagonal; la goma quita lo que haya */
@@ -456,6 +471,20 @@ export class MapView {
         return this.draw();
       }
       if (this.painting === "diag") { this.diagonalTo(p); return; }
+      if (this.painting === "eraseFree" || (this.painting === "erase" && this.freeWallAt(p.fx, p.fy))) {
+        if (this.freeWallAt(p.fx, p.fy) && this.opts.onWallCut) this.opts.onWallCut(p.fx, p.fy);
+        if (this.painting === "eraseFree") this.opts.onEdge && this.opts.onEdge(this.edgeAt(p.fx, p.fy, true), "erase");
+        return;
+      }
+      if (this.wallStroke) {
+        const ws = this.wallStroke;
+        if (ws.straight || e.shiftKey) { ws.straight = true; ws.points = [ws.points[0], [p.fx, p.fy]]; }
+        else {
+          const last = ws.points[ws.points.length - 1];
+          if (Math.hypot(p.fx - last[0], p.fy - last[1]) > 0.05) ws.points.push([p.fx, p.fy]);
+        }
+        return this.draw();
+      }
       if (this.painting === "cell" || this.painting === "layer") {
         this.paintAt(p);
         return;
@@ -531,6 +560,15 @@ export class MapView {
         this.opts.onEdge && this.opts.onEdge(edgeKey(d.sx, d.sy, this.diagonalAt(d.fx, d.fy)), "wall");
       }
       if (this.painting) { this.painting = null; this.lastPaint = null; this.diag = null; return; }
+      if (this.wallStroke) {
+        /* Se simplifica casi como un dibujo: sigue la forma que se traza, sin
+           cientos de puntos que no aportan nada */
+        const pts = simplify(this.wallStroke.points, 0.05).slice(0, 400);
+        this.wallStroke = null;
+        if (pts.length > 1 && Math.hypot(pts[0][0] - pts[pts.length - 1][0], pts[0][1] - pts[pts.length - 1][1]) + pts.length > 2.3
+          && this.opts.onWall) this.opts.onWall(pts);
+        return this.draw();
+      }
       if (this.stroke) {
         const pts = simplify(this.stroke.points, 0.04);
         this.stroke = null;
@@ -638,6 +676,18 @@ export class MapView {
       d.done.add(key);
       this.opts.onEdge && this.opts.onEdge(key, "wall");
     }
+  }
+
+  /* El muro libre más cercano al puntero, a menos de un tercio de casilla */
+  freeWallAt(fx, fy) {
+    let best = null, bestD = 0.3;
+    for (const w of (this.data.map && this.data.map.walls) || []) {
+      for (let i = 1; i < w.points.length; i++) {
+        const dist = segDist(fx, fy, w.points[i - 1], w.points[i]);
+        if (dist < bestD) { bestD = dist; best = w; }
+      }
+    }
+    return best;
   }
 
   /* El trazo más cercano al puntero, si está a menos de un tercio de casilla */
@@ -847,6 +897,30 @@ export class MapView {
       ctx.setLineDash(type === "window" ? [thick, thick * 1.6] : []);
       ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
       ctx.setLineDash([]);
+    }
+
+    /* Muros libres, con los mismos colores que los de la cuadrícula (a los
+       jugadores solo les llegan los que ya conocen) */
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = thick;
+    for (const w of map.walls || []) {
+      const type = w.type || "wall";
+      ctx.strokeStyle = type === "door" ? COLORS.door : type === "doorOpen" ? COLORS.doorOpen : COLORS.wall;
+      ctx.setLineDash(type === "doorOpen" ? [thick, thick * 1.6] : type === "window" ? [thick * 0.6, thick] : []);
+      ctx.beginPath();
+      w.points.forEach(([px, py], i) => (i ? ctx.lineTo(X(px), Y(py)) : ctx.moveTo(X(px), Y(py))));
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.strokeStyle = COLORS.wall;
+    if (this.wallStroke) {
+      ctx.save();
+      ctx.globalAlpha = 0.75;
+      ctx.beginPath();
+      this.wallStroke.points.forEach(([px, py], i) => (i ? ctx.lineTo(X(px), Y(py)) : ctx.moveTo(X(px), Y(py))));
+      ctx.stroke();
+      ctx.restore();
     }
 
     /* Accesos a otros mapas */

@@ -14,23 +14,43 @@ export const BLOCKS = { wall: true, door: true, doorOpen: false, window: false }
    ve, pero no se pisa. */
 export const isDiagonal = key => /,(d|a)$/.test(key);
 
+/* Además, los muros libres (map.walls): trazos con puntos en casillas que
+   cortan la vista y el paso con la misma geometría, sin dejar casillas sin
+   suelo. Los tramos se reparten en cubos de 4×4 casillas para no comprobar
+   cada rayo contra todos los muros de un plano grande. */
+const BUCKET = 4;
 const diagCache = new WeakMap();
 function diagonals(map) {
   const edges = map.edges || {};
+  const free = map.walls || [];
   let hit = diagCache.get(edges);
-  if (hit) return hit;
+  if (hit && hit.free === free) return hit;
   const segs = [], cells = new Set();
+  const add = (x1, y1, x2, y2) => segs.push({
+    x1, y1, x2, y2,
+    minx: Math.min(x1, x2), maxx: Math.max(x1, x2), miny: Math.min(y1, y2), maxy: Math.max(y1, y2)
+  });
   for (const [key, type] of Object.entries(edges)) {
     if (!BLOCKS[type]) continue;
     const [sx, sy, dir] = key.split(",");
     if (dir !== "d" && dir !== "a") continue;
     const x = Number(sx), y = Number(sy);
-    const seg = dir === "d" ? { x1: x, y1: y, x2: x + 1, y2: y + 1 } : { x1: x + 1, y1: y, x2: x, y2: y + 1 };
-    seg.minx = x; seg.maxx = x + 1; seg.miny = y; seg.maxy = y + 1;
-    segs.push(seg);
+    if (dir === "d") add(x, y, x + 1, y + 1); else add(x + 1, y, x, y + 1);
     cells.add(cellKey(x, y));
   }
-  hit = { segs, cells };
+  for (const w of free) {
+    if (!BLOCKS[w.type || "wall"]) continue;          // puerta abierta o ventana: no corta
+    for (let i = 1; i < w.points.length; i++) add(w.points[i - 1][0], w.points[i - 1][1], w.points[i][0], w.points[i][1]);
+  }
+  const buckets = new Map();
+  segs.forEach((w, i) => {
+    for (let by = Math.floor(w.miny / BUCKET); by <= Math.floor(w.maxy / BUCKET); by++)
+      for (let bx = Math.floor(w.minx / BUCKET); bx <= Math.floor(w.maxx / BUCKET); bx++) {
+        const k = bx + "," + by;
+        (buckets.get(k) || buckets.set(k, []).get(k)).push(i);
+      }
+  });
+  hit = { segs, cells, buckets, free, stamp: new Uint32Array(segs.length), tick: 0 };
   diagCache.set(edges, hit);
   return hit;
 }
@@ -42,21 +62,30 @@ export const wallCell = (map, x, y) => diagonals(map).cells.has(cellKey(x, y));
    Tocarlo en su extremo cuenta como cruzarlo (así no se cuela la vista por la
    junta de dos tramos); que el rayo empiece o acabe sobre el muro, no. */
 export function crossesDiagonal(map, x0, y0, x1, y1) {
-  const { segs } = diagonals(map);
-  if (!segs.length) return false;
+  const D = diagonals(map);
+  if (!D.segs.length) return false;
   const ax = x0 + 0.5, ay = y0 + 0.5, bx = x1 + 0.5, by = y1 + 0.5;
   const lx = Math.min(ax, bx), hx = Math.max(ax, bx), ly = Math.min(ay, by), hy = Math.max(ay, by);
   const rx = bx - ax, ry = by - ay;
-  for (const w of segs) {
-    if (w.maxx < lx || w.minx > hx || w.maxy < ly || w.miny > hy) continue;
-    const sx = w.x2 - w.x1, sy = w.y2 - w.y1;
-    const den = rx * sy - ry * sx;
-    if (Math.abs(den) < 1e-9) continue;                  // paralelos
-    const qx = w.x1 - ax, qy = w.y1 - ay;
-    const t = (qx * sy - qy * sx) / den;                 // a lo largo del rayo
-    const u = (qx * ry - qy * rx) / den;                 // a lo largo del muro
-    if (t > 1e-6 && t < 1 - 1e-6 && u >= -1e-6 && u <= 1 + 1e-6) return true;
-  }
+  const tick = ++D.tick;
+  for (let qy = Math.floor(ly / BUCKET); qy <= Math.floor(hy / BUCKET); qy++)
+    for (let qx = Math.floor(lx / BUCKET); qx <= Math.floor(hx / BUCKET); qx++) {
+      const list = D.buckets.get(qx + "," + qy);
+      if (!list) continue;
+      for (const i of list) {
+        if (D.stamp[i] === tick) continue;
+        D.stamp[i] = tick;
+        const w = D.segs[i];
+        if (w.maxx < lx || w.minx > hx || w.maxy < ly || w.miny > hy) continue;
+        const sx = w.x2 - w.x1, sy = w.y2 - w.y1;
+        const den = rx * sy - ry * sx;
+        if (Math.abs(den) < 1e-9) continue;                  // paralelos
+        const px = w.x1 - ax, py = w.y1 - ay;
+        const t = (px * sy - py * sx) / den;                 // a lo largo del rayo
+        const u = (px * ry - py * rx) / den;                 // a lo largo del muro
+        if (t > 1e-6 && t < 1 - 1e-6 && u >= -1e-6 && u <= 1 + 1e-6) return true;
+      }
+    }
   return false;
 }
 
@@ -395,7 +424,7 @@ function cellParts(map, x, y) {
 export function roomsOf(map) {
   const painted = map.rooms || {};
   let hit = roomCache.get(painted);
-  if (hit && hit.edges === map.edges) return hit.rooms;
+  if (hit && hit.edges === map.edges && hit.walls === map.walls) return hit.rooms;
   const of = new Map();      // casilla -> salas que la tocan
   const rooms = [];
   const seen = new Set();    // "x,y#trozo"
@@ -415,6 +444,7 @@ export function roomsOf(map) {
           const nk = cellKey(nx, ny);
           if (!painted[nk] || String(painted[nk]) !== id) continue;     // otra sala, u otra cosa
           if (edgeBetween(map, x, y, nx, ny)) continue;                   // un muro o una puerta la parte
+          if (freeBetween(map, x, y, nx, ny)) continue;                   // también un muro libre, de cualquier tipo
           const np = partFacing(map, nx, ny, (dir + 2) % 4);
           if (seen.has(nk + "#" + np)) continue;
           seen.add(nk + "#" + np);
@@ -425,10 +455,24 @@ export function roomsOf(map) {
       rooms.push([...cells]);
     }
   }
-  hit = { edges: map.edges, rooms: { of, list: rooms } };
+  hit = { edges: map.edges, walls: map.walls, rooms: { of, list: rooms } };
   roomCache.set(painted, hit);
   return hit.rooms;
 }
+/* ¿Algún muro libre, abierto o cerrado, entre los centros de dos casillas? */
+function freeBetween(map, x0, y0, x1, y1) {
+  const ax = x0 + 0.5, ay = y0 + 0.5, bx = x1 + 0.5, by = y1 + 0.5;
+  for (const w of map.walls || []) {
+    for (let i = 1; i < w.points.length; i++) {
+      const [px, py] = w.points[i - 1], [qx, qy] = w.points[i];
+      const d1 = (bx - ax) * (py - ay) - (by - ay) * (px - ax), d2 = (bx - ax) * (qy - ay) - (by - ay) * (qx - ax);
+      const d3 = (qx - px) * (ay - py) - (qy - py) * (ax - px), d4 = (qx - px) * (by - py) - (qy - py) * (bx - px);
+      if (d1 * d2 <= 0 && d3 * d4 < 0) return true;
+    }
+  }
+  return false;
+}
+
 /* Cualquier borde dibujado, abierto o cerrado: separa salas */
 function edgeBetween(map, x1, y1, x2, y2) {
   let key = null;
@@ -497,6 +541,22 @@ function sightCells(doc, map) {
     }
   }
   return set;
+}
+
+/* Los muros libres que pasan por lo que ya se ha visto (se mira cada media
+   casilla a lo largo del trazo, y a los dos lados si cae justo en una línea) */
+export function wallsNear(map, seen, explored = []) {
+  const cells = new Set([...(seen || []), ...explored]);
+  if (!cells.size) return [];
+  const near = (x, y) => cells.has(cellKey(Math.floor(x - 0.05), Math.floor(y - 0.05)))
+    || cells.has(cellKey(Math.floor(x + 0.05), Math.floor(y + 0.05)));
+  return (map.walls || []).filter(w => w.points.some((p, i) => {
+    if (near(p[0], p[1])) return true;
+    if (!i) return false;
+    const q = w.points[i - 1], n = Math.ceil(Math.hypot(p[0] - q[0], p[1] - q[1]) * 2);
+    for (let k = 1; k < n; k++) if (near(q[0] + (p[0] - q[0]) * k / n, q[1] + (p[1] - q[1]) * k / n)) return true;
+    return false;
+  }));
 }
 
 /* La franja de penumbra: casillas justo más allá de lo que se ve (pegadas a

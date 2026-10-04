@@ -11,7 +11,7 @@ import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret } fro
 import { openCharEditor, openConditions } from "./char-editor.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
-import { openGridFit, openWallFit } from "./gridfit.js";
+import { openGridFit, openWallFit, teachFromMap, forgetLearned, learnedCount, exportLearned, importLearned } from "./gridfit.js";
 import { langPicker } from "./i18n.js";
 import { icon, withIcon } from "./icons.js";
 import { rollHitPoints } from "./dice.js";
@@ -1122,8 +1122,9 @@ function renderMap() {
             <button data-tool="token" aria-pressed="true" title="Mover y seleccionar fichas">${icon("move", 15)}Fichas</button>
             <button data-tool="measure" aria-pressed="false" title="Medir distancias">${icon("ruler", 15)}Regla</button>
             <button data-tool="wall" aria-pressed="false" title="Muro: por los bordes, recto; desde el centro de una casilla, en diagonal">${icon("wall", 15)}Muro</button>
-            <button data-tool="door" aria-pressed="false" title="Puerta, recta o en diagonal: se abre y se cierra">${icon("door", 15)}Puerta</button>
-            <button data-tool="erase" aria-pressed="false" title="Quitar muros, diagonales y puertas">${icon("eraser", 15)}Borrar</button>
+            <button data-tool="freewall" aria-pressed="false" title="Muro a mano alzada, para paredes redondas o irregulares (con Mayúsculas, recto)">${icon("scribble", 15)}Muro libre</button>
+            <button data-tool="door" aria-pressed="false" title="Puerta, recta, en diagonal o en un muro libre: se abre y se cierra">${icon("door", 15)}Puerta</button>
+            <button data-tool="erase" aria-pressed="false" title="Quitar muros, diagonales, muros libres y puertas">${icon("eraser", 15)}Borrar</button>
             <button data-tool="pin" aria-pressed="false" title="Clavar una nota">${icon("note", 15)}Nota</button>
             <button data-tool="portal" aria-pressed="false" title="Escalera o pasadizo: a otro mapa o a otro punto de este">${icon("stairs", 15)}Acceso</button>
             <button data-tool="draw" aria-pressed="false" title="Dibujar a mano alzada">${icon("scribble", 15)}Dibujar</button>
@@ -1180,6 +1181,9 @@ function renderMap() {
         tokenMenu(id);
       },
       onEdge: (key, tool) => paintEdge(key, tool),
+      onWall: points => op("wall.add", { mapId: activeMap().id, wall: { points } }),
+      onWallCut: (x, y) => op("wall.cut", { mapId: activeMap().id, x, y, r: 0.3 }),
+      onWallDoor: (x, y) => op("wall.door", { mapId: activeMap().id, x, y }),
       onPaintCell: (x, y, brush) => {
         const k = x + "," + y, mapId = activeMap().id;
         op("map.cells", { mapId, patch: { [k]: brush === "none" ? null : brush } });
@@ -1221,8 +1225,9 @@ function renderMap() {
         measure: "Arrastra de una casilla a otra para medir",
         wall: "Arrastra por los bordes para un muro recto, o empieza en el centro de una casilla para uno en diagonal",
         draw: "Dibuja con el ratón o el dedo; elige color y si lo ve la party",
-        door: "Pulsa un borde para una puerta recta, o el centro de una casilla para una en diagonal. Otra pulsación la abre o la cierra; para quitarla, Borrar",
-        erase: "Arrastra para quitar muros y puertas",
+        freewall: "Traza la pared como un dibujo (con Mayúsculas, recta). Puerta y Borrar valen igual",
+        door: "Pulsa un borde (recta), el centro de una casilla (diagonal) o un muro libre. Otra pulsación la abre o la cierra; para quitarla, Borrar",
+        erase: "Arrastra para quitar muros y puertas, también trozos de muro libre",
         pin: "Pulsa donde quieras clavar la nota",
         portal: "Pulsa donde esté la escalera"
       }[mapTool] || "";
@@ -1473,6 +1478,19 @@ function openMapSettings(map) {
       <button type="button" class="btn sm" id="imgBtn">Imagen de fondo</button>
       <button type="button" class="btn sm" id="fitGrid">Encajar cuadrícula con el plano</button>
       <button type="button" class="btn sm" id="fitWalls">Muros y puertas del plano</button>
+    </div>
+    <fieldset>
+      <legend>Lo aprendido para proponer muros</legend>
+      <p class="hint" id="learnedInfo" style="margin:0 0 10px">…</p>
+      <div class="row">
+        <button type="button" class="btn sm" id="teachWalls" title="Cuando los muros de este plano estén bien puestos, la propuesta aprende de ellos para los próximos planos">Enseñar con este plano</button>
+        <button type="button" class="btn sm" id="exportWalls" title="Un archivo con los planos enseñados, para otra instalación o una versión nueva">Exportar</button>
+        <button type="button" class="btn sm" id="importWalls" title="Aprender de un archivo exportado desde Mesa">Importar</button>
+        <button type="button" class="btn sm" id="forgetWalls">Olvidar lo aprendido</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+    </fieldset>
+    <div class="row" style="margin-bottom:12px">
       <input type="file" id="imgFile" accept="image/*" hidden>
     </div>
     <fieldset>
@@ -1540,6 +1558,32 @@ function openMapSettings(map) {
   });
   body.querySelector("#fitGrid").addEventListener("click", () => openGridFit(activeMap(), { onApply }));
   body.querySelector("#fitWalls").addEventListener("click", () => openWallFit(activeMap()));
+  const learnedInfo = async () => {
+    const n = await learnedCount().catch(() => 0);
+    const info = body.querySelector("#learnedInfo");
+    if (info) info.textContent = n
+      ? `Ha aprendido de ${n} ${n === 1 ? "plano enseñado" : "planos enseñados"}. Exporta para llevártelo a otra instalación o a una versión nueva.`
+      : "Todavía no se ha enseñado con ningún plano. Cuando los muros de un plano estén bien, «Enseñar con este plano».";
+  };
+  learnedInfo();
+  body.querySelector("#teachWalls").addEventListener("click", async () => { await teachFromMap(activeMap()); learnedInfo(); });
+  body.querySelector("#exportWalls").addEventListener("click", () => exportLearned());
+  const importFile = body.querySelector("#importFile");
+  body.querySelector("#importWalls").addEventListener("click", () => importFile.click());
+  importFile.addEventListener("change", async () => {
+    if (!importFile.files[0]) return;
+    await importLearned(importFile.files[0]);
+    importFile.value = "";
+    learnedInfo();
+  });
+  body.querySelector("#forgetWalls").addEventListener("click", async () => {
+    const n = await learnedCount();
+    if (!n) return toast("Todavía no ha aprendido de ningún plano");
+    if (await confirmBox(`¿Olvidar lo aprendido de ${n} ${n === 1 ? "plano" : "planos"}? La propuesta de muros vuelve a la de serie. Si quieres conservarlo, exporta antes.`, { okLabel: "Olvidar" })) {
+      await forgetLearned();
+      learnedInfo();
+    }
+  });
   body.querySelector("#resetFog").addEventListener("click", () => patchMap(map.id, { explored: [] }));
   body.querySelector("#clearWalls").addEventListener("click", () => patchMap(map.id, { edges: {} }));
   body.querySelector("#clearCells").addEventListener("click", () => patchMap(map.id, { cells: {} }));

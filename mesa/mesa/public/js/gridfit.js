@@ -9,11 +9,11 @@
    2. Con la cuadrícula ya puesta, propone muros y puertas (wallfind.js) y
       los enseña sobre el plano para revisarlos antes de ponerlos. */
 
-import { modal, toast, imgURL } from "./util.js";
-import { patchMap } from "./net.js";
+import { modal, toast, imgURL, confirmBox } from "./util.js";
+import { patchMap, getWallData, saveWallData, uploadImage } from "./net.js";
 import { MAX_COLS, MAX_ROWS } from "./schema.js";
 import { toGray, detectGrid, fitCount } from "./gridfind.js";
-import { measureWalls, classifyWalls } from "./wallfind.js";
+import { measureWalls, classifyWalls, trainingSet, learnFromMap, usableModel, BASE_MODEL } from "./wallfind.js";
 
 const mod = (a, b) => ((a % b) + b) % b;
 const fmt = (v, d = 2) => String(Math.round(v * 10 ** d) / 10 ** d).replace(".", ",");
@@ -261,7 +261,7 @@ export function openWallFit(map) {
   if (!map.imageId) return toast("Este mapa no tiene imagen de fondo", "bad");
   if (!map.imgGrid) return toast("Primero encaja la cuadrícula con el plano", "bad");
   const g = { ...map.imgGrid, cols: map.cols, rows: map.rows };
-  const existing = Object.keys(map.edges || {}).length;
+  const existing = Object.keys(map.edges || {}).length + (map.walls || []).length;
 
   const body = document.createElement("div");
   body.className = "gridfit";
@@ -270,14 +270,14 @@ export function openWallFit(map) {
     <div class="gridfit-view"><canvas></canvas></div>
     <div class="row gridfit-tools">
       <label class="check"><input type="checkbox" name="zoom"> Ver a tamaño real</label>
-      <span class="gridfit-legend"><i class="wall"></i>Muro <i class="diag"></i>Muro en diagonal <i class="door"></i>Puerta</span>
+      <span class="gridfit-legend"><i class="wall"></i>Muro <i class="diag"></i>Diagonal o muro libre <i class="door"></i>Puerta</span>
     </div>
     <label class="field gridfit-range"><span>Sensibilidad</span>
       <span class="gridfit-range-row"><small>Menos muros</small>
       <input name="sens" type="range" min="0" max="1" step="0.05" value="0.5">
       <small>Más muros</small></span></label>
     ${existing ? `<fieldset>
-      <legend>Este mapa ya tiene ${existing} muros o puertas</legend>
+      <legend>Este mapa ya tiene ${existing} muros, muros libres o puertas</legend>
       <label class="check"><input type="radio" name="mode" value="replace" checked> Sustituirlos por los propuestos</label>
       <label class="check" style="margin-top:6px"><input type="radio" name="mode" value="add"> Añadir los propuestos y dejar los que hay</label>
     </fieldset>` : ""}
@@ -289,16 +289,19 @@ export function openWallFit(map) {
   const status = body.querySelector(".gridfit-status");
   const input = n => body.querySelector(`[name="${n}"]`);
   const setStatus = (tone, text) => { status.className = "gridfit-status " + tone; status.textContent = text; };
-  let img = null, measured = null, result = null;
+  let img = null, measured = null, result = null, model = null;
 
   function classify() {
-    result = classifyWalls(measured, { sensitivity: +input("sens").value });
-    const { walls, doors, diagonals, floorMask } = result.stats;
-    const what = `${walls} ${walls === 1 ? "muro" : "muros"}${diagonals ? ` (${diagonals} en diagonal)` : ""} y ${doors} ${doors === 1 ? "puerta" : "puertas"}`;
+    result = classifyWalls(measured, { sensitivity: +input("sens").value, model });
+    const { walls, doors, diagonals, free, floorMask } = result.stats;
+    const odd = [diagonals ? `${diagonals} en diagonal` : "", free ? `${free} ${free === 1 ? "libre" : "libres"} en paredes curvas o giradas` : ""].filter(Boolean).join(", ");
+    const what = `${walls} ${walls === 1 ? "muro" : "muros"}${odd ? ` (${odd})` : ""} y ${doors} ${doors === 1 ? "puerta" : "puertas"}`;
+    const learned = (model && model.maps && model.maps.length) || 0;
+    const extra = learned ? ` Uso lo aprendido de ${learned} ${learned === 1 ? "plano corregido" : "planos corregidos"}.` : "";
     if (!walls && !doors) setStatus("bad", "No encuentro muros claros en este plano. Prueba a subir la sensibilidad o ponlos a mano.");
-    else if (floorMask) setStatus("good", `Propongo ${what}. Revísalos sobre el plano antes de ponerlos.`);
+    else if (floorMask) setStatus("good", `Propongo ${what}. Revísalos sobre el plano antes de ponerlos.${extra}`);
     else setStatus("warn", `Propongo ${what}. En este plano no distingo el suelo de lo que no lo es, así que solo
-      salen muros dibujados como líneas largas: seguramente falten algunos.`);
+      salen muros dibujados como líneas largas: seguramente falten algunos.${extra}`);
     draw();
   }
 
@@ -320,6 +323,15 @@ export function openWallFit(map) {
       else { ctx.moveTo(X(x), Y(y)); ctx.lineTo(X(x + 1), Y(y)); }
       ctx.stroke();
     }
+    /* Muros libres propuestos: paredes curvas o giradas */
+    ctx.strokeStyle = "#ffa31a";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2 / k, g.w * 0.14);
+    for (const w of result.walls || []) {
+      ctx.beginPath();
+      w.points.forEach(([px, py], i) => (i ? ctx.lineTo(X(px), Y(py)) : ctx.moveTo(X(px), Y(py))));
+      ctx.stroke();
+    }
   }
 
   input("sens").addEventListener("input", () => { if (measured) classify(); });
@@ -335,12 +347,10 @@ export function openWallFit(map) {
           if (!result) return false;
           const now = map.edges || {};
           const mode = existing ? host.querySelector('[name="mode"]:checked').value : "replace";
-          let edges;
-          if (mode === "add") edges = { ...result.edges, ...now };
-          else {
-            edges = { ...result.edges };
-          }
-          patchMap(map.id, { edges });
+          const proposed = result.walls || [];
+          const edges = mode === "add" ? { ...result.edges, ...now } : { ...result.edges };
+          const walls = mode === "add" ? [...(map.walls || []), ...proposed] : proposed;
+          patchMap(map.id, { edges, walls });
           toast(`Puestos ${result.stats.walls} muros y ${result.stats.doors} puertas`, "good");
         }
       }
@@ -349,8 +359,9 @@ export function openWallFit(map) {
 
   onResizeWhileOpen(body, draw);
 
-  loadImage(map.imageId).then(loaded => {
+  Promise.all([loadImage(map.imageId), currentModel().catch(() => null)]).then(([loaded, saved]) => {
     img = loaded;
+    model = usableModel(saved);
     draw();
     setTimeout(() => {
       try {
@@ -363,4 +374,145 @@ export function openWallFit(map) {
   }).catch(() => setStatus("bad", "No se pudo cargar la imagen del plano."));
 
   return dialog;
+}
+
+/* ---------- Enseñar con un plano corregido ----------
+   Los muros que el DM deja puestos en un plano (después de corregir la
+   propuesta, o puestos a mano) enseñan a la propuesta cómo son los muros de
+   ese estilo de plano. Se guardan dos cosas, en el servidor (para todas las
+   partidas) o en el navegador en la versión de prueba:
+
+   - el modelo aprendido (pesos y su confianza), que es lo que se usa;
+   - los planos enseñados (imagen, cuadrícula, muros y puertas). Con ellos
+     se puede volver a aprender desde cero: si una versión nueva de Mesa
+     cambia el modelo, o en otra instalación tras exportarlos e importarlos. */
+const USER_WEIGHT = 2;   // un plano del DM cuenta el doble que uno de los de serie
+const FORMAT = "mesa-planos-ensenados";
+
+/* Un plano enseñado: lo justo para volver a aprender de él */
+const lessonOf = map => ({
+  id: map.id, name: map.name, imageId: map.imageId, at: Date.now(),
+  imgGrid: map.imgGrid, cols: map.cols, rows: map.rows,
+  edges: map.edges || {}, walls: map.walls || []
+});
+
+/* Aprender de un plano enseñado a partir de un modelo */
+async function learnLesson(model, lesson) {
+  const img = await loadImage(lesson.imageId);
+  const g = { ...lesson.imgGrid, cols: lesson.cols, rows: lesson.rows };
+  const { X, y } = trainingSet(rgba(img), img.naturalWidth, img.naturalHeight, g, lesson.edges || {}, lesson.walls || []);
+  return learnFromMap(model, X, y, { weight: USER_WEIGHT, mapId: lesson.id, name: lesson.name });
+}
+
+/* Volver a aprender desde el modelo de serie con todos los planos enseñados */
+async function relearn(lessons, onStep = () => {}) {
+  let model = BASE_MODEL, used = 0, missing = 0;
+  for (const [i, lesson] of lessons.entries()) {
+    onStep(i + 1, lessons.length);
+    try { model = await learnLesson(model, lesson); used++; } catch { missing++; }
+    await new Promise(r => setTimeout(r, 0));     // que la página respire entre plano y plano
+  }
+  return { model: used ? model : null, used, missing };
+}
+
+/* El modelo con el que proponer. Si lo guardado es de otra versión del
+   modelo (otros rasgos, otro modelo de serie) y hay planos enseñados, se
+   vuelve a aprender de ellos sin que el DM tenga que hacer nada. */
+async function currentModel() {
+  const { model, lessons = [] } = await getWallData();
+  const fits = model && usableModel(model) !== BASE_MODEL && model.version === BASE_MODEL.version;
+  if (fits || !lessons.length) return fits ? model : null;
+  toast(`Esta versión de Mesa vuelve a aprender de tus ${lessons.length} planos enseñados…`);
+  const out = await relearn(lessons);
+  await saveWallData({ model: out.model });
+  return out.model;
+}
+
+export async function teachFromMap(map) {
+  if (!map.imageId || !map.imgGrid) return toast("Primero carga el plano y encaja su cuadrícula", "bad");
+  const straight = Object.keys(map.edges || {}).length, free = (map.walls || []).length;
+  if (straight + free * 4 < 20) return toast("Este plano tiene muy pocos muros: ponlos o corrígelos antes de enseñar con él", "bad");
+  try {
+    const current = usableModel(await currentModel());
+    const { lessons = [] } = await getWallData();
+    const again = lessons.some(x => x.id === map.id);
+    if (again && !(await confirmBox("Ya se enseñó con este plano. Enseñar otra vez le da el doble de peso. ¿Seguir?", { danger: false, okLabel: "Enseñar otra vez" }))) return;
+    toast("Aprendiendo de este plano…");
+    await new Promise(r => setTimeout(r, 30));
+    const lesson = lessonOf(map);
+    const next = await learnLesson(current, lesson);
+    /* Se guarda la última versión de cada plano enseñado */
+    await saveWallData({ model: next, lessons: [...lessons.filter(x => x.id !== map.id), lesson] });
+    toast(`Aprendido. La propuesta de muros ya cuenta con ${next.maps.length} ${next.maps.length === 1 ? "plano corregido" : "planos corregidos"}`, "good");
+  } catch (err) {
+    toast("No se pudo aprender de este plano: " + err.message, "bad");
+  }
+}
+
+export async function forgetLearned() {
+  await saveWallData({ model: null, lessons: [] });
+  toast("La propuesta de muros vuelve a la de serie");
+}
+
+export async function learnedCount() {
+  const { lessons = [], model } = await getWallData().catch(() => ({}));
+  return Math.max(lessons.length, (model && model.maps && model.maps.length) || 0);
+}
+
+/* ---------- Llevarse lo aprendido ----------
+   Un solo archivo con los planos enseñados (imágenes incluidas). Al
+   importarlo en otra instalación, o en una versión nueva, se vuelve a
+   aprender de todos ellos. */
+const toDataURL = blob => new Promise((resolve, reject) => {
+  const r = new FileReader();
+  r.onload = () => resolve(r.result);
+  r.onerror = () => reject(r.error);
+  r.readAsDataURL(blob);
+});
+
+export async function exportLearned() {
+  const { lessons = [] } = await getWallData();
+  if (!lessons.length) return toast("Todavía no se ha enseñado con ningún plano");
+  toast("Preparando el archivo…");
+  const out = [];
+  for (const l of lessons) {
+    try {
+      const blob = await (await fetch(imgURL(l.imageId))).blob();
+      out.push({ ...l, image: await toDataURL(blob) });
+    } catch { /* la imagen ya no está: ese plano no se puede llevar */ }
+  }
+  const file = new Blob([JSON.stringify({ format: FORMAT, version: 1, exported: new Date().toISOString(), lessons: out })], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(file);
+  a.download = `mesa-planos-ensenados-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  toast(`Exportados ${out.length} ${out.length === 1 ? "plano enseñado" : "planos enseñados"}${out.length < lessons.length ? ` (${lessons.length - out.length} sin imagen)` : ""}`, "good");
+}
+
+export async function importLearned(file) {
+  try {
+    const data = JSON.parse(await file.text());
+    if (!data || data.format !== FORMAT || !Array.isArray(data.lessons)) throw new Error("no es un archivo de planos enseñados de Mesa");
+    const { lessons = [] } = await getWallData();
+    const seen = new Set(lessons.map(l => l.id + "|" + l.at));
+    const added = [];
+    for (const [i, l] of data.lessons.entries()) {
+      if (!l || typeof l.image !== "string" || !l.imgGrid || seen.has(l.id + "|" + l.at)) continue;
+      toast(`Importando planos… ${i + 1} de ${data.lessons.length}`);
+      const blob = await (await fetch(l.image)).blob();
+      const imageId = await uploadImage(blob);
+      const { image, ...rest } = l;
+      added.push({ ...rest, imageId });
+    }
+    if (!added.length) return toast("Esos planos ya estaban enseñados");
+    const all = [...lessons, ...added];
+    const out = await relearn(all, (n, total) => { if (n === 1 || n === total || n % 5 === 0) toast(`Aprendiendo… plano ${n} de ${total}`); });
+    await saveWallData({ model: out.model, lessons: all });
+    toast(`Importados ${added.length} planos. La propuesta ya cuenta con ${out.used} planos enseñados`, "good");
+  } catch (err) {
+    toast("No se pudo importar: " + err.message, "bad");
+  }
 }

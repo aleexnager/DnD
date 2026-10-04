@@ -54,6 +54,8 @@ export async function localTransport() {
       registerLocalImage(id, URL.createObjectURL(blob));
       return id;
     },
+    wallData: token => ask("wallmodel", { token }),
+    saveWallData: (token, fields) => ask("wallmodelSet", { token, fields }),
     leave: token => { port.postMessage({ kind: "leave", token }); }
   };
 }

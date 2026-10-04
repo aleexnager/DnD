@@ -188,6 +188,23 @@ export function createHost(base) {
         if (!c) throw new Error("sesión caducada");
         return storeImage(base, msg.blob);
       }
+      case "wallmodel": {
+        if (!c || c.role !== "dm") throw new Error("Solo el DM");
+        let saved = (await kvGet("wallmodel")) || null;
+        if (saved && Array.isArray(saved.w)) saved = { model: saved, lessons: [] };
+        return saved || { model: null, lessons: [] };
+      }
+      case "wallmodelSet": {
+        if (!c || c.role !== "dm") throw new Error("Solo el DM");
+        let saved = (await kvGet("wallmodel")) || null;
+        if (saved && Array.isArray(saved.w)) saved = { model: saved, lessons: [] };
+        saved = { model: null, lessons: [], ...(saved || {}) };
+        const f = msg.fields || {};
+        if ("model" in f) saved.model = f.model;
+        if ("lessons" in f) saved.lessons = Array.isArray(f.lessons) ? f.lessons : [];
+        await kvSet("wallmodel", saved);
+        return true;
+      }
       case "leave": {
         ports.delete(msg.token);
         if (c) engine.setOnline(c, false);

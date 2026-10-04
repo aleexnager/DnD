@@ -11,9 +11,10 @@
      absorbImages(d) saca las imágenes incrustadas de una copia antigua
      onPresence()    avisa de que ha cambiado quién está conectado */
 
-import { emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizePortal, normalizeAttack, normalizeDrawing, modOf, addDice, scaleDice, cantripTier } from "./schema.js";
-import { visibleCells, fringeCells, edgesNear, gridDistance, pathCost, occupied, fits, reachableCells } from "./los.js";
+import { emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier } from "./schema.js";
+import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells } from "./los.js";
 import { roll, detail } from "./dice.js";
+import { cutWalls, doorAt } from "./freewalls.js";
 import { critDamage } from "./attacks-core.js";
 
 export const ROLES = ["dm", "player", "screen"];
@@ -165,6 +166,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         /* Los muros siguen cortando la vista y el paso aunque no se enseñen:
            solo deja de viajar el dibujo */
         edges: doc.session.showWallsToParty === false ? {} : doc.session.revealAll ? map.edges : edgesNear(map, seen, explored),
+        walls: doc.session.showWallsToParty === false ? [] : doc.session.revealAll ? map.walls || [] : wallsNear(map, seen, explored),
         dark: map.dark, feet: map.feet, diagonals: map.diagonals, playerZoom: map.playerZoom,
         cells: pickCells(map, seen, explored),
         shapes: (map.shapes || []).filter(sh => sh.party),
@@ -701,7 +703,10 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         if (!dm) return "Solo el DM";
         const m = doc.maps.find(x => x.id === op.id);
         if (!m) return "No existe ese mapa";
-        Object.assign(m, op.fields || {});
+        const fields = { ...(op.fields || {}) };
+        if ("walls" in fields) fields.walls = (Array.isArray(fields.walls) ? fields.walls : [])
+          .map(normalizeWall).filter(w => w.points.length > 1).slice(0, MAX_WALLS);
+        Object.assign(m, fields);
         break;
       }
       case "map.add":
@@ -817,6 +822,44 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
           else if (["wall", "door", "doorOpen", "window"].includes(v)) edges[k] = v;
         }
         mp.edges = edges;
+        break;
+      }
+
+      /* Muros libres, trazados a mano o propuestos al cargar el plano */
+      case "wall.add": {
+        if (!dm) return "Solo el DM";
+        const mp = doc.maps.find(x => x.id === (op.mapId || doc.session.activeMapId));
+        if (!mp) return "No existe ese mapa";
+        const w = normalizeWall(op.wall);
+        if (w.points.length < 2) return null;
+        if ((mp.walls || []).length >= MAX_WALLS) return "Este mapa ya tiene demasiados muros trazados";
+        mp.walls = [...(mp.walls || []), w];
+        break;
+      }
+      /* La goma: quita el trozo de muro libre que toca */
+      case "wall.cut": {
+        if (!dm) return "Solo el DM";
+        const mp = doc.maps.find(x => x.id === (op.mapId || doc.session.activeMapId));
+        if (!mp) return "No existe ese mapa";
+        if (!Number.isFinite(+op.x) || !Number.isFinite(+op.y)) return null;
+        mp.walls = cutWalls(mp.walls || [], +op.x, +op.y, Math.min(1, Math.max(0.1, +op.r || 0.3))).slice(0, MAX_WALLS);
+        break;
+      }
+      /* La herramienta Puerta sobre un muro libre: puerta, abierta, sin puerta */
+      case "wall.door": {
+        if (!dm) return "Solo el DM";
+        const mp = doc.maps.find(x => x.id === (op.mapId || doc.session.activeMapId));
+        if (!mp) return "No existe ese mapa";
+        if (!Number.isFinite(+op.x) || !Number.isFinite(+op.y)) return null;
+        const next = doorAt(mp.walls || [], +op.x, +op.y);
+        if (next) mp.walls = next.slice(0, MAX_WALLS);
+        break;
+      }
+      case "wall.remove": {
+        if (!dm) return "Solo el DM";
+        const mp = doc.maps.find(x => x.id === (op.mapId || doc.session.activeMapId));
+        if (!mp) return "No existe ese mapa";
+        mp.walls = (mp.walls || []).filter(w => w.id !== op.id);
         break;
       }
 

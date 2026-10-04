@@ -30,6 +30,8 @@
 
    No depende del navegador: trabaja sobre los píxeles en un array. */
 
+import { BASE_MODEL } from "./wallmodel.js";
+
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 const SEED = 0.4, MIN_COHERENCE = 0.58;
@@ -251,7 +253,7 @@ function otsu(values) {
 /* De las medidas a una propuesta de muros y puertas.
    sensitivity 0…1: más alto, más muros (umbrales más bajos). Se puede
    recalcular al mover el control sin volver a medir la imagen. */
-export function classifyWalls(m, { sensitivity = 0.5 } = {}) {
+function ruleWalls(m, { sensitivity = 0.5 } = {}) {
   const { cols, rows, edges } = m;
   const f = 1.6 - 1.2 * clamp(sensitivity, 0, 1);
   const n = cols * rows;
@@ -687,9 +689,440 @@ export function classifyWalls(m, { sensitivity = 0.5 } = {}) {
   const walls = [...out.values()].filter(t => t === "wall").length;
   const diag = [...out.keys()].filter(k => /,(d|a)$/.test(k)).length;
   return {
-    edges: result, floor,
+    edges: result, floor, score,
     stats: { walls, doors: out.size - walls, diagonals: diag, floorMask: masked, coherence: +coherence.toFixed(2), split: +split.sep.toFixed(2), tLine: +tLine.toFixed(1), tDiff: +tDiff.toFixed(1) }
   };
+}
+
+/* ---------- Muros aprendidos de planos marcados a mano ----------
+
+   Regresión logística sobre cada borde, entrenada con cinco planos en los
+   que se marcaron a mano muros, diagonales y puertas. Todos los rasgos van
+   en percentil dentro del propio plano (0…1), para que no dependan del
+   estilo ni del brillo de cada mapa:
+
+   dark, light, thin, diff, thick, white, band   medidas del corte del borde
+   cmin, cmax       brillo de la franja frente al más oscuro / claro de los lados
+   lsd              diferencia de brillo entre los dos lados
+   smin, smax       cuánto se ve la cuadrícula en las dos casillas
+   rim, inn         borde del suelo (un lado suelo) o dentro del suelo
+   ev               lo más marcado de dark, light y band
+   n1lo/hi, n2lo/hi ev de los vecinos en la misma línea (a 1 y a 2 casillas)
+   n1rim…, n2rim…   lo mismo con rim
+
+   rule             si las reglas (ruleWalls) ponen muro en ese borde
+
+   Evaluado dejando cada plano fuera del entrenamiento (ver classifyWalls). */
+const MODEL = BASE_MODEL;
+
+/* Percentil de cada valor dentro de la lista (empates: rango medio), 0…1 */
+function percentile(values) {
+  const n = values.length, idx = Array.from({ length: n }, (_, i) => i).sort((a, b) => values[a] - values[b]);
+  const out = new Float64Array(n);
+  for (let i = 0; i < n;) {
+    let j = i;
+    while (j + 1 < n && values[idx[j + 1]] === values[idx[i]]) j++;
+    const r = (i + j) / 2 / Math.max(1, n - 1);
+    for (let k = i; k <= j; k++) out[idx[k]] = r;
+    i = j + 1;
+  }
+  return out;
+}
+
+/* Rasgos de cada borde, en el orden de model.names */
+export function edgeFeatures(m, floor, score, ruleEdges = {}, names = MODEL.names) {
+  const { cols, edges } = m;
+  const n = edges.length;
+  const side = e => e.dir === "v"
+    ? [e.cy * cols + e.cx - 1, e.cy * cols + e.cx]
+    : [(e.cy - 1) * cols + e.cx, e.cy * cols + e.cx];
+  const P = {};
+  for (const f of ["dark", "light", "thin", "diff", "thick", "white", "band"]) P[f] = percentile(edges.map(e => e[f]));
+  const la = edges.map(e => lum(e.a)), lb = edges.map(e => lum(e.b)), lc = edges.map(e => lum(e.c));
+  P.cmin = percentile(lc.map((c, i) => c - Math.min(la[i], lb[i])));
+  P.cmax = percentile(lc.map((c, i) => c - Math.max(la[i], lb[i])));
+  P.lsd = percentile(la.map((a, i) => Math.abs(a - lb[i])));
+  const sides = edges.map(side);
+  const sv = i => (score[i] === null || score[i] === undefined ? -1 : score[i]);
+  const both = percentile([...sides.map(s => sv(s[0])), ...sides.map(s => sv(s[1]))]);
+  P.smin = new Float64Array(n); P.smax = new Float64Array(n); P.rim = new Float64Array(n); P.inn = new Float64Array(n); P.ev = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    P.smin[i] = Math.min(both[i], both[n + i]); P.smax[i] = Math.max(both[i], both[n + i]);
+    const fa = floor[sides[i][0]] ? 1 : 0, fb = floor[sides[i][1]] ? 1 : 0;
+    P.rim[i] = fa !== fb ? 1 : 0; P.inn[i] = fa + fb === 2 ? 1 : 0;
+    P.ev[i] = Math.max(P.dark[i], P.light[i], P.band[i]);
+  }
+  P.rule = Float64Array.from(edges, e => (ruleEdges[e.key] ? 1 : 0));
+  const index = new Map(edges.map((e, i) => [e.key, i]));
+  const nb = (e, s) => index.get(e.dir === "v" ? `${e.cx},${e.cy + s},v` : `${e.cx + s},${e.cy},h`);
+  for (const [name, steps] of [["n1", [-1, 1]], ["n2", [-2, 2]]]) {
+    P[name + "lo"] = new Float64Array(n); P[name + "hi"] = new Float64Array(n);
+    P[name + "rimlo"] = new Float64Array(n); P[name + "rimhi"] = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      const js = steps.map(s => nb(edges[i], s));
+      const ev = js.map(j => (j === undefined ? 0 : P.ev[j])), rim = js.map(j => (j === undefined ? 0 : P.rim[j]));
+      P[name + "lo"][i] = Math.min(...ev); P[name + "hi"][i] = Math.max(...ev);
+      P[name + "rimlo"][i] = Math.min(...rim); P[name + "rimhi"][i] = Math.max(...rim);
+    }
+  }
+  return edges.map((_, i) => names.map(f => P[f][i]));
+}
+
+const sigmoid = z => 1 / (1 + Math.exp(-z));
+const predict = (model, x) => {
+  let z = model.bias;
+  for (let k = 0; k < x.length; k++) z += model.w[k] * x[k];
+  return sigmoid(z);
+};
+
+/* Probabilidad de muro de cada borde */
+export function wallProbabilities(m, floor, score, model = MODEL, ruleEdges = {}) {
+  return Float64Array.from(edgeFeatures(m, floor, score, ruleEdges, model.names), x => predict(model, x));
+}
+
+/* ---------- Aprender de un plano corregido ----------
+
+   Qué bordes son muro según lo que el DM dejó puesto: los bordes con muro o
+   puerta, y los bordes por los que pasa un muro diagonal o un muro libre
+   (si al menos el 60 % del borde queda a menos de 0,3 casillas). */
+export function labelEdges(m, mapEdges = {}, freeWalls = []) {
+  const segs = [];
+  for (const [k, t] of Object.entries(mapEdges)) {
+    if (!t) continue;
+    const [x, y, d] = k.split(",").map((v, i) => (i < 2 ? +v : v));
+    if (d === "d") segs.push([x, y, x + 1, y + 1]);
+    else if (d === "a") segs.push([x + 1, y, x, y + 1]);
+  }
+  for (const w of freeWalls)
+    for (let i = 1; i < w.points.length; i++) segs.push([...w.points[i - 1], ...w.points[i]]);
+  const near = (px, py) => segs.some(([x1, y1, x2, y2]) => {
+    const dx = x2 - x1, dy = y2 - y1, L = dx * dx + dy * dy;
+    const t = L ? clamp(((px - x1) * dx + (py - y1) * dy) / L, 0, 1) : 0;
+    return Math.hypot(px - x1 - t * dx, py - y1 - t * dy) <= 0.3;
+  });
+  return m.edges.map(e => {
+    if (mapEdges[e.key]) return 1;
+    if (!segs.length) return 0;
+    let hit = 0;
+    for (let k = 0; k < 10; k++) {
+      const t = 0.05 + 0.1 * k;
+      if (e.dir === "v" ? near(e.cx, e.cy + t) : near(e.cx + t, e.cy)) hit++;
+    }
+    return hit >= 6 ? 1 : 0;
+  });
+}
+
+/* Resolver A·x = b (A simétrica definida positiva, 25×25) */
+function solve(A, b) {
+  const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < n; c++) {
+    let p = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    [M[c], M[p]] = [M[p], M[c]];
+    const d = M[c][c] || 1e-12;
+    for (let r = c + 1; r < n; r++) {
+      const f = M[r][c] / d;
+      if (f) for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k];
+    }
+  }
+  const x = new Array(n).fill(0);
+  for (let r = n - 1; r >= 0; r--) {
+    let s = M[r][n];
+    for (let k = r + 1; k < n; k++) s -= M[r][k] * x[k];
+    x[r] = s / (M[r][r] || 1e-12);
+  }
+  return x;
+}
+
+/* Nuevo modelo tras ver un plano corregido. Es una actualización bayesiana
+   (aproximación de Laplace): lo aprendido hasta ahora es un punto de partida
+   con su confianza H; los bordes del plano nuevo tiran de los pesos según
+   pesen frente a esa confianza, y la confianza crece con ellos. Así no hace
+   falta guardar los planos anteriores: basta con 25 pesos y una matriz 25×25.
+   Cada plano cuenta con clases equilibradas (los muros pesan lo mismo que
+   los bordes sin muro). */
+export function learnFromMap(model, X, y, { weight = 1, mapId = "", name = "" } = {}) {
+  const n = X.length, pos = y.reduce((a, b) => a + b, 0);
+  if (!n || !pos || pos === n) throw new Error("Hacen falta bordes con muro y sin muro");
+  const sw = y.map(v => weight * (v ? n / (2 * pos) : n / (2 * (n - pos))));
+  const d = model.w.length + 1;
+  const theta0 = [model.bias, ...model.w];
+  let theta = theta0.slice();
+  let Hdata = null;
+  for (let it = 0; it < 12; it++) {
+    const g = theta.map((t, k) => model.H[k].reduce((s, h, j) => s + h * (theta[j] - theta0[j]), 0));
+    const Hd = Array.from({ length: d }, () => new Float64Array(d));
+    for (let i = 0; i < n; i++) {
+      const z = [1, ...X[i]];
+      let a = 0;
+      for (let k = 0; k < d; k++) a += theta[k] * z[k];
+      const p = sigmoid(a), r = sw[i] * (p - y[i]), q = sw[i] * p * (1 - p);
+      for (let k = 0; k < d; k++) {
+        g[k] += r * z[k];
+        if (!z[k]) continue;
+        const qk = q * z[k];
+        for (let j = k; j < d; j++) Hd[k][j] += qk * z[j];
+      }
+    }
+    for (let k = 0; k < d; k++) for (let j = 0; j < k; j++) Hd[k][j] = Hd[j][k];
+    const H = model.H.map((row, k) => row.map((v, j) => v + Hd[k][j]));
+    const step = solve(H, g);
+    theta = theta.map((t, k) => t - step[k]);
+    Hdata = Hd;
+    if (Math.max(...step.map(Math.abs)) < 1e-5) break;
+  }
+  const r3 = v => Math.round(v * 1e5) / 1e5;
+  return {
+    version: model.version || 1,
+    names: model.names,
+    bias: r3(theta[0]),
+    w: theta.slice(1).map(r3),
+    H: model.H.map((row, k) => row.map((v, j) => Math.round((v + Hdata[k][j]) * 1000) / 1000)),
+    maps: [...(model.maps || []), { id: mapId, name, at: Date.now(), edges: n, walls: pos }].slice(-200)
+  };
+}
+
+/* Todo lo necesario para enseñar con un plano: medir la imagen y comparar
+   con los muros que dejó el DM */
+export function trainingSet(data, W, H, grid, mapEdges, freeWalls, channels = 4) {
+  const m = measureWalls(data, W, H, grid, channels);
+  const rules = ruleWalls(m, { sensitivity: 0.5 });
+  const X = edgeFeatures(m, rules.floor, rules.score, rules.edges, MODEL.names);
+  const y = labelEdges(m, mapEdges, freeWalls);
+  return { X, y };
+}
+
+/* El modelo que se usa si llega uno guardado con otros rasgos: el base */
+export const usableModel = model =>
+  model && Array.isArray(model.w) && Array.isArray(model.H) && JSON.stringify(model.names) === JSON.stringify(MODEL.names)
+    ? model : MODEL;
+export { BASE_MODEL };
+
+/* La propuesta: muros del modelo aprendido; diagonales y puertas, de las
+   reglas (con tan pocas puertas de ejemplo, el modelo no las distingue de un
+   plano a otro). La sensibilidad mueve el umbral del modelo. */
+export function classifyWalls(m, { sensitivity = 0.5, model = MODEL } = {}) {
+  model = usableModel(model);
+  const rules = ruleWalls(m, { sensitivity: 0.5 });
+  const prob = wallProbabilities(m, rules.floor, rules.score, model, rules.edges);
+  const thr = 0.75 - 0.5 * clamp(sensitivity, 0, 1);
+  const out = new Map();
+  const cols = m.cols;
+  const isFloor = i => !!rules.floor[i];
+  const inner = e => e.dir === "v"
+    ? isFloor(e.cy * cols + e.cx - 1) && isFloor(e.cy * cols + e.cx)
+    : isFloor((e.cy - 1) * cols + e.cx) && isFloor(e.cy * cols + e.cx);
+  const byKey = new Map(m.edges.map((e, i) => [e.key, i]));
+  const along = (e, s) => byKey.get(e.dir === "v" ? `${e.cx},${e.cy + s},v` : `${e.cx + s},${e.cy},h`);
+  /* Bordes del suelo y fuera de él: lo que diga el modelo */
+  /* Con máscara de suelo, las reglas aciertan bien el contorno de las salas:
+     se parte de sus paredes y se añade lo que el modelo da como seguro. Sin
+     máscara (todo cuenta como suelo, una ciudad) no se sabe qué está dentro
+     de una sala y manda el modelo en todos los bordes. Así salió mejor en los
+     cinco planos de prueba: F1 0,62 de media, frente a 0,46 de las reglas y
+     0,61 del modelo solo (cada plano evaluado con un modelo que no lo vio). */
+  const masked = !!rules.stats.floorMask;
+  if (masked) {
+    const thrAdd = Math.min(0.95, thr + 0.1);
+    for (const [k, t] of Object.entries(rules.edges)) if (t === "wall" && !/,(d|a)$/.test(k)) out.set(k, "wall");
+    const touchesFloor = e => e.dir === "v"
+      ? isFloor(e.cy * cols + e.cx - 1) || isFloor(e.cy * cols + e.cx)
+      : isFloor((e.cy - 1) * cols + e.cx) || isFloor(e.cy * cols + e.cx);
+    m.edges.forEach((e, i) => {
+      if (prob[i] < thrAdd || inner(e)) return;
+      /* En plena roca (ningún lado es suelo) hace falta más seguridad */
+      if (!touchesFloor(e) && prob[i] < Math.min(0.97, thr + 0.3)) return;
+      out.set(e.key, "wall");
+    });
+  } else m.edges.forEach((e, i) => { if (prob[i] >= thr) out.set(e.key, "wall"); });
+
+  /* Dentro de una sala casi nunca hay paredes: solo tabiques rectos de al
+     menos 3 casillas enganchados a otra pared (o muy largos), y con más
+     seguridad que en el borde */
+  const hit = i => masked && i !== undefined && prob[i] >= thr + 0.1 && inner(m.edges[i]);
+  const runs = [];
+  m.edges.forEach((e, i) => {
+    if (!hit(i) || hit(along(e, -1))) return;
+    const run = [i];
+    for (let j = along(e, 1); hit(j); j = along(m.edges[j], 1)) run.push(j);
+    if (run.length >= 3) runs.push(run);
+  });
+  const vertsOf = key => {
+    const [x, y, d] = key.split(","), cx = +x, cy = +y;
+    return d === "v" ? [`${cx},${cy}`, `${cx},${cy + 1}`] : [`${cx},${cy}`, `${cx + 1},${cy}`];
+  };
+  /* Un tabique vale si uno de sus extremos toca una pared (un rectángulo
+     suelto en mitad de la sala es una alfombra o una mesa), o si es muy largo */
+  const touched = new Set();
+  for (const k of out.keys()) for (const v of vertsOf(k)) touched.add(v);
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const run of runs) {
+      if (run.taken) continue;
+      const a = vertsOf(m.edges[run[0]].key)[0], b = vertsOf(m.edges[run[run.length - 1]].key)[1];
+      if (!touched.has(a) && !touched.has(b) && run.length < 8) continue;
+      run.taken = changed = true;
+      for (const j of run) { out.set(m.edges[j].key, "wall"); for (const v of vertsOf(m.edges[j].key)) touched.add(v); }
+    }
+  }
+  const cellOf = key => key.split(",").slice(0, 2).map(Number);
+  for (const [k, t] of Object.entries(rules.edges)) {
+    if (/,(d|a)$/.test(k)) {
+      /* La diagonal sustituye al escalón recto de esa casilla */
+      const [x, y] = cellOf(k);
+      for (const q of [`${x},${y},h`, `${x + 1},${y},v`, `${x},${y + 1},h`, `${x},${y},v`]) out.delete(q);
+      out.set(k, t);
+    } else if (t === "door") out.set(k, "door");
+  }
+  const ends = key => {
+    const [x, y, dir] = key.split(","), cx = +x, cy = +y;
+    if (dir === "v") return [`${cx},${cy}`, `${cx},${cy + 1}`];
+    if (dir === "h") return [`${cx},${cy}`, `${cx + 1},${cy}`];
+    if (dir === "d") return [`${cx},${cy}`, `${cx + 1},${cy + 1}`];
+    return [`${cx + 1},${cy}`, `${cx},${cy + 1}`];
+  };
+
+  /* Trozos sueltos: grupos de menos de 3 muros sin tocar nada más */
+  const at = new Map();
+  for (const k of out.keys()) for (const v of ends(k)) (at.get(v) || at.set(v, []).get(v)).push(k);
+  const seen = new Set();
+  for (const k of [...out.keys()]) {
+    if (seen.has(k)) continue;
+    const comp = [k];
+    seen.add(k);
+    for (let i = 0; i < comp.length; i++)
+      for (const v of ends(comp[i])) for (const o of at.get(v)) if (!seen.has(o)) { seen.add(o); comp.push(o); }
+    if (comp.length < 3) for (const c of comp) out.delete(c);
+  }
+  const walls = masked ? smoothStairs(out, rules.floor, m.cols, m.rows, m.cells) : [];
+  const edges = Object.fromEntries(out);
+  const vals = Object.entries(edges);
+  return {
+    edges, walls, floor: rules.floor, score: rules.score, rules: rules.edges,
+    stats: {
+      ...rules.stats,
+      walls: vals.filter(([, t]) => t === "wall").length,
+      doors: vals.filter(([, t]) => t === "door").length,
+      diagonals: vals.filter(([k]) => /,(d|a)$/.test(k)).length,
+      free: walls.length
+    }
+  };
+}
+
+/* ---------- Escaleras a muros libres ----------
+   Una sala redonda o una pared girada sale en la cuadrícula como una
+   escalera de bordes. Se recorren las cadenas de muros (de cruce a cruce),
+   se simplifican con Ramer-Douglas-Peucker y cada tramo resultante que no es
+   horizontal ni vertical, y cruza al menos dos casillas a lo ancho y a lo
+   alto, pasa a ser un muro libre en lugar de su escalera. Los tramos rectos
+   siguen siendo bordes de casilla: una sala cuadrada no cambia. Modifica
+   «out» y devuelve los muros libres. */
+function rdpIdx(pts, eps, a = 0, b = pts.length - 1, keep = new Set([a, b])) {
+  let idx = -1, max = 0;
+  const [x1, y1] = pts[a], [x2, y2] = pts[b], L = Math.hypot(x2 - x1, y2 - y1);
+  for (let i = a + 1; i < b; i++) {
+    const [x, y] = pts[i];
+    const d = L ? Math.abs((x2 - x1) * (y1 - y) - (x1 - x) * (y2 - y1)) / L : Math.hypot(x - x1, y - y1);
+    if (d > max) { max = d; idx = i; }
+  }
+  if (idx >= 0 && max > eps) { keep.add(idx); rdpIdx(pts, eps, a, idx, keep); rdpIdx(pts, eps, idx, b, keep); }
+  return keep;
+}
+
+function smoothStairs(out, floor, cols, rows, cells, eps = 0.75) {
+  const P = v => v.split(",").map(Number);
+  const endsOf = key => {
+    const [x, y, d] = key.split(","), cx = +x, cy = +y;
+    if (d === "v") return [`${cx},${cy}`, `${cx},${cy + 1}`];
+    if (d === "h") return [`${cx},${cy}`, `${cx + 1},${cy}`];
+    if (d === "d") return [`${cx},${cy}`, `${cx + 1},${cy + 1}`];
+    return [`${cx + 1},${cy}`, `${cx},${cy + 1}`];
+  };
+  const keys = [...out.keys()].filter(k => out.get(k) === "wall");
+  const at = new Map();
+  for (const k of keys) for (const v of endsOf(k)) (at.get(v) || at.set(v, []).get(v)).push(k);
+  const used = new Set(), free = [];
+  const walk = (startV, firstKey) => {
+    const verts = [startV], ks = [];
+    let v = startV, k = firstKey;
+    while (k && !used.has(k)) {
+      used.add(k); ks.push(k);
+      const [a, b] = endsOf(k);
+      v = a === v ? b : a;
+      verts.push(v);
+      const next = at.get(v) || [];
+      if (next.length !== 2) break;
+      k = next.find(q => q !== k);
+    }
+    return { verts, ks };
+  };
+  /* Escalera de verdad: avanza siempre hacia el mismo lado en x y en y, con
+     peldaños de 2 casillas como mucho (una pared curva o girada da peldaños
+     cortos; uno largo es una esquina de verdad) */
+  const isStair = (pts, i, j) => {
+    const sx = Math.sign(pts[j][0] - pts[i][0]), sy = Math.sign(pts[j][1] - pts[i][1]);
+    let run = 0, dir = null;
+    for (let q = i + 1; q <= j; q++) {
+      const ddx = pts[q][0] - pts[q - 1][0], ddy = pts[q][1] - pts[q - 1][1];
+      if ((ddx && Math.sign(ddx) !== sx) || (ddy && Math.sign(ddy) !== sy)) return false;
+      const d = ddx && ddy ? "o" : ddx ? "x" : "y";
+      run = d === dir ? run + 1 : 1;
+      dir = d;
+      if (run > 2) return false;
+    }
+    return true;
+  };
+  /* Contorno de una sala: a un lado del trazo hay suelo y al otro no */
+  const floorAt = (x, y) => {
+    const cx = Math.floor(x), cy = Math.floor(y);
+    return cx >= 0 && cy >= 0 && cx < cols && cy < rows ? !!floor[cy * cols + cx] : false;
+  };
+  const isRim = (a, b) => {
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1]), nx = -(b[1] - a[1]) / L, ny = (b[0] - a[0]) / L;
+    let left = 0, right = 0, n = 0;
+    for (let t = 0.1; t < 0.95; t += 0.8 / Math.max(2, Math.round(L * 2))) {
+      const x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t;
+      if (floorAt(x + nx * 0.8, y + ny * 0.8)) left++;
+      if (floorAt(x - nx * 0.8, y - ny * 0.8)) right++;
+      n++;
+    }
+    const fl = left / n, fr = right / n;
+    if (!((fl >= 0.7 && fr <= 0.3) || (fr >= 0.7 && fl <= 0.3))) return false;
+    /* Y en la imagen los dos lados no se parecen (piedra frente a suelo): si
+       son del mismo color, el suelo está mal detectado y no hay pared */
+    const colorAt = (x, y) => {
+      const cx = Math.floor(x), cy = Math.floor(y);
+      return cx >= 0 && cy >= 0 && cx < cols && cy < rows ? cells[cy * cols + cx] : null;
+    };
+    const L2 = [], R2 = [];
+    for (let t = 0.1; t < 0.95; t += 0.2) {
+      const x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t;
+      const cl = colorAt(x + nx * 0.8, y + ny * 0.8), cr = colorAt(x - nx * 0.8, y - ny * 0.8);
+      if (cl && cr) { L2.push(cl); R2.push(cr); }
+    }
+    if (!L2.length) return false;
+    const mean = cs => [0, 1, 2].map(k => cs.reduce((t, c) => t + c[k], 0) / cs.length);
+    return dist3(mean(L2), mean(R2)) >= 35;
+  };
+  const chains = [];
+  for (const [v, list] of at) if (list.length !== 2) for (const k of list) if (!used.has(k)) chains.push(walk(v, k));
+  for (const k of keys) if (!used.has(k)) chains.push(walk(endsOf(k)[0], k));   // lazos cerrados
+  for (const { verts, ks } of chains) {
+    if (ks.length < 3) continue;
+    const pts = verts.map(P);
+    const keep = [...rdpIdx(pts, eps)].sort((a, b) => a - b);
+    let line = null;
+    for (let n = 1; n < keep.length; n++) {
+      const i = keep[n - 1], j = keep[n];
+      const dx = Math.abs(pts[j][0] - pts[i][0]), dy = Math.abs(pts[j][1] - pts[i][1]);
+      const oblique = dx >= 2 && dy >= 2 && j - i >= 4 && isStair(pts, i, j) && isRim(pts[i], pts[j]);
+      if (!oblique) { line = null; continue; }
+      for (let q = i; q < j; q++) out.delete(ks[q]);
+      if (line && line[line.length - 1] === i) { line.push(j); free[free.length - 1].points.push(pts[j]); }
+      else { line = [i, j]; free.push({ type: "wall", points: [pts[i], pts[j]] }); }
+    }
+  }
+  return free;
 }
 
 /* Todo de una vez, para quien tenga los píxeles a mano */
