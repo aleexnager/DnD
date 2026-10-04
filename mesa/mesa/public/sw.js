@@ -34,8 +34,11 @@ const SHELL = [
   "js/dice-panel.js", "js/attacks.js", "js/attacks-core.js", "js/char-editor.js",
   "js/dm.js", "js/player.js", "js/screen.js",
   "js/engine.js", "js/local.js", "js/local-host.js", "js/local-worker.js",
-  "js/spells.js", "js/spellbook.js", "js/statblock.js", "js/sheet.js", "js/list-editor.js", "js/sound-core.js", "js/ambient.js", "js/voice.js", "js/portals.js",
-  "js/gridfind.js", "js/gridfit.js", "js/wallfind.js", "js/wallmodel.js", "js/freewalls.js"
+  "js/spells.js", "js/spellbook.js", "js/statblock.js", "js/sheet.js", "js/list-editor.js", "js/sound-core.js", "js/ambient.js", "js/creador.js", "js/creador-datos.js", "js/voice.js", "js/portals.js",
+  "js/gridfind.js", "js/gridfit.js", "js/wallfind.js", "js/wallmodel.js", "js/freewalls.js",
+  /* Siluetas del creador de personajes */
+  ...["barbaro", "bardo", "clerigo", "druida", "guerrero", "monje", "paladin", "explorador", "picaro", "hechicero", "brujo", "mago",
+    "humano", "elfo", "enano", "mediano", "draconido", "gnomo", "semielfo", "semiorco", "tiefling"].map(n => `art/creador/${n}.svg`)
 ].map(p => new URL(p, BASE).href);
 
 self.addEventListener("install", event => {

@@ -9,6 +9,7 @@ import { store, onState, onStatus, onPresence, op, patchChar, leave } from "./ne
 import { dicePanel, renderLog, throwDice, tellTable } from "./dice-panel.js";
 import { openAttacks, areaAttacks, slotsLeft, shapeLabel } from "./attacks.js";
 import { openCharEditor, openConditions } from "./char-editor.js";
+import { openBuilder } from "./creador.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
 import { sheetTabsHTML, handleSheetAct } from "./sheet.js";
@@ -514,7 +515,7 @@ function bindActions(root) {
     if (r && dc) tellTable(`${c ? c.name : store.session.name}: ${r.total >= dc ? "supera" : "falla"} ${b.dataset.label} (CD ${dc})`);
     op("request.done", { id: b.dataset.ask, charId: c ? c.id : "" });
   });
-  on(root, "click", "[data-new]", () => openCharEditor(null, { isDM: false }));
+  on(root, "click", "[data-new]", () => openBuilder({ onManual: () => openCharEditor(null, { isDM: false }) }));
 
   on(root, "click", "[data-act]", (e, b) => {
     const c = me();

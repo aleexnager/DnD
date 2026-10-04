@@ -9,6 +9,7 @@ import { feetChars, nextRoomId } from "./los.js";
 import { store, onState, onPresence, onStatus, op, patchChar, patchSession, patchMap, uploadImage, leave, lobby } from "./net.js";
 import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret } from "./dice-panel.js";
 import { openCharEditor, openConditions } from "./char-editor.js";
+import { openBuilder } from "./creador.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
 import { openGridFit, openWallFit, teachFromMap, forgetLearned, learnedCount, exportLearned, importLearned } from "./gridfit.js";
@@ -116,7 +117,7 @@ export function mountDM(root) {
     root.querySelectorAll("[data-tab]").forEach(x => x.setAttribute("aria-selected", String(x === b)));
     render();
   });
-  $("#addBtn", root).addEventListener("click", () => openCharEditor(null, {}));
+  $("#addBtn", root).addEventListener("click", newCharacter);
   $("#bestiaryBtn", root).addEventListener("click", () => toggleDrawer());
   $("#combatBtn", root).addEventListener("click", toggleCombat);
   $("#restBtn", root).addEventListener("click", openRest);
@@ -132,6 +133,9 @@ export function mountDM(root) {
   bindKeys();
   render();
 }
+
+/* Personaje nuevo: el creador paso a paso, o la ficha a mano para un PNJ rápido */
+function newCharacter() { openBuilder({ onManual: () => openCharEditor(null, {}) }); }
 
 /* ---------- Presencia ---------- */
 function renderPresence(list = store.presence) {
@@ -476,7 +480,7 @@ function bindTable(root) {
 
     switch (act) {
       case "sheetTab": cardTabs.set(c.id, btn.dataset.tabId); return render();
-      case "add": return openCharEditor(null, {});
+      case "add": return newCharacter();
       case "fold":
         openCards.has(c.id) ? openCards.delete(c.id) : openCards.add(c.id);
         return render();
@@ -2037,7 +2041,7 @@ function bindKeys() {
     const meta = e.ctrlKey || e.metaKey;
     if (meta && e.key.toLowerCase() === "k") { e.preventDefault(); toggleCombat(); }
     else if (meta && e.key.toLowerCase() === "b") { e.preventDefault(); toggleDrawer(); }
-    else if (meta && e.key.toLowerCase() === "n") { e.preventDefault(); openCharEditor(null, {}); }
+    else if (meta && e.key.toLowerCase() === "n") { e.preventDefault(); newCharacter(); }
     else if (e.key === " " || e.key === "Enter" || (meta && e.key === "ArrowRight")) { e.preventDefault(); step(1); }
     else if (meta && e.key.toLowerCase() === "z") { e.preventDefault(); op("undo"); toast("Deshecho"); }
     else if (e.key === "Escape" && mapView) { mapView.selection.clear(); mapView.pending = null; mapView.draw(); }
