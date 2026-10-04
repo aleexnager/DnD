@@ -65,11 +65,16 @@ export function dicePanel({ isDM = false } = {}) {
         ${[4, 6, 8, 10, 12, 20, 100].map(d => `<button class="die" data-die="${d}">d${d}</button>`).join("")}
         <button class="die" data-die="20" data-many="2">2d20</button>
       </div>
-      <div class="adv">
-        <button data-mode="dis" aria-pressed="false">Desventaja</button>
-        <button data-mode="normal" aria-pressed="true">Normal</button>
-        <button data-mode="adv" aria-pressed="false">Ventaja</button>
-        ${isDM ? `<button data-secret aria-pressed="false" title="En secreto: nadie más lo ve" aria-label="En secreto">${icon("eyeOff", 15)}<span>Secreto</span></button>` : ""}
+      <div class="roll-opts">
+        <p class="roll-opts-label">Cómo se tira</p>
+        <div class="adv" role="group" aria-label="Cómo se tira">
+          <button data-mode="dis" aria-pressed="false">Desventaja</button>
+          <button data-mode="normal" aria-pressed="true">Normal</button>
+          <button data-mode="adv" aria-pressed="false">Ventaja</button>
+        </div>
+        ${isDM ? `<button class="secret-toggle" data-secret aria-pressed="false" title="En secreto: nadie más lo ve">
+          ${icon("eyeOff", 16)}<span class="secret-text"><b>Tirada secreta</b><small>Solo la ves tú</small></span>
+          <span class="switch"><i></i></span></button>` : ""}
       </div>
       <form class="dice-form">
         <input name="f" placeholder="1d20+5, 2d6, 8d6…" aria-label="Fórmula de dados" autocomplete="off">
@@ -80,7 +85,10 @@ export function dicePanel({ isDM = false } = {}) {
         <button data-filter="roll" aria-pressed="false">Tiradas</button>
         <button data-filter="chat" aria-pressed="false">Charla</button>
       </div>
-      <div class="log" id="log"></div>
+      <div class="log-wrap">
+        <div class="log" id="log" aria-live="polite"></div>
+        <button class="log-new hidden" data-log-new type="button">${icon("down", 14)}<span>Mensajes nuevos</span></button>
+      </div>
       <div class="whisper-to hidden" id="whisperTo"></div>
       <form class="chat-form">
         <button type="button" class="icon-btn" data-whisper title="Susurrar a alguien en concreto" aria-pressed="false">${icon("whisper")}</button>
@@ -129,7 +137,7 @@ export function dicePanel({ isDM = false } = {}) {
   on(node, "click", "[data-filter]", (e, b) => {
     filter = b.dataset.filter;
     node.querySelectorAll("[data-filter]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-    renderLog(node.querySelector("#log"));
+    renderLog(node.querySelector("#log"), { toEnd: true });
   });
 
   const secretBtn = node.querySelector("[data-secret]");
@@ -176,15 +184,34 @@ function openWhisperPicker(done) {
 export const currentMode = () => mode;
 export const isSecret = () => secret;
 
-export function renderLog(host) {
+/* El registro va como cualquier chat: lo último abajo y lo anterior subiendo.
+   Si estás abajo, se queda abajo; si has subido a leer, no te mueve y avisa
+   de que hay mensajes nuevos. Lo que mandas tú siempre te lleva abajo. */
+export function renderLog(host, { toEnd = false } = {}) {
   const doc = store.doc;
   if (!host || !doc) return;
   const keep = e => filter === "todo" ? true
     : filter === "chat" ? e.kind === "chat"
     : e.kind === "roll" || e.kind === "attack";
-  const stick = host.scrollHeight - host.scrollTop - host.clientHeight < 60;
+  const list = doc.log.filter(keep).slice(-70);
+  const last = list[list.length - 1];
+  const newest = last ? String(last.id || last.ts) : "";
+  const first = host.dataset.newest === undefined;
+  const grew = !first && newest !== host.dataset.newest;
+  const atEnd = host.scrollHeight - host.scrollTop - host.clientHeight < 60;
+  const mine = grew && last && store.session && last.actor === store.session.name;
+  const pill = host.parentElement && host.parentElement.querySelector("[data-log-new]");
+  if (pill && !host.dataset.bound) {
+    host.dataset.bound = "1";
+    host.addEventListener("scroll", () => {
+      if (host.scrollHeight - host.scrollTop - host.clientHeight < 60) pill.classList.add("hidden");
+    }, { passive: true });
+    pill.addEventListener("click", () => { host.scrollTo({ top: host.scrollHeight, behavior: "smooth" }); pill.classList.add("hidden"); });
+  }
+  host.dataset.newest = newest;
+  if (!grew && !first && !toEnd) return;   // nada nuevo: no se repinta ni se mueve
 
-  host.innerHTML = doc.log.filter(keep).slice(-70).map(e => {
+  host.innerHTML = list.map(e => {
     const cls = [e.kind, e.crit ? "crit" : "", e.fumble ? "fumble" : "", e.secret ? "secret" : ""].join(" ");
     if (e.kind === "chat") {
       const mine = store.session && e.actor === store.session.name;
@@ -226,5 +253,8 @@ export function renderLog(host) {
     </div>`;
   }).join("");
 
-  if (stick) host.scrollTop = host.scrollHeight;
+  if (first || toEnd || atEnd || mine) {
+    host.scrollTop = host.scrollHeight;
+    if (pill) pill.classList.add("hidden");
+  } else if (grew && pill) pill.classList.remove("hidden");
 }

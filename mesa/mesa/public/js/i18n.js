@@ -674,6 +674,8 @@ const EN = {
   "Puntos de golpe": "Hit Points", "Actuales": "Current", "Máximos": "Max", "Temp.": "Temp",
   "Competencia": "Proficiency", "Desafío": "Challenge", "Recursos": "Resources",
   "Sin estados": "No conditions", "Salvaciones de muerte": "Death saves",
+  "Cómo se tira": "Roll mode", "Tirada secreta": "Secret roll", "Solo la ves tú": "Only you see it",
+  "Mensajes nuevos": "New messages",
 
   /* Pestañas de la ficha */
   "Ataque": "Attack", "Alcance": "Range", "Golpe/CD": "Hit/DC", "Acciones en combate": "Actions in combat",

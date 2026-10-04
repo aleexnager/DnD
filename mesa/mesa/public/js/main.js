@@ -166,7 +166,8 @@ async function gate(wanted) {
     }
   });
 
-  app().addEventListener("keydown", e => { if (e.key === "Enter") $("#go").click(); });
+  /* Solo mientras se está en la entrada: dentro de la partida, Intro es del chat */
+  app().addEventListener("keydown", e => { const go = $("#go"); if (e.key === "Enter" && go) go.click(); });
 }
 
 /* ---------- Instalar como aplicación ----------
