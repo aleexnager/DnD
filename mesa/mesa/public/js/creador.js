@@ -17,8 +17,8 @@ const ABIL = { str: "Fuerza", dex: "Destreza", con: "Constitución", int: "Intel
 const ABBR = { str: "FUE", dex: "DES", con: "CON", int: "INT", wis: "SAB", cha: "CAR" };
 const skillName = id => (SKILLS.find(s => s[0] === id) || [id, id])[1];
 const sign = n => (n >= 0 ? "+" : "") + n;
-const listJoin = l => l.length > 1 ? l.slice(0, -1).join(", ") + " y " + l[l.length - 1] : l.join("");
-const STEP_NAMES = { clase: "Clase", especie: "Especie", caracteristicas: "Características", trasfondo: "Trasfondo", conjuros: "Conjuros", equipo: "Equipo", ficha: "Ficha" };
+const listJoin = l => l.length > 1 ? l.slice(0, -1).join(", ") + " <span>y</span> " + l[l.length - 1] : l.join("");
+const STEP_NAMES = { clase: "Clase", especie: "Especie", caracteristicas: "Características", trasfondo: "Trasfondo", conjuros: "Conjuros", equipo: "Equipo", ficha: "Resumen" };
 const METHODS = [["estandar", "Serie estándar"], ["puntos", "Compra de puntos"], ["dados", "Tirar dados"], ["mano", "A mano"]];
 /* La silueta va de máscara sobre un color vivo. La ruta, absoluta: dentro de una
    variable CSS, una relativa se resolvería desde la hoja de estilos */
@@ -111,8 +111,8 @@ export function openBuilder({ onManual } = {}) {
         ${cards(CLASSES, st.classId, "class")}
         <aside class="bd-detail">${c ? `
           ${hero(c)}
-          ${facts([["Dado de golpe", "d" + c.die], ["Característica principal", c.primary.map(k => ABIL[k]).join(" o ")],
-            ["Salvaciones", c.saves.map(k => ABIL[k]).join(" y ")], ["Armaduras", esc(c.armor)]])}
+          ${facts([["Dado de golpe", "d" + c.die], ["Característica principal", c.primary.map(k => `<span>${ABIL[k]}</span>`).join(" <span>o</span> ")],
+            ["Salvaciones", c.saves.map(k => `<span>${ABIL[k]}</span>`).join(" <span>y</span> ")], ["Armaduras", esc(c.armor)]])}
           <h4 class="bd-sub">Rasgos de nivel 1</h4>${traitList(c.features)}
           <h4 class="bd-sub">Habilidades · elige ${c.choose} <span class="bd-count">${st.classSkills.length}/${c.choose}</span></h4>
           ${skillChips(c.from, st.classSkills, c.choose, "cskill")}`
@@ -121,7 +121,7 @@ export function openBuilder({ onManual } = {}) {
     },
     especie() {
       const s = sp();
-      const bonus = s ? Object.entries(s.bonus).map(([k, v]) => `${ABBR[k]} +${v}`).join(", ") + (s.freeBonus ? `, y +1 a ${s.freeBonus} más` : "") : "";
+      const bonus = s ? Object.entries(s.bonus).map(([k, v]) => `<span>${ABBR[k]} +${v}</span>`).join(", ") + (s.freeBonus ? ` <span>y +1 a otras ${s.freeBonus}</span>` : "") : "";
       return `<div class="bd-split">
         ${cards(SPECIES, st.speciesId, "species")}
         <aside class="bd-detail">${s ? `
@@ -163,12 +163,14 @@ export function openBuilder({ onManual } = {}) {
       return `<div class="bd-col">
         <div class="bd-methods" role="group" aria-label="Cómo se reparten">${METHODS.map(([k, l]) =>
           `<button type="button" data-method="${k}" aria-pressed="${st.method === k}">${l}</button>`).join("")}</div>
-        <p class="bd-note">${{
+        <p class="bd-note"><span>${{
           estandar: "Reparte 15, 14, 13, 12, 10 y 8 entre las seis características.",
-          puntos: `Cada característica empieza en 8 y sube hasta 15. Gastas <b class="tnum">${spent()}</b> de ${POINTS} puntos.`,
+          puntos: "Cada característica empieza en 8 y sube hasta 15.",
           dados: "Se tiran 4d6 seis veces y se quita el dado más bajo de cada tirada. Luego repartes los resultados.",
           mano: "Escribe las puntuaciones que ya tengas, de 3 a 18."
-        }[st.method]}${c ? ` Para ${esc(c.name.toLowerCase())}, lo más importante es ${c.primary.map(k => ABIL[k]).join(" o ")} (marcada).` : ""}</p>
+        }[st.method]}</span>
+        ${st.method === "puntos" ? `<span>Gastas</span> <b class="tnum">${spent()}</b> <span>de ${POINTS} puntos.</span>` : ""}
+        ${c ? `<span class="bd-key">${c.primary.map(k => `<b>${ABIL[k]}</b>`).join(" <span>o</span> ")} <span>es lo más importante para tu clase (marcada).</span></span>` : ""}</p>
         ${st.method === "dados" ? `<div class="bd-rolls"><button type="button" class="btn sm" data-roll>${withIcon("dice", st.rolls.length ? "Volver a tirar" : "Tirar los dados", 15)}</button>
           ${st.rolls.map(v => `<span class="bd-roll tnum">${v}</span>`).join("")}</div>` : ""}
         <div class="bd-abils">${ABIL_KEYS.map(box).join("")}</div>
@@ -182,7 +184,8 @@ export function openBuilder({ onManual } = {}) {
         <div class="bd-bgs">${BACKGROUNDS.map(x => `<button type="button" class="bd-bg" data-bg="${x.id}" aria-pressed="${x.id === st.bgId}">
           <b>${esc(x.name)}</b><small>${esc(x.pitch)}</small>
           ${x.skills.length ? `<span class="bd-bg-skills">${x.skills.map(skillName).map(esc).join(" · ")}</span>` : ""}</button>`).join("")}</div>
-        ${dup.length ? `<p class="bd-note">${icon("info", 14)} ${listJoin(dup.map(skillName).map(esc))} ya ${dup.length > 1 ? "las tenías" : "la tenías"}: elige ${dup.length > 1 ? "otras" : "otra"} a cambio.</p>` : ""}
+        ${dup.length ? `<p class="bd-note">${icon("info", 14)} ${listJoin(dup.map(k => `<b>${esc(skillName(k))}</b>`))}
+          <span>${dup.length > 1 ? "ya las tenías: elige otras a cambio." : "ya la tenías: elige otra a cambio."}</span></p>` : ""}
         ${picks ? `<h4 class="bd-sub">${b.free ? "Habilidades de tu trasfondo" : "Habilidades a cambio"} <span class="bd-count">${st.bgSkills.length}/${picks}</span></h4>
           ${skillChips(SKILLS.map(x => x[0]), st.bgSkills, picks, "bskill", [...mine, ...b.skills])}` : ""}
         <h4 class="bd-sub">Tus habilidades</h4>
@@ -193,7 +196,7 @@ export function openBuilder({ onManual } = {}) {
       const c = cls();
       const list = c.spells.map(id => SPELL_LIBRARY.find(s => s.id === id)).filter(Boolean);
       return `<div class="bd-col">
-        <p class="bd-note">Elige hasta <b>${c.pick}</b> conjuros para empezar. Luego puedes cambiarlos desde «Conjuros» en la ficha.
+        <p class="bd-note"><span>Elige hasta</span> <b>${c.pick}</b> <span>conjuros para empezar. Luego puedes cambiarlos desde «Conjuros» en la ficha.</span>
           <span class="bd-count">${st.spells.length}/${c.pick}</span></p>
         <div class="bd-spells">${list.map(s => {
           const on = st.spells.includes(s.id);
@@ -208,21 +211,22 @@ export function openBuilder({ onManual } = {}) {
       const c = cls(), sc = finalScores(choice()), ch = buildCharacter(choice());
       const armor = ARMOR[c.kit.armor];
       const shield = c.kit.items.some(([n, , , eq]) => eq && /escudo/i.test(n));
-      const how = c.kit.armor === "ninguna"
-        ? (c.unarmored === "con" ? "10 + DES + CON, sin armadura" : c.unarmored === "wis" ? "10 + DES + SAB, sin armadura"
-          : c.unarmored === "draconic" ? "13 + DES, por tu linaje" : "10 + DES, sin armadura")
-        : `${armor.name.toLowerCase()} ${armor.base}${armor.dex === 0 ? "" : armor.dex ? " + DES (máx. 2)" : " + DES"}${c.acBonus ? " + 1 por Defensa" : ""}`;
+      const parts = c.kit.armor === "ninguna"
+        ? (c.unarmored === "con" ? ["Sin armadura", "10 + DES + CON"] : c.unarmored === "wis" ? ["Sin armadura", "10 + DES + SAB"]
+          : c.unarmored === "draconic" ? ["Linaje dracónico", "13 + DES"] : ["Sin armadura", "10 + DES"])
+        : [armor.name, String(armor.base), ...(armor.dex === 0 ? [] : [armor.dex ? "+ DES (máx. 2)" : "+ DES"]), ...(c.acBonus ? ["+ 1 por Defensa"] : [])];
+      if (shield) parts.push("+ 2 del escudo");
       return `<div class="bd-col">
         <div class="bd-statline">
           <span class="bd-stat"><small>Clase de armadura</small><b class="tnum">${armorClass(c, sc)}</b></span>
           <span class="bd-stat"><small>Puntos de golpe</small><b class="tnum">${ch.hp}</b></span>
           <span class="bd-stat"><small>Velocidad</small><b class="tnum">${ch.speed}</b></span>
         </div>
-        <p class="bd-note">CA: ${how}${shield ? " + 2 del escudo" : ""}.</p>
+        <p class="bd-note bd-ac">${parts.map(x => `<span>${esc(x)}</span>`).join(" ")}</p>
         <h4 class="bd-sub">Ataques</h4>
         <div class="bd-table">${ch.attacks.map(a => `<div><b>${esc(a.name)}</b><span>${esc(a.range)}</span><span class="tnum">${sign(a.atk)}</span><span class="tnum">${esc(a.damage)} ${esc(a.type)}</span></div>`).join("")}</div>
         <h4 class="bd-sub">Equipo</h4>
-        <div class="bd-chips">${ch.items.map(i => `<span class="bd-chip static ${i.equipped ? "on" : ""}">${i.qty > 1 ? i.qty + " × " : ""}${esc(i.name)}</span>`).join("")}</div>
+        <div class="bd-chips">${ch.items.map(i => `<span class="bd-chip static ${i.equipped ? "on" : ""}">${i.qty > 1 ? `<span class="tnum">${i.qty} ×</span> ` : ""}<span>${esc(i.name)}</span></span>`).join("")}</div>
       </div>`;
     },
     ficha() {
@@ -233,7 +237,7 @@ export function openBuilder({ onManual } = {}) {
           <label class="field"><span>Nombre</span><input data-f="name" value="${esc(st.name)}" placeholder="Cómo se llama tu personaje" maxlength="40"></label>
           <div class="cols2">
             <label class="field"><span>Alineamiento</span><select data-f="alignment"><option value="">—</option>${ALIGNMENTS.map(a =>
-              `<option ${a === st.alignment ? "selected" : ""}>${a}</option>`).join("")}</select></label>
+              `<option value="${esc(a)}" ${a === st.alignment ? "selected" : ""}>${esc(a)}</option>`).join("")}</select></label>
             <label class="field"><span>Jugador</span><input data-f="player" value="${esc(st.player)}" placeholder="Quién lo lleva"></label>
           </div>
           <div class="bd-look">
@@ -253,7 +257,7 @@ export function openBuilder({ onManual } = {}) {
             <span class="bd-stat"><small>Velocidad</small><b class="tnum">${ch.speed}</b></span>
           </div>
           <div class="bd-mini-abils">${ABIL_KEYS.map(k => `<span><small>${ABBR[k]}</small><b class="tnum">${sign(modOf(ch[k]))}</b><i class="tnum">${ch[k]}</i></span>`).join("")}</div>
-          <p class="bd-note">${ch.skills.map(skillName).map(esc).join(", ")}</p>
+          <div class="bd-chips">${ch.skills.map(k => `<span class="bd-chip static">${esc(skillName(k))}</span>`).join("")}</div>
         </aside>
       </div>`;
     }
