@@ -380,9 +380,38 @@ ordenador.
 
 ## Mapa
 
-Cada mapa tiene su imagen de fondo, su cuadrícula, sus muros y su niebla. Al
-cargar una imagen, las filas se ajustan solas a su proporción para que el plano
-no salga deformado.
+Cada mapa tiene su imagen de fondo, su cuadrícula, sus muros y su niebla.
+
+Al **cargar un plano**, Mesa busca sola la cuadrícula que trae dibujada
+(tamaño de casilla, dónde empieza, columnas y filas) y la enseña encima de la
+imagen para confirmarla o corregirla: se puede arrastrar, cambiar de tamaño o
+probar «casilla al doble» y «a la mitad». Después **propone los muros y las
+puertas** sobre el plano, con un control de sensibilidad, para revisarlos
+antes de ponerlos. Es una propuesta: se corrige con las herramientas de
+siempre. Las dos ventanas están también en los ajustes del mapa.
+
+### La propuesta de muros aprende de tus planos
+
+Cuando los muros de un plano estén bien puestos (corregidos o a mano), en
+**Ajustes del mapa → Enseñar con este plano** la propuesta aprende de ellos
+para los planos siguientes. Se nota sobre todo con planos del mismo estilo o
+del mismo dibujante. Lo aprendido vale para todas las partidas de ese
+ordenador (en la versión de prueba, para ese navegador).
+
+Mesa guarda los **planos enseñados** (imagen, cuadrícula, muros y puertas),
+así que no hay que volver a enseñarlos nunca:
+
+- **Al actualizar Mesa** a una versión nueva, conserva la carpeta `data/`
+  (ahí está `wallmodel.json`). Si la versión nueva cambia la forma de
+  proponer muros, vuelve a aprender sola de todos los planos enseñados la
+  primera vez que propone muros.
+- **Para llevártelo a otro ordenador**, o si vas a empezar con una carpeta
+  `data/` vacía: **Exportar** da un archivo
+  `mesa-planos-ensenados-AAAA-MM-DD.json` con todos los planos enseñados
+  (imágenes incluidas); en el otro Mesa, **Importar** ese archivo y aprende de
+  todos de una vez. Importar dos veces el mismo archivo no duplica nada.
+- **Olvidar lo aprendido** vuelve a la propuesta de serie y borra los planos
+  enseñados: exporta antes si quieres conservarlos.
 
 - **Fichas** arrastra por las casillas. Al arrastrar se pinta **hasta dónde
   llega** con la velocidad que le quede, rodeando muros, y un contador dice
@@ -410,7 +439,13 @@ no salga deformado.
   visión y es pared; abierta deja ver y pasar, también por su casilla si es
   diagonal. En el plano se ven como un bloque: macizo si está cerrada y hueco
   si está abierta.
-- **Borrar** quita muros, diagonales y puertas.
+- **Muro libre**, a mano alzada como **Dibujar**, para paredes redondas,
+  cuevas o edificios girados que no siguen la cuadrícula (con `Mayús`, en
+  línea recta). Es un muro como los demás: corta la visión y el paso, separa
+  salas, **Puerta** convierte en puerta el trozo de una casilla que pulses (y
+  luego la abre y la cierra) y **Borrar** quita solo el trozo por el que
+  pasas. A los jugadores solo les llega lo que ya han visto.
+- **Borrar** quita muros, diagonales, muros libres y puertas.
 - **Difícil** pinta terreno difícil (escombros, barro, maleza): **entrar en
   esas casillas cuesta el doble**. Se ve con un rayado suave en todas las
   pantallas, el alcance que se pinta al arrastrar ya lo descuenta, y el
@@ -742,8 +777,9 @@ enseñaría por dónde ha venido.
 
 ## Dónde viven los datos
 
-En la carpeta `data/` junto al programa: `mesa.json` con la partida e `images/`
-con los planos y los retratos. Se guarda solo, unas décimas después de cada
+En la carpeta `data/` junto al programa: `mesa.json` con la partida, `images/`
+con los planos y los retratos, y `wallmodel.json` con lo que ha aprendido la
+propuesta de muros y los planos con los que se enseñó. Se guarda solo, unas décimas después de cada
 cambio, y sobrevive a que cierres la ventana.
 
 Desde **⋯ → Guardar copia de la partida** te llevas un `.json` con todo, y

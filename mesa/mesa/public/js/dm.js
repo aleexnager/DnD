@@ -11,7 +11,7 @@ import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret } fro
 import { openCharEditor, openConditions } from "./char-editor.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
-import { openGridFit, openWallFit, teachFromMap, forgetLearned, learnedCount } from "./gridfit.js";
+import { openGridFit, openWallFit, teachFromMap, forgetLearned, learnedCount, exportLearned, importLearned } from "./gridfit.js";
 import { langPicker } from "./i18n.js";
 import { icon, withIcon } from "./icons.js";
 import { rollHitPoints } from "./dice.js";
@@ -1479,9 +1479,18 @@ function openMapSettings(map) {
       <button type="button" class="btn sm" id="fitGrid">Encajar cuadrícula con el plano</button>
       <button type="button" class="btn sm" id="fitWalls">Muros y puertas del plano</button>
     </div>
+    <fieldset>
+      <legend>Lo aprendido para proponer muros</legend>
+      <p class="hint" id="learnedInfo" style="margin:0 0 10px">…</p>
+      <div class="row">
+        <button type="button" class="btn sm" id="teachWalls" title="Cuando los muros de este plano estén bien puestos, la propuesta aprende de ellos para los próximos planos">Enseñar con este plano</button>
+        <button type="button" class="btn sm" id="exportWalls" title="Un archivo con los planos enseñados, para otra instalación o una versión nueva">Exportar</button>
+        <button type="button" class="btn sm" id="importWalls" title="Aprender de un archivo exportado desde Mesa">Importar</button>
+        <button type="button" class="btn sm" id="forgetWalls">Olvidar lo aprendido</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+    </fieldset>
     <div class="row" style="margin-bottom:12px">
-      <button type="button" class="btn sm" id="teachWalls" title="Cuando los muros de este plano estén bien puestos, la propuesta aprende de ellos para los próximos planos">Enseñar con este plano</button>
-      <button type="button" class="btn sm" id="forgetWalls">Olvidar lo aprendido</button>
       <input type="file" id="imgFile" accept="image/*" hidden>
     </div>
     <fieldset>
@@ -1549,11 +1558,31 @@ function openMapSettings(map) {
   });
   body.querySelector("#fitGrid").addEventListener("click", () => openGridFit(activeMap(), { onApply }));
   body.querySelector("#fitWalls").addEventListener("click", () => openWallFit(activeMap()));
-  body.querySelector("#teachWalls").addEventListener("click", () => teachFromMap(activeMap()));
+  const learnedInfo = async () => {
+    const n = await learnedCount().catch(() => 0);
+    const info = body.querySelector("#learnedInfo");
+    if (info) info.textContent = n
+      ? `Ha aprendido de ${n} ${n === 1 ? "plano enseñado" : "planos enseñados"}. Exporta para llevártelo a otra instalación o a una versión nueva.`
+      : "Todavía no se ha enseñado con ningún plano. Cuando los muros de un plano estén bien, «Enseñar con este plano».";
+  };
+  learnedInfo();
+  body.querySelector("#teachWalls").addEventListener("click", async () => { await teachFromMap(activeMap()); learnedInfo(); });
+  body.querySelector("#exportWalls").addEventListener("click", () => exportLearned());
+  const importFile = body.querySelector("#importFile");
+  body.querySelector("#importWalls").addEventListener("click", () => importFile.click());
+  importFile.addEventListener("change", async () => {
+    if (!importFile.files[0]) return;
+    await importLearned(importFile.files[0]);
+    importFile.value = "";
+    learnedInfo();
+  });
   body.querySelector("#forgetWalls").addEventListener("click", async () => {
     const n = await learnedCount();
     if (!n) return toast("Todavía no ha aprendido de ningún plano");
-    if (await confirmBox(`¿Olvidar lo aprendido de ${n} ${n === 1 ? "plano" : "planos"}? La propuesta de muros vuelve a la de serie.`, { okLabel: "Olvidar" })) forgetLearned();
+    if (await confirmBox(`¿Olvidar lo aprendido de ${n} ${n === 1 ? "plano" : "planos"}? La propuesta de muros vuelve a la de serie. Si quieres conservarlo, exporta antes.`, { okLabel: "Olvidar" })) {
+      await forgetLearned();
+      learnedInfo();
+    }
   });
   body.querySelector("#resetFog").addEventListener("click", () => patchMap(map.id, { explored: [] }));
   body.querySelector("#clearWalls").addEventListener("click", () => patchMap(map.id, { edges: {} }));

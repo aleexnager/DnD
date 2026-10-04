@@ -105,14 +105,14 @@ const http = {
     if (!res.ok) throw new Error(data.error || "No se pudo subir la imagen");
     return data.imageId;
   },
-  async wallModel(token) {
+  async wallData(token) {
     const res = await fetch("api/wallmodel?token=" + encodeURIComponent(token));
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "No se pudo leer lo aprendido");
-    return data.model;
+    return data;
   },
-  async saveWallModel(token, model) {
-    const res = await fetch("api/wallmodel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, model }) });
+  async saveWallData(token, fields) {
+    const res = await fetch("api/wallmodel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, ...fields }) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "No se pudo guardar lo aprendido");
     return true;
@@ -214,12 +214,13 @@ export async function sendRtc(to, data) {
   try { return await t.rtc(store.session.token, to, data); } catch { return false; }
 }
 
-/* Lo aprendido por la propuesta de muros (null: nada todavía) */
-export async function getWallModel() {
-  return (await transport()).wallModel(store.session.token);
+/* Lo aprendido por la propuesta de muros: { model, lessons } */
+export async function getWallData() {
+  return (await transport()).wallData(store.session.token);
 }
-export async function saveWallModel(model) {
-  return (await transport()).saveWallModel(store.session.token, model);
+/* Guarda los campos que se pasen: { model }, { lessons } o los dos */
+export async function saveWallData(fields) {
+  return (await transport()).saveWallData(store.session.token, fields);
 }
 
 export async function uploadImage(blob) {
