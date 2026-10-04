@@ -401,6 +401,7 @@ const MAP_DEFAULTS = {
   lockRatio: true, cols: 28, rows: 18, grid: true,
   radius: 5, remember: true,
   camera: "full", followSpan: 14, partyZoom: 1,
+  roomCamera: false,    // al entrar la party en una sala, la cámara la encuadra entera
   explored: [], edges: {}, notes: "",
   /* Nuevo en 2.1 */
   dark: false,          // si está a oscuras, solo se ve lo que alumbran las antorchas
@@ -438,6 +439,7 @@ export function normalizeMap(raw = {}) {
   m.grid = m.grid !== false;
   m.remember = m.remember !== false;
   m.camera = m.camera === "follow" ? "follow" : "full";
+  m.roomCamera = !!m.roomCamera;
   m.explored = Array.isArray(m.explored) ? m.explored.filter(k => typeof k === "string") : [];
   m.dark = !!m.dark;
   m.playerZoom = m.playerZoom !== false;

@@ -676,6 +676,12 @@ const EN = {
   "Sin estados": "No conditions", "Salvaciones de muerte": "Death saves",
   "Cómo se tira": "Roll mode", "Tirada secreta": "Secret roll", "Solo la ves tú": "Only you see it",
   "Mensajes nuevos": "New messages",
+  "Encuadrar salas": "Frame rooms",
+  "Cuando la party entre en una sala, su cámara la encuadra entera; al salir, vuelve a la de antes": "When the party enters a room, their camera frames all of it; on leaving, it goes back to the previous one",
+  "La cámara de la party encuadrará cada sala al entrar": "The party camera will frame each room on entering",
+  "Activado. Marca las salas con la herramienta «Sala» para que se encuadren": "On. Mark rooms with the “Room” tool so they get framed",
+  "La cámara de la party ya no encuadra las salas": "The party camera no longer frames rooms",
+  "Encuadrar cada sala marcada cuando la party entre en ella (al salir, vuelve esta cámara)": "Frame each marked room when the party enters it (on leaving, this camera comes back)",
 
   /* Pestañas de la ficha */
   "Ataque": "Attack", "Alcance": "Range", "Golpe/CD": "Hit/DC", "Acciones en combate": "Actions in combat",

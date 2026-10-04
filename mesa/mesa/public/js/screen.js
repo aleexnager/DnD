@@ -127,8 +127,9 @@ function render() {
        quedan franjas negras ni arriba ni a los lados. Siguiendo a alguien, el
        hueco manda y el encuadre se adapta. */
     const board = $(".board");
-    board.style.aspectRatio = map.camera === "follow" ? "" : `${map.cols} / ${map.rows}`;
-    board.classList.toggle("free", map.camera === "follow");
+    const framed = map.camera === "follow" || !!map.roomFrame;    // el encuadre manda sobre la forma del mapa
+    board.style.aspectRatio = framed ? "" : `${map.cols} / ${map.rows}`;
+    board.classList.toggle("free", framed);
   }
   wrap.classList.toggle("hidden", !map);
 

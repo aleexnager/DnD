@@ -12,7 +12,7 @@
      onPresence()    avisa de que ha cambiado quién está conectado */
 
 import { emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier } from "./schema.js";
-import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells } from "./los.js";
+import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells, partyRoomFrame } from "./los.js";
 import { roll, detail } from "./dice.js";
 import { cutWalls, doorAt } from "./freewalls.js";
 import { critDamage } from "./attacks-core.js";
@@ -159,6 +159,9 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         imgGrid: map.imgGrid || null,
         cols: map.cols, rows: map.rows, radius: map.radius, remember: map.remember,
         camera: map.camera, followSpan: map.followSpan, partyZoom: map.partyZoom,
+        /* Solo el rectángulo de la sala donde está la party: el plano de las
+           salas no viaja, que enseñaría lo que aún no han explorado */
+        roomFrame: map.roomCamera ? partyRoomFrame(doc, map, doc.session.focusId) : null,
         grid: map.grid, revealAll: doc.session.revealAll,
         explored: doc.session.revealAll ? [] : explored,
         visible: visibleList,

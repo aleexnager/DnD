@@ -1170,6 +1170,8 @@ function renderMap() {
           <button class="btn sm" data-map="zoomOut">−</button>
           <span class="pill" id="zoomLabel">100%</span>
           <button class="btn sm" data-map="zoomIn">+</button>
+          <button class="btn sm" data-map="roomCam" id="roomCamBtn" aria-pressed="false"
+            title="Cuando la party entre en una sala, su cámara la encuadra entera; al salir, vuelve a la de antes">${withIcon("room", "Encuadrar salas", 15)}</button>
           <span class="spacer"></span>
           <span class="pill" id="mapHint"></span>
           <button class="btn sm" data-map="settings">Ajustes del mapa</button>
@@ -1305,6 +1307,9 @@ function renderMap() {
 
   const pick = $("#mapPick", pane);
   pick.innerHTML = doc().maps.map(m => `<option value="${m.id}" ${m.id === map.id ? "selected" : ""}>${esc(m.name)}</option>`).join("");
+  const roomCam = $("#roomCamBtn", pane);
+  roomCam.setAttribute("aria-pressed", String(map.roomCamera));
+  roomCam.classList.toggle("on", map.roomCamera);
   mapView.set({ map, chars: chars(), session: session(), you: null });
 }
 
@@ -1474,6 +1479,13 @@ function mapAction(what) {
   if (what === "zoomOut") return mapView.setZoom(mapView.zoom / 1.25);
   if (what === "fit") return mapView.setZoom(1);
   if (what === "settings") return openMapSettings(map);
+  if (what === "roomCam") {
+    const on = !map.roomCamera;
+    patchMap(map.id, { roomCamera: on });
+    const rooms = Object.keys(map.rooms || {}).length;
+    return toast(on ? (rooms ? "La cámara de la party encuadrará cada sala al entrar"
+      : "Activado. Marca las salas con la herramienta «Sala» para que se encuadren") : "La cámara de la party ya no encuadra las salas");
+  }
 }
 
 function openMapSettings(map) {
@@ -1522,6 +1534,7 @@ function openMapSettings(map) {
             <option value="full" ${map.camera === "full" ? "selected" : ""}>Todo el mapa</option>
             <option value="follow" ${map.camera === "follow" ? "selected" : ""}>Centrada en el personaje</option>
           </select></label>
+        <label class="check" style="grid-column:1 / -1"><input type="checkbox" name="roomCamera" ${map.roomCamera ? "checked" : ""}> Encuadrar cada sala marcada cuando la party entre en ella (al salir, vuelve esta cámara)</label>
         <label class="field"><span>Casillas a lo ancho al seguir</span>
           <input name="followSpan" type="number" min="4" max="60" value="${map.followSpan}"></label>
         <label class="field"><span>Pies por casilla</span>
@@ -1637,6 +1650,7 @@ function openMapSettings(map) {
           remember: v("remember").checked,
           grid: v("grid").checked,
           camera: v("camera").value,
+          roomCamera: v("roomCamera").checked,
           followSpan: +v("followSpan").value || 14,
           dark: v("dark").checked,
           playerZoom: v("playerZoom").checked,
