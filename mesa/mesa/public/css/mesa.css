@@ -1896,6 +1896,40 @@ button.st-pill:hover { background: var(--accent-wash); border-color: var(--accen
 .notes-box { padding: 10px 12px 12px; }
 .notes-box .block p { margin: 0 0 4px; font-size: 14px; }
 
+/* ---------- Menú de una ficha en el mapa: un globo que la señala ---------- */
+.token-pop {
+  --frame: color-mix(in srgb, var(--tone, var(--accent)) 72%, var(--pitch));
+  position: fixed; z-index: 55; width: 272px; max-width: calc(100vw - 16px); padding: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .03), transparent 60%), var(--stone);
+  border: 1px solid var(--frame); border-radius: var(--cut);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .6);
+  animation: popIn .16s var(--ease-out, ease) both;
+}
+@keyframes popIn { from { opacity: 0; transform: translateY(4px) scale(.97); } }
+.token-pop.below { animation-name: popInBelow; }
+@keyframes popInBelow { from { opacity: 0; transform: translateY(-4px) scale(.97); } }
+.token-pop::after {          /* la flecha que apunta a la ficha */
+  content: ""; position: absolute; left: var(--arrow, 50%); bottom: -7px; width: 12px; height: 12px;
+  background: var(--stone); border: 1px solid var(--frame); border-width: 0 1px 1px 0;
+  transform: translateX(-50%) rotate(45deg);
+}
+.token-pop.below::after { bottom: auto; top: -7px; border-width: 1px 0 0 1px; }
+.tk-head { display: flex; gap: 10px; align-items: center; padding: 0 2px 10px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+.tk-head .avatar { width: 40px; height: 40px; font-size: 13px; background: var(--tone); }
+.tk-id { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.tk-id b { font-size: 15px; overflow-wrap: anywhere; line-height: 1.2; }
+.tk-id small { color: var(--dim); font-size: 12px; }
+.tk-id .bar { margin-top: 3px; height: 5px; }
+.tk-list { display: grid; gap: 1px; }
+.tk-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border-radius: 4px;
+  text-align: left; font-size: 13.5px; color: var(--vellum);
+}
+.tk-item .ico { color: var(--accent-soft); flex: none; }
+.tk-item:hover, .tk-item:focus-visible { background: var(--stone-2); }
+.tk-item.danger { color: var(--danger-text); }
+.tk-item.danger .ico { color: var(--danger-text); }
+
 /* ---------- Editor de listas ---------- */
 .list-editor { display: grid; gap: 8px; }
 .le-rows { display: grid; gap: 8px; }

@@ -326,6 +326,14 @@ export class MapView {
     return Math.abs(dx - dy) <= Math.abs(dx + dy - 1) ? "d" : "a";
   }
 
+  /* Dónde se ve una ficha, en coordenadas de pantalla: para anclarle un menú */
+  tokenBox(id) {
+    const g = this._geom, c = this.data.chars.find(x => x.id === id);
+    if (!g || !c || c.mx === null) return null;
+    const n = footprint(c), box = this.canvas.getBoundingClientRect();
+    return { x: box.left + g.originX + (c.mx + n / 2) * g.cell, y: box.top + g.originY + (c.my + n / 2) * g.cell, r: n * g.cell / 2, board: box };
+  }
+
   /* Una ficha grande responde en todas las casillas que ocupa. */
   tokenAt(x, y) {
     const map = this.data.map;

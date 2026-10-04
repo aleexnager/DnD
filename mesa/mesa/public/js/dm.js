@@ -233,6 +233,7 @@ function render() {
 
   $("#combatBtn").innerHTML = withIcon("swords", session().combat.on ? "Terminar combate" : "Iniciar combate");
   $("#combatBtn").classList.toggle("on", session().combat.on);
+  if (tab !== "mapa") closeTokenMenu();
   $("#tableView").classList.toggle("hidden", tab !== "mesa");
   $("#mapPane").classList.toggle("hidden", tab !== "mapa");
 
@@ -1219,7 +1220,7 @@ function renderMap() {
       onRoom: id => { const h = $("#mapHint"); if (h) h.textContent = roomHint(id); },
       onPing: (x, y) => op("ping", { x, y, mapId: activeMap().id }),
       onSelect: ids => { const h = $("#mapHint"); if (h) h.textContent = ids.length ? ids.length + " fichas elegidas" : ""; },
-      onZoom: z => { const l = $("#zoomLabel"); if (l) l.textContent = Math.round(z * 100) + "%"; }
+      onZoom: z => { closeTokenMenu(); const l = $("#zoomLabel"); if (l) l.textContent = Math.round(z * 100) + "%"; }
     });
 
     mapView.drawColor = DRAW_COLORS[0];
@@ -1307,6 +1308,7 @@ function renderMap() {
 
   const pick = $("#mapPick", pane);
   pick.innerHTML = doc().maps.map(m => `<option value="${m.id}" ${m.id === map.id ? "selected" : ""}>${esc(m.name)}</option>`).join("");
+  if (tokenPop) requestAnimationFrame(placeTokenMenu);
   const roomCam = $("#roomCamBtn", pane);
   roomCam.setAttribute("aria-pressed", String(map.roomCamera));
   roomCam.classList.toggle("on", map.roomCamera);
@@ -1335,22 +1337,85 @@ function placeHere(x, y) {
 }
 
 /* Menú de una ficha del tablero */
+/* El menú de una ficha del mapa: un globo pequeño encima de ella que la
+   señala, con su vida y lo que se le puede hacer. Se cierra al pulsar fuera,
+   con Esc, al mover o acercar el mapa, o al elegir algo. */
+let tokenPop = null;
+function closeTokenMenu() {
+  if (!tokenPop) return;
+  tokenPop.cleanup();
+  tokenPop.node.remove();
+  tokenPop = null;
+}
+function placeTokenMenu() {
+  if (!tokenPop || !mapView) return;
+  const at = mapView.tokenBox(tokenPop.id);
+  if (!at) return closeTokenMenu();
+  const n = tokenPop.node, w = n.offsetWidth, h = n.offsetHeight, gap = 10, pad = 8;
+  const minX = Math.max(pad, at.board.left + pad), maxX = Math.min(innerWidth - pad, at.board.right - pad);
+  const left = clamp(at.x - w / 2, minX, Math.max(minX, maxX - w));
+  /* Encima si cabe en el tablero; si no, debajo; y si no cabe en ninguno,
+     donde haya más sitio, sin salirse de la pantalla */
+  const roomAbove = at.y - at.r - gap - Math.max(pad, at.board.top + pad);
+  const roomBelow = Math.min(innerHeight, at.board.bottom) - pad - (at.y + at.r + gap);
+  const above = roomAbove >= h || (roomBelow < h && roomAbove > roomBelow);
+  const top = above ? Math.max(pad, at.y - at.r - gap - h) : Math.min(at.y + at.r + gap, innerHeight - h - pad);
+  n.classList.toggle("below", !above);
+  n.style.left = left + "px";
+  n.style.top = top + "px";
+  n.style.setProperty("--arrow", clamp(at.x - left, 16, w - 16) + "px");
+}
 function tokenMenu(id) {
+  closeTokenMenu();
   const c = byId(id);
-  if (!c) return;
-  const body = el(`<div class="row" style="flex-direction:column">
-    <button class="btn" data-tk="target">${targetId === id ? "Dejar de apuntarle" : "Apuntar con los ataques"}</button>
-    <button class="btn" data-tk="attack">Atacar con ${esc(c.name)}</button>
-    <button class="btn" data-tk="focus">Centrar la cámara de la party aquí</button>
-    <button class="btn" data-tk="conditions">Estados</button>
-    <button class="btn" data-tk="edit">Abrir la ficha</button>
-    ${c.kind === "monster" ? `<button class="btn" data-tk="hide">${c.hidden ? "Enseñar a la party" : "Ocultar a la party"}</button>` : ""}
-    <button class="btn danger" data-tk="off">Sacar del mapa</button>
+  if (!c || !mapView.tokenBox(id)) return;
+  const p = pct(c);
+  const monster = c.kind === "monster";
+  const item = (tk, ico, label, tone = "") =>
+    `<button class="tk-item ${tone}" data-tk="${tk}" role="menuitem">${icon(ico, 16)}<span>${label}</span></button>`;
+  const node = el(`<div class="token-pop" role="menu" aria-label="${esc(c.name)}" style="--tone:${esc(c.color)}">
+    <div class="tk-head">
+      ${c.avatarId ? `<img class="avatar" src="${imgURL(c.avatarId)}" alt="">` : `<div class="avatar">${initials(c.name)}</div>`}
+      <div class="tk-id">
+        <b>${esc(c.name)}</b>
+        <small><span class="tnum">${c.hp}/${c.maxHp}</span> PV · CA <span class="tnum">${c.ac}</span></small>
+        ${hpBar(c.id, p)}
+      </div>
+    </div>
+    <div class="tk-list">
+      ${item("target", "target", targetId === id ? "Dejar de apuntarle" : "Apuntar con los ataques")}
+      ${item("attack", "sword", "Atacar con " + esc(c.name))}
+      ${item("focus", "tv", "Centrar la cámara de la party aquí")}
+      ${item("conditions", "sparkle", "Estados")}
+      ${item("edit", "pencil", "Abrir la ficha")}
+      ${monster ? item("hide", c.hidden ? "eye" : "eyeOff", c.hidden ? "Enseñar a la party" : "Ocultar a la party") : ""}
+      ${item("off", "close", "Sacar del mapa", "danger")}
+    </div>
   </div>`);
-  const m = modal({ title: c.name, body, actions: [{ label: "Cerrar" }] });
-  on(body, "click", "[data-tk]", (e, b) => {
+  document.body.appendChild(node);
+
+  const outside = e => { if (!node.contains(e.target)) closeTokenMenu(); };
+  const keys = e => { if (e.key === "Escape") { e.stopPropagation(); closeTokenMenu(); } };
+  const canvas = $("#canvas");
+  const away = () => closeTokenMenu();
+  /* El clic que lo abre todavía está en curso: se escucha desde el siguiente */
+  setTimeout(() => { if (tokenPop && tokenPop.node === node) document.addEventListener("pointerdown", outside, true); }, 0);
+  document.addEventListener("keydown", keys, true);
+  window.addEventListener("resize", away);
+  if (canvas) canvas.addEventListener("wheel", away, { passive: true });
+  tokenPop = { id, node, cleanup: () => {
+    document.removeEventListener("pointerdown", outside, true);
+    document.removeEventListener("keydown", keys, true);
+    window.removeEventListener("resize", away);
+    if (canvas) canvas.removeEventListener("wheel", away);
+  } };
+  placeTokenMenu();
+  const first = node.querySelector(".tk-item");
+  if (first) first.focus({ preventScroll: true });
+
+  on(node, "click", "[data-tk]", (e, b) => {
     const what = b.dataset.tk;
-    m.close();
+    closeTokenMenu();
     if (what === "target") { targetId = targetId === id ? null : id; mapView.target = targetId; return render(); }
     if (what === "attack") return attack(c);
     if (what === "focus") { patchSession({ focusId: id }); return toast("La cámara sigue a " + c.name); }
