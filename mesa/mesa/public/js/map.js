@@ -21,7 +21,7 @@ const COLORS = {
   dark: "rgba(4,5,9,.55)",
   sight: "rgba(200,155,74,.10)",
   lit: "rgba(255,214,140,.10)",
-  pick: "rgba(197,49,49,.55)",
+  pick: "rgba(200,155,74,.55)",
   reach: "rgba(120,170,255,.16)",
   reachEdge: "rgba(140,185,255,.5)",
   measure: "#7fd0ff",
@@ -1189,7 +1189,7 @@ export class MapView {
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
       if (g.cell > 12) {
         ctx.fillStyle = "rgba(226,214,190,.6)";
-        ctx.font = `600 ${Math.round(g.cell * 0.46 * Math.min(n, 2))}px "Roboto Condensed", system-ui, sans-serif`;
+        ctx.font = `600 ${Math.round(g.cell * 0.46 * Math.min(n, 2))}px Roboto, system-ui, sans-serif`;
         ctx.textAlign = "center"; ctx.textBaseline = "middle";
         ctx.fillText("?", cx, cy + 1);
       }
@@ -1284,7 +1284,7 @@ export class MapView {
         mark(ctx, bx, by, br * 0.62);
       } else {
         ctx.fillStyle = "#f0d9c8";
-        ctx.font = `700 ${Math.round(br * 1.05)}px "Roboto Condensed", system-ui, sans-serif`;
+        ctx.font = `700 ${Math.round(br * 1.05)}px Roboto, system-ui, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText("+" + extra, bx, by + 0.5);
@@ -1352,7 +1352,7 @@ export class MapView {
     ctx.setLineDash([]);
     if (s.label && g.cell > 14) {
       ctx.fillStyle = "#f2f3f4";
-      ctx.font = `600 ${Math.max(10, Math.round(g.cell * 0.24))}px "Roboto Condensed", system-ui, sans-serif`;
+      ctx.font = `600 ${Math.max(10, Math.round(g.cell * 0.24))}px Roboto, system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.fillText(s.label, ox, oy - 4);
     }
@@ -1376,7 +1376,7 @@ export class MapView {
     ctx.beginPath(); ctx.arc(bx, by, 4, 0, Math.PI * 2); ctx.fillStyle = COLORS.measure; ctx.fill();
 
     const text = `${feet} pies · ${cells} ${cells === 1 ? "casilla" : "casillas"}`;
-    ctx.font = `600 13px "Roboto Condensed", system-ui, sans-serif`;
+    ctx.font = `600 13px Roboto, system-ui, sans-serif`;
     const w = ctx.measureText(text).width + 12;
     const lx = clamp((ax + bx) / 2 - w / 2, 2, g.W - w - 2);
     const ly = clamp((ay + by) / 2 - 26, 2, g.H - 26);
@@ -1452,7 +1452,7 @@ export class MapView {
     if (memory) ctx.globalAlpha = 0.45;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fillStyle = c.color || "#c53131";
+    ctx.fillStyle = c.color || "#c89b4a";
     ctx.globalAlpha *= down ? 0.35 : 1;
     ctx.fill();
 
@@ -1462,7 +1462,7 @@ export class MapView {
       ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
     } else if (span > 18) {
       ctx.fillStyle = "rgba(10,10,12,.82)";
-      ctx.font = `600 ${Math.round(r * 0.9)}px "Roboto Condensed", system-ui, sans-serif`;
+      ctx.font = `600 ${Math.round(r * 0.9)}px Roboto, system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(initials(c.name), cx, cy + 1);
@@ -1530,7 +1530,7 @@ export class MapView {
     /* Nombre */
     if (g.cell > 26) {
       const label = c.name.length > 14 ? c.name.slice(0, 13) + "…" : c.name;
-      ctx.font = `600 ${Math.max(9, Math.round(g.cell * 0.2))}px "Roboto Condensed", system-ui, sans-serif`;
+      ctx.font = `600 ${Math.max(9, Math.round(g.cell * 0.2))}px Roboto, system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       const w = ctx.measureText(label).width + 8;

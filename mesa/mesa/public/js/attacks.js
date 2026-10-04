@@ -7,46 +7,8 @@
 
 import { el, on, esc, toast, modal } from "./util.js";
 import { store, op } from "./net.js";
-import { normalizeAttack, modOf } from "./schema.js";
+import { normalizeAttack, modOf, parseAttackLine } from "./schema.js";
 import { critDamage } from "./attacks-core.js";
-
-const DAMAGE_WORDS = [
-  "contundente", "cortante", "perforante", "acido", "ácido", "frio", "frío", "fuego", "fuerza",
-  "relampago", "relámpago", "necrotico", "necrótico", "veneno", "psiquico", "psíquico",
-  "radiante", "trueno", "magico", "mágico"
-];
-const ABILITY_WORDS = {
-  fuerza: "str", destreza: "dex", constitucion: "con", constitución: "con",
-  inteligencia: "int", sabiduria: "wis", sabiduría: "wis", carisma: "cha"
-};
-
-/* Una línea de texto -> un ataque, o null si ahí no hay ninguno. */
-export function parseAttackLine(line) {
-  const text = String(line || "").trim();
-  if (!text) return null;
-  const dice = text.match(/(\d*d\d+(?:\s*[+-]\s*\d+)?)/i);
-  const hit = text.match(/([+-]\s*\d+)\s*(?:al ataque|to hit)/i)
-    || text.match(/^[^.:]{2,40}[.:]\s*([+-]\s*\d+)/);
-  const save = text.match(/CD\s*(\d+)\s*(?:de\s+)?(fuerza|destreza|constituci[oó]n|inteligencia|sabidur[ií]a|carisma)/i);
-  if (!dice && !save) return null;
-  /* En el formato del bestiario («Tragar — … 3d6 de ácido por turno») una línea
-     sin bonificador ni CD describe un efecto, no un ataque que tirar. */
-  if (!hit && !save && /\s—\s/.test(text)) return null;
-
-  /* «Cimitarra. Ataque…» o, como escribe el bestiario, «Cimitarra — +4 al ataque — …» */
-  const name = (text.split(/\s[—–]\s|[.:]/)[0] || "Ataque").trim().slice(0, 48);
-  const type = DAMAGE_WORDS.find(w => new RegExp("\\b" + w + "\\b", "i").test(text)) || "";
-  const range = (text.match(/(alcance[^,.;]*|distancia[^,.;]*|reach[^,.;]*|range[^,.;]*)/i) || [""])[0].trim();
-
-  return normalizeAttack({
-    name,
-    atk: hit ? Number(hit[1].replace(/\s+/g, "")) : 0,
-    damage: dice ? dice[1].replace(/\s+/g, "") : "",
-    type,
-    range: range.slice(0, 40),
-    save: save ? `${ABILITY_WORDS[save[2].toLowerCase()] || "dex"} ${save[1]}` : ""
-  });
-}
 
 /* Todo lo que una ficha sabe hacer: lo que tenga guardado más lo que se pueda
    leer de sus acciones y de su lista de armas. */
@@ -164,4 +126,4 @@ export function openAttacks(attacker, { targets = [], preselect = null, secret =
 
 /* Modificador de ataque sugerido al crear un ataque a mano */
 export const suggestedAtk = (c, ability = "str") => modOf(c[ability]) + (c.proficiency || 2);
-export { critDamage, store };
+export { critDamage, store, parseAttackLine };

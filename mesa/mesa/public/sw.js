@@ -14,7 +14,7 @@
    Todas las rutas son relativas al sitio donde vive Mesa: en GitHub Pages es
    una subcarpeta (/DnD/), no la raíz. */
 
-const VERSION = "mesa-2.8.0";
+const VERSION = "mesa-2.9.0";
 const SHELL_CACHE = VERSION + "-app";
 const IMG_CACHE = "mesa-img";
 const IMG_LIMIT = 80;
@@ -24,7 +24,7 @@ const BASE = new URL("./", self.location.href);
 const SHELL = [
   "./",
   "css/mesa.css",
-  "fonts/roboto.woff2", "fonts/roboto-italic.woff2", "fonts/roboto-condensed.woff2", "fonts/libre-baskerville-bold.woff2",
+  "fonts/roboto.woff2", "fonts/roboto-italic.woff2",
   "manifest.webmanifest",
   "icons/icon.svg",
   "icons/icon-192.png",
@@ -33,7 +33,7 @@ const SHELL = [
   "js/dice-panel.js", "js/attacks.js", "js/attacks-core.js", "js/char-editor.js",
   "js/dm.js", "js/player.js", "js/screen.js",
   "js/engine.js", "js/local.js", "js/local-host.js", "js/local-worker.js",
-  "js/spells.js", "js/spellbook.js", "js/statblock.js", "js/voice.js", "js/portals.js",
+  "js/spells.js", "js/spellbook.js", "js/statblock.js", "js/sheet.js", "js/list-editor.js", "js/voice.js", "js/portals.js",
   "js/gridfind.js", "js/gridfit.js", "js/wallfind.js", "js/wallmodel.js", "js/freewalls.js"
 ].map(p => new URL(p, BASE).href);
 

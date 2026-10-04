@@ -1,8 +1,9 @@
 /* Editor de ficha. El DM lo abre para cualquiera; cada jugador, para la suya. */
 
 import { modal, esc, toast, shrinkImage, imgURL, initials } from "./util.js";
-import { ABILITIES, SKILLS, CONDITIONS, SHAPE_NAMES, normalizeChar, normalizeAttack, modOf, uid } from "./schema.js";
-import { attacksOf, attackLabel } from "./attacks.js";
+import { ABILITIES, SKILLS, CONDITIONS, SHAPE_NAMES, FEATURE_SOURCES, normalizeChar, normalizeAttack, normalizeItem, normalizeFeature, modOf, uid } from "./schema.js";
+import { attacksOf } from "./attacks.js";
+import { listEditor } from "./list-editor.js";
 import { op, patchChar, uploadImage } from "./net.js";
 
 const field = (label, name, value, type = "text", extra = "") =>
@@ -66,10 +67,9 @@ export function openCharEditor(source, { isDM = true, title } = {}) {
 
     <fieldset>
       <legend>Ataques</legend>
-      <div id="atkList"></div>
-      <button type="button" class="btn sm" id="addAtk">Añadir ataque</button>
-      <p class="prose" style="font-size:12px;margin-top:8px">Lo que apuntes aquí sale como botón para tirar en la mesa. Los ataques escritos en «Ataques y armas» o en las acciones de una criatura se detectan solos.</p>
-      <p class="prose" style="font-size:12px;margin-top:6px">Si le pones un nivel, al usarlo gastará un espacio de conjuro y no te dejará lanzarlo cuando no te queden. Si le pones una forma, podrás ver su área sobre el mapa antes de decidir.</p>
+      <div id="atkHost"></div>
+      <p class="prose small-note">Cada ataque sale en la pestaña «Acciones» de la ficha: se toca el golpe o el daño para tirarlo.</p>
+      <p class="prose small-note">Si le pones un nivel, al usarlo gastará un espacio de conjuro y no te dejará lanzarlo cuando no te queden. Si le pones una forma, podrás ver su área sobre el mapa antes de decidir.</p>
     </fieldset>
 
     <fieldset>
@@ -98,62 +98,72 @@ export function openCharEditor(source, { isDM = true, title } = {}) {
 
     <fieldset>
       <legend>Recursos propios</legend>
-      <div id="resList"></div>
-      <button type="button" class="btn sm" id="addRes">Añadir recurso</button>
-      <p class="prose" style="font-size:12px;margin-top:8px">Inspiración bárbara, canalizar divinidad, puntos de ki…</p>
+      <div id="resHost"></div>
+      <p class="prose small-note">Inspiración bárbara, canalizar divinidad, puntos de ki…</p>
     </fieldset>
 
     <fieldset>
-      <legend>Notas de la ficha</legend>
-      <label class="field"><span>Ataques y armas</span><textarea name="weapons">${esc(c.weapons)}</textarea></label>
-      <label class="field"><span>Conjuros</span><textarea name="spells">${esc(c.spells)}</textarea></label>
-      <label class="field"><span>Equipo</span><textarea name="inventory">${esc(c.inventory)}</textarea></label>
+      <legend>Equipo</legend>
+      <div id="itemHost"></div>
+      <p class="prose small-note">El peso es por unidad, en libras. Lo equipado se marca también desde la ficha.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Rasgos y aptitudes</legend>
+      <div id="featHost"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Conjuros</legend>
+      <p class="prose small-note">Se eligen de la biblioteca o se crean desde «Conjuros» en la ficha, y salen en su pestaña listos para lanzar.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Notas</legend>
       <label class="field"><span>Anotaciones</span><textarea name="notes">${esc(c.notes)}</textarea></label>
     </fieldset>`;
 
-  /* Recursos */
-  const resList = body.querySelector("#resList");
-  const addRes = (r = { name: "", uses: 0, max: 1 }) => {
-    const row = document.createElement("div");
-    row.className = "row";
-    row.style.marginBottom = "8px";
-    row.innerHTML = `
-      <input placeholder="Nombre" value="${esc(r.name)}" data-res="name" style="flex:2 1 160px">
-      <input type="number" value="${r.uses}" data-res="uses" min="0" style="flex:0 1 80px" aria-label="Usados">
-      <input type="number" value="${r.max}" data-res="max" min="0" style="flex:0 1 80px" aria-label="Total">
-      <button type="button" class="btn sm danger" data-drop style="flex:0">Quitar</button>`;
-    row.querySelector("[data-drop]").addEventListener("click", () => row.remove());
-    resList.appendChild(row);
-  };
-  c.resources.forEach(addRes);
-  body.querySelector("#addRes").addEventListener("click", () => addRes());
+  /* Listas: recursos, ataques, equipo y rasgos */
+  const resEd = listEditor({
+    add: "Añadir recurso", rows: c.resources, blank: { name: "", uses: 0, max: 1 },
+    fields: [{ key: "name", label: "Nombre", grow: 3, basis: "160px" },
+      { key: "uses", label: "Usados", type: "number", basis: "70px" },
+      { key: "max", label: "Total", type: "number", basis: "70px" }]
+  });
+  body.querySelector("#resHost").appendChild(resEd.node);
 
-  /* Ataques */
-  const atkList = body.querySelector("#atkList");
-  const addAtk = (raw = {}) => {
-    const a = normalizeAttack(raw);
-    const row = document.createElement("div");
-    row.className = "row";
-    row.style.marginBottom = "8px";
-    row.innerHTML = `
-      <input placeholder="Espada larga" value="${esc(a.name)}" data-atk="name" style="flex:2 1 150px">
-      <input type="number" value="${a.atk}" data-atk="atk" style="flex:0 1 70px" aria-label="Al ataque" title="Bonificador al ataque">
-      <input placeholder="1d8+3" value="${esc(a.damage)}" data-atk="damage" style="flex:1 1 100px" aria-label="Daño">
-      <input placeholder="cortante" value="${esc(a.type)}" data-atk="type" style="flex:1 1 100px" aria-label="Tipo de daño">
-      <select data-atk="level" style="flex:0 1 110px" aria-label="Nivel de conjuro" title="Espacio de conjuro que gasta">
-        <option value="0">Sin espacio</option>
-        ${[1,2,3,4,5,6,7,8,9].map(n => `<option value="${n}" ${a.level === n ? "selected" : ""}>Nivel ${n}</option>`).join("")}
-      </select>
-      <select data-atk="shape" style="flex:0 1 130px" aria-label="Forma del área" title="Forma del área de efecto">
-        ${SHAPE_NAMES.map(([k, n]) => `<option value="${k}" ${a.shape === k ? "selected" : ""}>${n}</option>`).join("")}
-      </select>
-      <input type="number" min="0" max="300" step="5" value="${a.size || 20}" data-atk="size" style="flex:0 1 80px" aria-label="Tamaño del área en pies" title="Tamaño del área, en pies">
-      <button type="button" class="btn sm danger" data-drop style="flex:0">Quitar</button>`;
-    row.querySelector("[data-drop]").addEventListener("click", () => row.remove());
-    atkList.appendChild(row);
-  };
-  (c.attacks.length ? c.attacks : attacksOf(c).slice(0, 6)).forEach(addAtk);
-  body.querySelector("#addAtk").addEventListener("click", () => addAtk());
+  const atkEd = listEditor({
+    add: "Añadir ataque", rows: c.attacks.length ? c.attacks : attacksOf(c).slice(0, 6),
+    blank: { name: "", atk: 0, damage: "", type: "", range: "", level: 0, shape: "", size: 20 },
+    fields: [{ key: "name", label: "Nombre", grow: 3, basis: "150px", placeholder: "Espada larga" },
+      { key: "atk", label: "Al ataque", type: "number", min: -10, basis: "70px" },
+      { key: "damage", label: "Daño", basis: "90px", placeholder: "1d8+3" },
+      { key: "type", label: "Tipo", basis: "100px", placeholder: "cortante" },
+      { key: "range", label: "Alcance", basis: "100px", placeholder: "5 pies" },
+      { key: "level", label: "Espacio", type: "select", basis: "110px",
+        options: [[0, "Sin espacio"], ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => [n, "Nivel " + n])] },
+      { key: "shape", label: "Área", type: "select", basis: "130px", options: SHAPE_NAMES },
+      { key: "size", label: "Tamaño (pies)", type: "number", step: 5, basis: "80px" }]
+  });
+  body.querySelector("#atkHost").appendChild(atkEd.node);
+
+  const itemEd = listEditor({
+    add: "Añadir objeto", rows: c.items, blank: { name: "", qty: 1, weight: 0, equipped: false, note: "" },
+    fields: [{ key: "name", label: "Objeto", grow: 3, basis: "150px", placeholder: "Cuerda de cáñamo" },
+      { key: "qty", label: "Cantidad", type: "number", basis: "70px" },
+      { key: "weight", label: "Peso (lb)", type: "number", step: 0.5, basis: "70px" },
+      { key: "equipped", label: "Equipado", type: "check", grow: 0, basis: "auto" },
+      { key: "note", label: "Nota", grow: 2, basis: "140px" }]
+  });
+  body.querySelector("#itemHost").appendChild(itemEd.node);
+
+  const featEd = listEditor({
+    add: "Añadir rasgo", rows: c.features, blank: { name: "", source: "Clase", text: "" },
+    fields: [{ key: "name", label: "Nombre", grow: 2, basis: "150px", placeholder: "Ataque furtivo" },
+      { key: "source", label: "Origen", type: "select", basis: "120px", options: FEATURE_SOURCES.map(x => [x, x]) },
+      { key: "text", label: "Qué hace", type: "area", grow: 4, basis: "100%" }]
+  });
+  body.querySelector("#featHost").appendChild(featEd.node);
 
   /* Retrato */
   const file = body.querySelector("#avFile");
@@ -193,21 +203,12 @@ export function openCharEditor(source, { isDM = true, title } = {}) {
             saves: [...host.querySelectorAll('[name="save"]:checked')].map(i => i.value),
             skills: [...host.querySelectorAll('[name="skill"]:checked')].map(i => i.value),
             slots: c.slots.map((_, i) => +val("slot" + i) || 0),
-            resources: [...resList.children].map(row => ({
-              name: row.querySelector('[data-res="name"]').value.trim(),
-              uses: +row.querySelector('[data-res="uses"]').value || 0,
-              max: +row.querySelector('[data-res="max"]').value || 0
-            })).filter(r => r.name),
-            weapons: val("weapons"), spells: val("spells"), inventory: val("inventory"), notes: val("notes"),
+            resources: resEd.read().filter(r => r.name),
+            items: itemEd.read().map(normalizeItem).filter(x => x.name),
+            features: featEd.read().map(normalizeFeature).filter(x => x.name),
+            weapons: "", spells: "", inventory: "", notes: val("notes"),
             vision: +val("vision") || 0, light: +val("light") || 0, reach: +val("reach") || 1, size: val("size") || "Mediano",
-            attacks: [...atkList.children].map(row => {
-              const f = k => row.querySelector(`[data-atk="${k}"]`).value;
-              return normalizeAttack({
-                name: f("name").trim(), atk: +f("atk") || 0,
-                damage: f("damage").trim(), type: f("type").trim(),
-                level: +f("level") || 0, shape: f("shape"), size: +f("size") || 20
-              });
-            }).filter(a => a.name)
+            attacks: atkEd.read().map(a => normalizeAttack({ ...a, level: +a.level || 0, size: a.size || 20 })).filter(a => a.name)
           };
           ABILITIES.forEach(([k]) => { fields[k] = +val(k) || 10; });
           fields.slotsUsed = c.slotsUsed.map((u, i) => Math.min(u, fields.slots[i]));

@@ -11,6 +11,7 @@ import { openAttacks, areaAttacks, slotsLeft, shapeLabel } from "./attacks.js";
 import { openCharEditor, openConditions } from "./char-editor.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
+import { sheetTabsHTML, handleSheetAct } from "./sheet.js";
 import { langPicker } from "./i18n.js";
 import { icon, withIcon } from "./icons.js";
 
@@ -202,8 +203,8 @@ function renderPicker(pane) {
 }
 
 /* ---------- Ficha ---------- */
-/* La pestaña de abajo de la ficha (ataques, conjuros, equipo, notas) */
-let sheetTab = "";
+/* La pestaña de abajo de la ficha (acciones, conjuros, equipo, rasgos, notas) */
+let sheetTab = "acciones";
 
 function renderSheet(pane, c) {
   const p = pct(c);
@@ -214,9 +215,6 @@ function renderSheet(pane, c) {
   /* Una fila que se toca para tirar: el punto dice si tiene competencia */
   const rollRow = (name, mod, prof, extra = "") => `<button class="roll-row" data-act="rollMod" data-mod="${mod}" data-label="${esc(name)}">
       <i class="prof ${prof ? "on" : ""}"></i>${extra}<span class="roll-name">${esc(name)}</span><b class="roll-mod tnum">${sign(mod)}</b></button>`;
-  const notes = [["Ataques", c.weapons], ["Conjuros", c.spells], ["Equipo", c.inventory], ["Notas", c.notes]].filter(([, t]) => t);
-  if (!notes.some(([t]) => t === sheetTab)) sheetTab = notes.length ? notes[0][0] : "";
-  const shown = notes.find(([t]) => t === sheetTab);
 
   pane.innerHTML = `
     <div class="sheet-head" style="--tone:${esc(c.color)}">
@@ -317,11 +315,7 @@ function renderSheet(pane, c) {
       </div>
 
       <section class="sheet-box notes-box">
-        ${notes.length ? `<nav class="sheet-tabs" role="tablist">
-          ${notes.map(([t]) => `<button role="tab" data-sheet-tab="${t}" aria-selected="${t === sheetTab}">${t}</button>`).join("")}
-        </nav>
-        <div class="block">${lines(shown[1]).map(l => `<p>${esc(l)}</p>`).join("")}</div>`
-        : '<p class="prose">Tu ficha aún no tiene ataques ni equipo apuntados. Pulsa «Editar» para rellenarla.</p>'}
+        ${sheetTabsHTML(c, sheetTab)}
       </section>
     </div>`;
 }
@@ -518,15 +512,18 @@ function bindActions(root) {
     op("request.done", { id: b.dataset.ask, charId: c ? c.id : "" });
   });
   on(root, "click", "[data-new]", () => openCharEditor(null, { isDM: false }));
-  on(root, "click", "[data-sheet-tab]", (e, b) => { sheetTab = b.dataset.sheetTab; render(); });
 
   on(root, "click", "[data-act]", (e, b) => {
     const c = me();
     if (!c) return;
     const amountEl = $("[data-amount]", root);
     const amount = () => Math.max(0, +(amountEl && amountEl.value || 0));
+    /* Con el campo vacío, curar y daño van de uno en uno */
+    const hpStep = () => amountEl && amountEl.value === "" ? 1 : amount();
 
+    if (handleSheetAct(c, b.dataset.act, b, { spellCtx: spellCtx() })) return;
     switch (b.dataset.act) {
+      case "sheetTab": sheetTab = b.dataset.tabId; return render();
       case "edit": return openCharEditor(c, { isDM: false });
       case "hp": {
         const n = +b.dataset.n;
@@ -534,14 +531,14 @@ function bindActions(root) {
         return patchChar(c.id, { hp });
       }
       case "damage": {
-        const n = amount();
+        const n = hpStep();
         if (!n) return;
         op("hp.apply", { id: c.id, damage: n });
         amountEl.value = "";
         return;
       }
       case "heal": {
-        const n = amount();
+        const n = hpStep();
         if (!n) return;
         op("hp.apply", { id: c.id, heal: n });
         amountEl.value = "";
@@ -606,7 +603,7 @@ function bindActions(root) {
   });
 
   document.addEventListener("keydown", e => {
-    if (e.key !== "Enter" || !e.target.matches("[data-amount]")) return;
+    if (e.key !== "Enter" || !e.target.matches("[data-amount]") || e.target.value === "") return;
     const btn = $('[data-act="damage"]');
     if (btn) btn.click();
   });

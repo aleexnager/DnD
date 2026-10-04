@@ -1,15 +1,11 @@
 Fuentes de Mesa
 ===============
 
-roboto.woff2, roboto-italic.woff2 (Roboto) y roboto-condensed.woff2 (Roboto Condensed):
+roboto.woff2 y roboto-italic.woff2 (Roboto):
 
 Copyright 2011 The Roboto Project Authors (https://github.com/googlefonts/roboto-classic)
 
-libre-baskerville-bold.woff2 (Libre Baskerville):
-
-Copyright 2012 The Libre Baskerville Project Authors (https://github.com/impallari/Libre-Baskerville) with Reserved Font Name Libre Baskerville.
-
-Todas con la SIL Open Font License 1.1, que sigue completa:
+Con la SIL Open Font License 1.1, que sigue completa:
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:
