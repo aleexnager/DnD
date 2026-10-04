@@ -73,6 +73,7 @@ const CHAR_DEFAULTS = {
   condMeta: {},         // estado -> rondas que le quedan
   used: { action: false, bonus: false, reaction: false, move: 0 },
   reach: 1,             // alcance cuerpo a cuerpo, en casillas
+  buffs: [],            // efectos que se suman a las tiradas: Bendecir, Furia…
   /* Conjuros */
   spellbook: [],        // conjuros que conoce, ya listos para lanzar
   castAbility: "",      // característica de lanzamiento (int, wis, cha)
@@ -144,6 +145,7 @@ export function normalizeChar(raw = {}) {
   c.spellbook = Array.isArray(c.spellbook) ? c.spellbook.map(normalizeSpell).slice(0, 80) : [];
   c.items = Array.isArray(c.items) ? c.items.map(normalizeItem).filter(x => x.name).slice(0, 200) : [];
   c.features = Array.isArray(c.features) ? c.features.map(normalizeFeature).filter(x => x.name).slice(0, 100) : [];
+  c.buffs = Array.isArray(c.buffs) ? c.buffs.map(normalizeBuff).filter(x => x.name).slice(0, 12) : [];
   fromText(c);
   c.castAbility = ["int", "wis", "cha"].includes(c.castAbility) ? c.castAbility : "";
   c.spellDC = clamp(Math.trunc(num(c.spellDC)), 0, 30);
@@ -155,6 +157,60 @@ export function normalizeChar(raw = {}) {
   if (c.mx === null || c.my === null) { c.mx = null; c.my = null; c.mapId = ""; }
   return c;
 }
+
+/* ---------- Efectos activos ----------
+   Lo que se suma solo a las tiradas mientras dura, como en Beyond20: Bendecir
+   pone 1d4 al ataque y a las salvaciones, Furia +2 al daño. Cada efecto tiene
+   una fórmula por tipo de tirada; vacía, no la toca. Se encienden y apagan
+   desde la ficha sin borrarlos. */
+export const BUFF_KINDS = ["attack", "damage", "save", "check"];
+const BUFF_TERM = /^[+-]?\s*(?:\d{0,2}d\d{1,3}|\d{1,2})(?:\s*[+-]\s*(?:\d{0,2}d\d{1,3}|\d{1,2}))*$/i;
+const buffFormula = v => {
+  const f = String(v ?? "").replace(/−/g, "-").replace(/\s+/g, "").toLowerCase().slice(0, 24);
+  return f && BUFF_TERM.test(f) ? f : "";
+};
+export function normalizeBuff(raw = {}) {
+  const b = { name: String(raw.name || "").trim().slice(0, 40), on: raw.on !== false };
+  for (const k of BUFF_KINDS) b[k] = buffFormula(raw[k]);
+  return b;
+}
+/* Los habituales del SRD, para no tener que escribirlos */
+export const BUFF_PRESETS = [
+  { name: "Bendecir", attack: "1d4", save: "1d4" },
+  { name: "Perdición", attack: "-1d4", save: "-1d4" },
+  { name: "Guía", check: "1d4" },
+  { name: "Resistencia", save: "1d4" },
+  { name: "Furia", damage: "2" },
+  { name: "Marca del cazador", damage: "1d6" },
+  { name: "Maleficio", damage: "1d6" },
+  { name: "Arma mágica +1", attack: "1", damage: "1" },
+  { name: "Favor divino", damage: "1d4" }
+];
+/* Lo que suman los efectos encendidos a un tipo de tirada: "+1d4+2" y quiénes */
+export function buffsFor(c, kind) {
+  const on = ((c && c.buffs) || []).filter(b => b.on && b[kind]);
+  return {
+    add: on.map(b => (/^[+-]/.test(b[kind]) ? "" : "+") + b[kind]).join(""),
+    names: on.map(b => b.name)
+  };
+}
+/* Una fórmula con sus efectos y la etiqueta con sus nombres */
+export function withBuffs(c, kind, formula, label = "") {
+  const { add, names } = buffsFor(c, kind);
+  return { formula: formula + add, label: names.length && label ? `${label} · ${names.join(", ")}` : label, names };
+}
+
+/* ---------- Daño extra al impactar ----------
+   Ataque furtivo (pícaro) y Castigo divino (paladín). Lo calcula el servidor
+   a partir de la ficha: el navegador solo dice si lo quiere usar. */
+const hasFeature = (c, re) => re.test(c.className || "") || (c.features || []).some(f => re.test(f.name));
+export const canSneak = c => hasFeature(c, /p[ií]car|rogue|ataque furtivo|sneak attack/i);
+export const canSmite = c => hasFeature(c, /palad[ií]n|paladin|castigo divino|divine smite/i);
+export const sneakDice = c => `${Math.ceil(clamp(c.level || 1, 1, 20) / 2)}d6`;
+/* 2d8 con un espacio de nivel 1, uno más por nivel por encima, hasta 5d8; y
+   uno más contra muertos vivientes e infernales */
+export const smiteDice = (slot, foe = false) => `${Math.min(5, 1 + clamp(slot, 1, 9)) + (foe ? 1 : 0)}d8`;
+export const smiteFoe = t => !!t && /muerto viviente|infernal|undead|fiend/i.test(`${t.sizeType || ""} ${t.type || ""}`);
 
 /* ---------- Listas de la ficha ----------
    Como en D&D Beyond: el equipo y los rasgos son listas, no párrafos. */
@@ -401,6 +457,7 @@ const MAP_DEFAULTS = {
   lockRatio: true, cols: 28, rows: 18, grid: true,
   radius: 5, remember: true,
   camera: "full", followSpan: 14, partyZoom: 1,
+  roomCamera: false,    // al entrar la party en una sala, la cámara la encuadra entera
   explored: [], edges: {}, notes: "",
   /* Nuevo en 2.1 */
   dark: false,          // si está a oscuras, solo se ve lo que alumbran las antorchas
@@ -409,6 +466,7 @@ const MAP_DEFAULTS = {
   cells: {},            // casillas pintadas: niebla, oscuridad o luz fija
   shapes: [],           // plantillas de área puestas en el tablero
   pins: [],             // chinchetas con nota
+  sounds: [],           // sonido ambiente: ver normalizeSound
   portals: [],          // accesos a otros mapas
   playerZoom: true,     // dejar que los jugadores se acerquen
   /* Dónde cae la cuadrícula dibujada en la imagen, en píxeles de la imagen:
@@ -438,6 +496,7 @@ export function normalizeMap(raw = {}) {
   m.grid = m.grid !== false;
   m.remember = m.remember !== false;
   m.camera = m.camera === "follow" ? "follow" : "full";
+  m.roomCamera = !!m.roomCamera;
   m.explored = Array.isArray(m.explored) ? m.explored.filter(k => typeof k === "string") : [];
   m.dark = !!m.dark;
   m.playerZoom = m.playerZoom !== false;
@@ -446,6 +505,7 @@ export function normalizeMap(raw = {}) {
   m.cells = m.cells && typeof m.cells === "object" && !Array.isArray(m.cells) ? { ...m.cells } : {};
   m.shapes = Array.isArray(m.shapes) ? m.shapes.map(normalizeShape).slice(0, 40) : [];
   m.pins = Array.isArray(m.pins) ? m.pins.map(normalizePin).slice(0, 60) : [];
+  m.sounds = Array.isArray(m.sounds) ? m.sounds.map(normalizeSound).slice(0, 40) : [];
   m.portals = Array.isArray(m.portals) ? m.portals.map(normalizePortal).slice(0, 40) : [];
   m.edges = m.edges && typeof m.edges === "object" && !Array.isArray(m.edges) ? { ...m.edges } : {};
   /* Capas por casilla que pinta el DM:
@@ -525,6 +585,25 @@ export function normalizeShape(raw = {}) {
     party: raw.party !== false               // ¿la ve la party?
   };
 }
+/* Sonido ambiente en el mapa (sound-core.js explica cómo se oye) */
+export const SOUND_MODES = ["point", "room", "map"];
+export function normalizeSound(raw = {}) {
+  return {
+    id: raw.id || uid(),
+    x: Math.trunc(num(raw.x)), y: Math.trunc(num(raw.y)),
+    name: String(raw.name || "").slice(0, 60),
+    audioId: /^[\w.-]{1,64}$/.test(String(raw.audioId || "")) ? String(raw.audioId) : "",
+    lib: /^[a-z0-9-]{1,40}$/.test(String(raw.lib || "")) ? String(raw.lib) : "",   // uno de la biblioteca de Mesa
+    fileName: String(raw.fileName || "").slice(0, 80),
+    volume: clamp(num(raw.volume, 0.7), 0, 1),
+    radius: clamp(num(raw.radius, 6), 1, 60),            // alcance, en casillas
+    mode: SOUND_MODES.includes(raw.mode) ? raw.mode : "point",
+    falloff: raw.falloff !== false,                       // más fuerte al acercarse
+    walls: raw.walls !== false,                           // las paredes lo apagan
+    on: raw.on !== false
+  };
+}
+
 export const PIN_KINDS = [
   ["nota", "Nota"], ["peligro", "Peligro"], ["tesoro", "Tesoro"], ["pregunta", "Algo raro"]
 ];

@@ -14,11 +14,12 @@
    Todas las rutas son relativas al sitio donde vive Mesa: en GitHub Pages es
    una subcarpeta (/DnD/), no la raíz. */
 
-const VERSION = "mesa-2.9.0";
+const VERSION = "mesa-2.13.0";
 const SHELL_CACHE = VERSION + "-app";
 const IMG_CACHE = "mesa-img";
 const IMG_LIMIT = 80;
 const DEMO_IMG_CACHE = "mesa-demo-img";   // lo que se sube en la versión de prueba: no se recorta
+const SOUND_CACHE = "mesa-sonidos";       // la biblioteca de sonidos: no cambia, se baja una vez
 
 const BASE = new URL("./", self.location.href);
 const SHELL = [
@@ -26,6 +27,7 @@ const SHELL = [
   "css/mesa.css",
   "fonts/roboto.woff2", "fonts/roboto-italic.woff2",
   "manifest.webmanifest",
+  "art/entrada.svg",
   "icons/icon.svg",
   "icons/icon-192.png",
   "js/main.js", "js/net.js", "js/util.js", "js/i18n.js", "js/icons.js",
@@ -33,8 +35,11 @@ const SHELL = [
   "js/dice-panel.js", "js/attacks.js", "js/attacks-core.js", "js/char-editor.js",
   "js/dm.js", "js/player.js", "js/screen.js",
   "js/engine.js", "js/local.js", "js/local-host.js", "js/local-worker.js",
-  "js/spells.js", "js/spellbook.js", "js/statblock.js", "js/sheet.js", "js/list-editor.js", "js/voice.js", "js/portals.js",
-  "js/gridfind.js", "js/gridfit.js", "js/wallfind.js", "js/wallmodel.js", "js/freewalls.js"
+  "js/spells.js", "js/spellbook.js", "js/statblock.js", "js/sheet.js", "js/list-editor.js", "js/rollable.js", "js/sound-core.js", "js/ambient.js", "js/sound-library.js", "js/creador.js", "js/creador-datos.js", "js/voice.js", "js/portals.js",
+  "js/gridfind.js", "js/gridfit.js", "js/wallfind.js", "js/wallmodel.js", "js/freewalls.js",
+  /* Siluetas del creador de personajes */
+  ...["barbaro", "bardo", "clerigo", "druida", "guerrero", "monje", "paladin", "explorador", "picaro", "hechicero", "brujo", "mago",
+    "humano", "elfo", "enano", "mediano", "draconido", "gnomo", "semielfo", "semiorco", "tiefling"].map(n => `art/creador/${n}.svg`)
 ].map(p => new URL(p, BASE).href);
 
 self.addEventListener("install", event => {
@@ -50,7 +55,7 @@ self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(keys
-        .filter(k => k !== SHELL_CACHE && k !== IMG_CACHE && k !== DEMO_IMG_CACHE)
+        .filter(k => k !== SHELL_CACHE && k !== IMG_CACHE && k !== DEMO_IMG_CACHE && k !== SOUND_CACHE)
         .map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
@@ -67,6 +72,10 @@ self.addEventListener("fetch", event => {
 
   if (rel.startsWith("img/")) {
     event.respondWith(imageFirst(req));
+    return;
+  }
+  if (rel.startsWith("sonidos/")) {
+    event.respondWith(soundFirst(req));
     return;
   }
   event.respondWith(networkFirst(req));
@@ -105,6 +114,17 @@ async function imageFirst(req) {
     await cache.put(req, res.clone());
     trim(cache);
   }
+  return res;
+}
+
+/* Los sonidos de la biblioteca se guardan la primera vez que suenan. Un
+   sonido que cambie tiene que cambiar también de nombre: el guardado no caduca. */
+async function soundFirst(req) {
+  const cache = await caches.open(SOUND_CACHE);
+  const hit = await cache.match(req);
+  if (hit) return hit;
+  const res = await fetch(req);
+  if (res.ok) cache.put(req, res.clone());
   return res;
 }
 

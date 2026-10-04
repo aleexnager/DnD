@@ -47,6 +47,11 @@ async function start(role) {
   await once;                       // no se pinta nada hasta tener el estado
   app().className = "";
   mount(app());
+  /* Sonido ambiente: lo que el servidor diga que se oye desde aquí */
+  const { ambientUpdate } = await import("./ambient.js");
+  const sound = () => ambientUpdate(role, store.doc ? store.doc.sounds : []);
+  onState(sound);
+  sound();
 }
 
 async function gate(wanted) {
@@ -56,6 +61,7 @@ async function gate(wanted) {
 
   app().className = "gate";
   app().innerHTML = `
+    <div class="gate-bg" aria-hidden="true"><img src="art/entrada.svg" alt=""></div>
     <div class="panel">
       <div class="gate-logo">${icon("shield", 30)}</div>
       <h1>Mesa</h1>

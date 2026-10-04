@@ -9,9 +9,11 @@ import { store, onState, onStatus, onPresence, op, patchChar, leave } from "./ne
 import { dicePanel, renderLog, throwDice, tellTable } from "./dice-panel.js";
 import { openAttacks, areaAttacks, slotsLeft, shapeLabel } from "./attacks.js";
 import { openCharEditor, openConditions } from "./char-editor.js";
+import { openBuilder } from "./creador.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
 import { sheetTabsHTML, handleSheetAct } from "./sheet.js";
+import { ambientToggle } from "./ambient.js";
 import { langPicker } from "./i18n.js";
 import { icon, withIcon } from "./icons.js";
 
@@ -61,6 +63,7 @@ export function mountPlayer(root) {
         <span class="spacer"></span>
         <div class="who"><span class="dot" id="dot"></span><span class="pill" id="whoami"></span></div>
         <span id="voiceSlot"></span>
+        <span id="ambientSlot"></span>
         <span id="plang"></span>
         <button class="icon-btn" id="leaveBtn" title="Salir de la partida" aria-label="Salir de la partida">${icon("exit")}</button>
       </header>
@@ -83,6 +86,7 @@ export function mountPlayer(root) {
   $("#plang", root).appendChild(langPicker());
   $("#voiceSlot", root).replaceWith(voiceWidget());
   $("#leaveBtn", root).addEventListener("click", () => leave());
+  $("#ambientSlot", root).replaceWith(ambientToggle("player"));
   onStatus(ok => {
     $("#offline", root).classList.toggle("hidden", ok);
     $("#dot", root).classList.toggle("off", !ok);
@@ -213,7 +217,7 @@ function renderSheet(pane, c) {
     : `<div class="avatar" style="--tone:${esc(c.color)}">${initials(c.name)}</div>`;
   const abbr = k => ABILITIES.find(a => a[0] === k)[1];
   /* Una fila que se toca para tirar: el punto dice si tiene competencia */
-  const rollRow = (name, mod, prof, extra = "") => `<button class="roll-row" data-act="rollMod" data-mod="${mod}" data-label="${esc(name)}">
+  const rollRow = (name, mod, prof, extra = "", kind = "check") => `<button class="roll-row" data-act="rollMod" data-mod="${mod}" data-kind="${kind}" data-label="${esc(name)}">
       <i class="prof ${prof ? "on" : ""}"></i>${extra}<span class="roll-name">${esc(name)}</span><b class="roll-mod tnum">${sign(mod)}</b></button>`;
 
   pane.innerHTML = `
@@ -304,7 +308,7 @@ function renderSheet(pane, c) {
 
       <div class="sheet-cols">
         <section class="sheet-box roll-box">
-          ${ABILITIES.map(([k, l]) => rollRow(l, modOf(c[k]) + (c.saves.includes(k) ? c.proficiency : 0), c.saves.includes(k))).join("")}
+          ${ABILITIES.map(([k, l]) => rollRow(l, modOf(c[k]) + (c.saves.includes(k) ? c.proficiency : 0), c.saves.includes(k), "", "save")).join("")}
           <h3 class="box-label">Salvaciones</h3>
         </section>
         <section class="sheet-box roll-box skills">
@@ -511,7 +515,7 @@ function bindActions(root) {
     if (r && dc) tellTable(`${c ? c.name : store.session.name}: ${r.total >= dc ? "supera" : "falla"} ${b.dataset.label} (CD ${dc})`);
     op("request.done", { id: b.dataset.ask, charId: c ? c.id : "" });
   });
-  on(root, "click", "[data-new]", () => openCharEditor(null, { isDM: false }));
+  on(root, "click", "[data-new]", () => openBuilder({ onManual: () => openCharEditor(null, { isDM: false }) }));
 
   on(root, "click", "[data-act]", (e, b) => {
     const c = me();
@@ -560,21 +564,21 @@ function bindActions(root) {
       }
       case "conc": {
         const r = throwDice("1d20" + sign(modOf(c.con) + (c.saves.includes("con") ? c.proficiency : 0)),
-          { label: `${c.name} · concentración` });
+          { label: `${c.name} · concentración`, char: c, kind: "save" });
         if (r && r.total < 10) { patchChar(c.id, { concentration: "" }); tellTable(`${c.name} pierde la concentración`); }
         return;
       }
       case "conditions": return openConditions(c);
       case "ability": {
         const k = b.dataset.k;
-        return throwDice("1d20" + sign(modOf(c[k])), { label: `${c.name} · ${ABILITIES.find(a => a[0] === k)[1]}` });
+        return throwDice("1d20" + sign(modOf(c[k])), { label: `${c.name} · ${ABILITIES.find(a => a[0] === k)[1]}`, char: c, kind: "check" });
       }
       case "initiative": {
-        const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa" });
+        const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", char: c, kind: "check" });
         if (r) patchChar(c.id, { initiative: r.total });
         return;
       }
-      case "rollMod": return throwDice("1d20" + sign(+b.dataset.mod), { label: `${c.name} · ${b.dataset.label}` });
+      case "rollMod": return throwDice("1d20" + sign(+b.dataset.mod), { label: `${c.name} · ${b.dataset.label}`, char: c, kind: b.dataset.kind === "save" ? "save" : "check" });
       case "slot": {
         const i = +b.dataset.level;
         const used = c.slotsUsed.slice();
@@ -591,10 +595,10 @@ function bindActions(root) {
         return patchChar(c.id, { [key]: c[key] === n ? n - 1 : n });
       }
       case "deathRoll": {
-        const r = throwDice("1d20", { label: c.name + " · salvación de muerte" });
+        const r = throwDice("1d20", { label: c.name + " · salvación de muerte", char: c, kind: "save" });
         if (!r) return;
-        if (r.total === 20) return patchChar(c.id, { hp: 1, deathOk: 0, deathFail: 0 });
-        if (r.total === 1) return patchChar(c.id, { deathFail: Math.min(3, c.deathFail + 2) });
+        if (r.natural === 20) return patchChar(c.id, { hp: 1, deathOk: 0, deathFail: 0 });
+        if (r.natural === 1) return patchChar(c.id, { deathFail: Math.min(3, c.deathFail + 2) });
         return patchChar(c.id, r.total >= 10
           ? { deathOk: Math.min(3, c.deathOk + 1) }
           : { deathFail: Math.min(3, c.deathFail + 1) });

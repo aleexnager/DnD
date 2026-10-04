@@ -481,6 +481,32 @@ function edgeBetween(map, x1, y1, x2, y2) {
   return !!(map.edges || {})[key];
 }
 
+/* La sala en la que está la party, como rectángulo de casillas, para que la
+   cámara la encuadre entera. Manda el personaje al que sigue la cámara; si no
+   sigue a nadie, la sala donde esté la mayoría de los personajes en pie. Si
+   están repartidos, ninguna: así la cámara no salta de una sala a otra. */
+export function partyRoomFrame(doc, map, focusId = "") {
+  const rooms = roomsOf(map);
+  if (!rooms.list.length) return null;
+  const roomAt = c => { for (const [x, y] of occupied(c)) { const r = rooms.of.get(cellKey(x, y)); if (r && r.length) return r[0]; } return -1; };
+  const focus = doc.chars.find(c => c.id === focusId && onMap(c, map));
+  let idx = -1;
+  if (focus) idx = roomAt(focus);
+  else {
+    const pcs = doc.chars.filter(c => c.kind === "pc" && c.hp > 0 && onMap(c, map));
+    const count = new Map();
+    for (const c of pcs) { const r = roomAt(c); if (r >= 0) count.set(r, (count.get(r) || 0) + 1); }
+    for (const [r, n] of count) if (n * 2 > pcs.length) idx = r;
+  }
+  if (idx < 0) return null;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const k of rooms.list[idx]) {
+    const [x, y] = k.split(",").map(Number);
+    x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
+  }
+  return { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+}
+
 /* Número para una sala nueva: uno más que el mayor que haya */
 export function nextRoomId(map) {
   let max = 0;

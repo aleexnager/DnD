@@ -10,14 +10,16 @@
 
 import { esc, lines, sign } from "./util.js";
 import { ABILITIES, modOf } from "./schema.js";
+import { rollable } from "./rollable.js";
 
 /* Tras el nombre va punto, así que el texto sigue en mayúscula */
 const capFirst = s => s.charAt(0).toUpperCase() + s.slice(1);
-const trait = line => {
+/* Las fórmulas del texto se tocan para tirar, a nombre de la criatura */
+const trait = (line, who) => {
   const i = line.indexOf(" — ");
   return i > 0
-    ? `<p class="mon-trait"><b>${esc(line.slice(0, i))}</b> ${esc(capFirst(line.slice(i + 3)))}</p>`
-    : `<p class="mon-trait">${esc(line)}</p>`;
+    ? `<p class="mon-trait"><b>${esc(line.slice(0, i))}</b> ${rollable(capFirst(line.slice(i + 3)), `${who} · ${line.slice(0, i)}`)}</p>`
+    : `<p class="mon-trait">${rollable(line, who)}</p>`;
 };
 const prop = (label, value) => value === "" || value === undefined || value === null ? ""
   : `<p class="mon-prop"><b>${label}</b> ${esc(value)}</p>`;
@@ -50,7 +52,7 @@ export function statBlockHTML(b, opts = {}) {
     ${prop("Sentidos", b.senses)}
     ${prop("Idiomas", b.languages)}
     ${b.cr !== undefined && b.cr !== "" ? `<p class="mon-prop"><b>Desafío</b> ${esc(b.cr)} (${b.xp || 0} PX)</p>` : ""}
-    ${traits.length ? `<i class="mon-rule"></i>${traits.map(trait).join("")}` : ""}
-    ${actions.length ? `<h4 class="mon-head">Acciones</h4>${actions.map(trait).join("")}` : ""}
+    ${traits.length ? `<i class="mon-rule"></i>${traits.map(l => trait(l, b.name)).join("")}` : ""}
+    ${actions.length ? `<h4 class="mon-head">Acciones</h4>${actions.map(l => trait(l, b.name)).join("")}` : ""}
   </div>`;
 }

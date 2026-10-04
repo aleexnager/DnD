@@ -49,11 +49,14 @@ async function kvSet(key, value) {
 }
 
 /* ---------- Imágenes ---------- */
-const EXT = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif" };
+const EXT = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif",
+  /* el sonido ambiente se guarda igual */
+  "audio/mpeg": "mp3", "audio/mp3": "mp3", "audio/ogg": "ogg", "audio/wav": "wav", "audio/x-wav": "wav", "audio/wave": "wav",
+  "audio/webm": "webm", "audio/mp4": "m4a", "audio/x-m4a": "m4a", "audio/aac": "aac", "audio/flac": "flac" };
 
 async function storeImage(base, blob) {
   const ext = EXT[blob.type];
-  if (!ext) throw new Error("Formato de imagen no admitido");
+  if (!ext) throw new Error(String(blob.type).startsWith("audio/") ? "Formato de audio no admitido: usa MP3, OGG, WAV o M4A" : "Formato de imagen no admitido");
   const id = rid(8) + "." + ext;
   const cache = await caches.open(IMG_CACHE);
   await cache.put(new URL("img/" + id, base).href, new Response(blob, {

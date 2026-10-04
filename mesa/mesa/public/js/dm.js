@@ -3,12 +3,13 @@
 import { afterMove } from "./portals.js";
 import { voiceWidget } from "./voice.js";
 import { $, el, on, esc, lines, sign, pct, hpTone, hpBar, tweenBars, initials, imgURL, toast, modal, confirmBox, shrinkImage, clamp } from "./util.js";
-import { CONDITIONS, conditionName, ABILITIES, SKILLS, PIN_KINDS, modOf, normalizeChar, normalizeBeast, bestiaryOf, isBaseBeast, normalizeMap, normalizePin, normalizePortal, uid, encounterDifficulty, MAX_COLS, MAX_ROWS } from "./schema.js";
+import { CONDITIONS, conditionName, ABILITIES, SKILLS, PIN_KINDS, normalizeSound, modOf, normalizeChar, normalizeBeast, bestiaryOf, isBaseBeast, normalizeMap, normalizePin, normalizePortal, uid, encounterDifficulty, MAX_COLS, MAX_ROWS } from "./schema.js";
 import { openAttacks } from "./attacks.js";
 import { feetChars, nextRoomId } from "./los.js";
 import { store, onState, onPresence, onStatus, op, patchChar, patchSession, patchMap, uploadImage, leave, lobby } from "./net.js";
 import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret } from "./dice-panel.js";
 import { openCharEditor, openConditions } from "./char-editor.js";
+import { openBuilder } from "./creador.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
 import { openGridFit, openWallFit, teachFromMap, forgetLearned, learnedCount, exportLearned, importLearned } from "./gridfit.js";
@@ -19,6 +20,8 @@ import { TYPE_NAMES, typeOf, crValue, CATALOG_BY_ID } from "./catalog.js";
 import { statBlockHTML } from "./statblock.js";
 import { sheetTabsHTML, attackTableHTML, handleSheetAct } from "./sheet.js";
 import { listEditor, linesToEntries, entriesToLines } from "./list-editor.js";
+import { ambientToggle, previewSound, stopPreview } from "./ambient.js";
+import { SOUND_LIBRARY, SOUND_CATS, libSound } from "./sound-library.js";
 
 let tab = "mesa";
 let shownTab = null;
@@ -115,7 +118,7 @@ export function mountDM(root) {
     root.querySelectorAll("[data-tab]").forEach(x => x.setAttribute("aria-selected", String(x === b)));
     render();
   });
-  $("#addBtn", root).addEventListener("click", () => openCharEditor(null, {}));
+  $("#addBtn", root).addEventListener("click", newCharacter);
   $("#bestiaryBtn", root).addEventListener("click", () => toggleDrawer());
   $("#combatBtn", root).addEventListener("click", toggleCombat);
   $("#restBtn", root).addEventListener("click", openRest);
@@ -131,6 +134,9 @@ export function mountDM(root) {
   bindKeys();
   render();
 }
+
+/* Personaje nuevo: el creador paso a paso, o la ficha a mano para un PNJ rápido */
+function newCharacter() { openBuilder({ onManual: () => openCharEditor(null, {}) }); }
 
 /* ---------- Presencia ---------- */
 function renderPresence(list = store.presence) {
@@ -233,6 +239,7 @@ function render() {
 
   $("#combatBtn").innerHTML = withIcon("swords", session().combat.on ? "Terminar combate" : "Iniciar combate");
   $("#combatBtn").classList.toggle("on", session().combat.on);
+  if (tab !== "mapa") closeTokenMenu();
   $("#tableView").classList.toggle("hidden", tab !== "mesa");
   $("#mapPane").classList.toggle("hidden", tab !== "mapa");
 
@@ -474,7 +481,7 @@ function bindTable(root) {
 
     switch (act) {
       case "sheetTab": cardTabs.set(c.id, btn.dataset.tabId); return render();
-      case "add": return openCharEditor(null, {});
+      case "add": return newCharacter();
       case "fold":
         openCards.has(c.id) ? openCards.delete(c.id) : openCards.add(c.id);
         return render();
@@ -497,12 +504,12 @@ function bindTable(root) {
       case "checkAbility": {
         const k = btn.dataset.ability;
         const label = `${c.name} · ${ABILITIES.find(a => a[0] === k)[1]}`;
-        return throwDice("1d20" + sign(modOf(c[k])), { label, mode: currentMode(), secret: isSecret() });
+        return throwDice("1d20" + sign(modOf(c[k])), { label, mode: currentMode(), secret: isSecret(), char: c, kind: "check" });
       }
       case "rollSave": return pickAndRoll(c, "save");
       case "rollSkill": return pickAndRoll(c, "skill");
       case "rollInitOne": {
-        const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa" });
+        const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", char: c, kind: "check" });
         if (r) patchChar(c.id, { initiative: r.total });
         return;
       }
@@ -545,7 +552,7 @@ function bindTable(root) {
       case "concSave": {
         const dc = +btn.dataset.dc || 10;
         const r = throwDice("1d20" + sign(modOf(c.con) + (c.saves.includes("con") ? c.proficiency : 0)),
-          { label: `${c.name} · concentración CD ${dc}` });
+          { label: `${c.name} · concentración CD ${dc}`, char: c, kind: "save" });
         if (r && r.total < dc) { patchChar(c.id, { concentration: "" }); tellTable(`${c.name} pierde la concentración`); }
         return;
       }
@@ -640,10 +647,10 @@ function pickForOrder() {
 }
 
 function deathSave(c) {
-  const r = throwDice("1d20", { label: c.name + " · salvación de muerte" });
+  const r = throwDice("1d20", { label: c.name + " · salvación de muerte", char: c, kind: "save" });
   if (!r) return;
-  if (r.total === 20) return patchChar(c.id, { hp: 1, deathOk: 0, deathFail: 0 });
-  if (r.total === 1) return patchChar(c.id, { deathFail: Math.min(3, c.deathFail + 2) });
+  if (r.natural === 20) return patchChar(c.id, { hp: 1, deathOk: 0, deathFail: 0 });
+  if (r.natural === 1) return patchChar(c.id, { deathFail: Math.min(3, c.deathFail + 2) });
   if (r.total >= 10) patchChar(c.id, { deathOk: Math.min(3, c.deathOk + 1) });
   else patchChar(c.id, { deathFail: Math.min(3, c.deathFail + 1) });
 }
@@ -656,7 +663,7 @@ function pickAndRoll(c, kind) {
     `<button class="btn sm" data-pick="${x.id}" data-mod="${x.mod}">${esc(x.name)} ${sign(x.mod)}</button>`).join("")}</div>`);
   const m = modal({ title: (kind === "save" ? "Salvación de " : "Prueba de ") + c.name, body, wide: true, actions: [{ label: "Cerrar" }] });
   on(body, "click", "[data-pick]", (e, b) => {
-    throwDice("1d20" + sign(+b.dataset.mod), { label: `${c.name} · ${b.textContent.trim()}`, mode: currentMode(), secret: isSecret() });
+    throwDice("1d20" + sign(+b.dataset.mod), { label: `${c.name} · ${b.textContent.trim()}`, mode: currentMode(), secret: isSecret(), char: c, kind: kind === "save" ? "save" : "check" });
     m.close();
   });
 }
@@ -746,7 +753,7 @@ function openCombatRoster() {
 
   /* Tirar aquí mismo y que el número caiga en su casilla */
   const rollOne = (c, secret) => {
-    const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", secret });
+    const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", secret, char: c, kind: "check" });
     if (!r) return;
     const box = body.querySelector(`[data-init="${c.id}"]`);
     if (box) box.value = r.total;
@@ -796,7 +803,7 @@ function rollInitiative() {
   const c0 = session().combat;
   const list = c0.on && c0.order.length ? c0.order.map(byId).filter(Boolean) : combatCandidates();
   list.forEach(c => {
-    const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", secret: c.kind === "monster" });
+    const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", secret: c.kind === "monster", char: c, kind: "check" });
     if (r) rolled.set(c.id, r.total);
   });
   rolled.forEach((total, id) => patchChar(id, { initiative: total }));
@@ -1136,6 +1143,7 @@ function renderMap() {
             <button data-tool="door" aria-pressed="false" title="Puerta, recta, en diagonal o en un muro libre: se abre y se cierra">${icon("door", 15)}Puerta</button>
             <button data-tool="erase" aria-pressed="false" title="Quitar muros, diagonales, muros libres y puertas">${icon("eraser", 15)}Borrar</button>
             <button data-tool="pin" aria-pressed="false" title="Clavar una nota">${icon("note", 15)}Nota</button>
+            <button data-tool="sound" aria-pressed="false" title="Sonido ambiente: una hoguera, un río, la música de la taberna">${icon("volume", 15)}Sonido</button>
             <button data-tool="portal" aria-pressed="false" title="Escalera o pasadizo: a otro mapa o a otro punto de este">${icon("stairs", 15)}Acceso</button>
             <button data-tool="draw" aria-pressed="false" title="Dibujar a mano alzada">${icon("scribble", 15)}Dibujar</button>
           </div>
@@ -1170,6 +1178,9 @@ function renderMap() {
           <button class="btn sm" data-map="zoomOut">−</button>
           <span class="pill" id="zoomLabel">100%</span>
           <button class="btn sm" data-map="zoomIn">+</button>
+          <span id="ambientSlot"></span>
+          <button class="btn sm" data-map="roomCam" id="roomCamBtn" aria-pressed="false"
+            title="Cuando la party entre en una sala, su cámara la encuadra entera; al salir, vuelve a la de antes">${withIcon("room", "Encuadrar salas", 15)}</button>
           <span class="spacer"></span>
           <span class="pill" id="mapHint"></span>
           <button class="btn sm" data-map="settings">Ajustes del mapa</button>
@@ -1213,11 +1224,12 @@ function renderMap() {
         if (afterArea) { lastArea = shape; const go = afterArea; afterArea = null; setTimeout(go, 350); }
       },
       onPin: (x, y) => editPin({ x, y }),
+      onSound: (x, y) => editSound({ x, y }),
       onPortal: (x, y) => editPortal({ x, y }),
       onRoom: id => { const h = $("#mapHint"); if (h) h.textContent = roomHint(id); },
       onPing: (x, y) => op("ping", { x, y, mapId: activeMap().id }),
       onSelect: ids => { const h = $("#mapHint"); if (h) h.textContent = ids.length ? ids.length + " fichas elegidas" : ""; },
-      onZoom: z => { const l = $("#zoomLabel"); if (l) l.textContent = Math.round(z * 100) + "%"; }
+      onZoom: z => { closeTokenMenu(); const l = $("#zoomLabel"); if (l) l.textContent = Math.round(z * 100) + "%"; }
     });
 
     mapView.drawColor = DRAW_COLORS[0];
@@ -1239,6 +1251,7 @@ function renderMap() {
         door: "Pulsa un borde (recta), el centro de una casilla (diagonal) o un muro libre. Otra pulsación la abre o la cierra; para quitarla, Borrar",
         erase: "Arrastra para quitar muros y puertas, también trozos de muro libre",
         pin: "Pulsa donde quieras clavar la nota",
+        sound: "Pulsa donde suena: una casilla vacía pone un sonido nuevo; uno que ya esté, lo abre",
         portal: "Pulsa donde esté la escalera"
       }[mapTool] || "";
       $("#mapHint", pane).textContent = hint;
@@ -1297,6 +1310,7 @@ function renderMap() {
     });
     on(pane, "click", "[data-map]", (e, b) => mapAction(b.dataset.map));
     $("#mapPick", pane).addEventListener("change", e => patchSession({ activeMapId: e.target.value }));
+    $("#ambientSlot", pane).replaceWith(ambientToggle("dm", true));
     $("#canvas", pane).addEventListener("pointermove", e => {
       const p = mapView.toCell(e.clientX, e.clientY);
       if (p) $("#coords", pane).textContent = `${p.x}, ${p.y}`;
@@ -1305,6 +1319,10 @@ function renderMap() {
 
   const pick = $("#mapPick", pane);
   pick.innerHTML = doc().maps.map(m => `<option value="${m.id}" ${m.id === map.id ? "selected" : ""}>${esc(m.name)}</option>`).join("");
+  if (tokenPop) requestAnimationFrame(placeTokenMenu);
+  const roomCam = $("#roomCamBtn", pane);
+  roomCam.setAttribute("aria-pressed", String(map.roomCamera));
+  roomCam.classList.toggle("on", map.roomCamera);
   mapView.set({ map, chars: chars(), session: session(), you: null });
 }
 
@@ -1330,22 +1348,85 @@ function placeHere(x, y) {
 }
 
 /* Menú de una ficha del tablero */
+/* El menú de una ficha del mapa: un globo pequeño encima de ella que la
+   señala, con su vida y lo que se le puede hacer. Se cierra al pulsar fuera,
+   con Esc, al mover o acercar el mapa, o al elegir algo. */
+let tokenPop = null;
+function closeTokenMenu() {
+  if (!tokenPop) return;
+  tokenPop.cleanup();
+  tokenPop.node.remove();
+  tokenPop = null;
+}
+function placeTokenMenu() {
+  if (!tokenPop || !mapView) return;
+  const at = mapView.tokenBox(tokenPop.id);
+  if (!at) return closeTokenMenu();
+  const n = tokenPop.node, w = n.offsetWidth, h = n.offsetHeight, gap = 10, pad = 8;
+  const minX = Math.max(pad, at.board.left + pad), maxX = Math.min(innerWidth - pad, at.board.right - pad);
+  const left = clamp(at.x - w / 2, minX, Math.max(minX, maxX - w));
+  /* Encima si cabe en el tablero; si no, debajo; y si no cabe en ninguno,
+     donde haya más sitio, sin salirse de la pantalla */
+  const roomAbove = at.y - at.r - gap - Math.max(pad, at.board.top + pad);
+  const roomBelow = Math.min(innerHeight, at.board.bottom) - pad - (at.y + at.r + gap);
+  const above = roomAbove >= h || (roomBelow < h && roomAbove > roomBelow);
+  const top = above ? Math.max(pad, at.y - at.r - gap - h) : Math.min(at.y + at.r + gap, innerHeight - h - pad);
+  n.classList.toggle("below", !above);
+  n.style.left = left + "px";
+  n.style.top = top + "px";
+  n.style.setProperty("--arrow", clamp(at.x - left, 16, w - 16) + "px");
+}
 function tokenMenu(id) {
+  closeTokenMenu();
   const c = byId(id);
-  if (!c) return;
-  const body = el(`<div class="row" style="flex-direction:column">
-    <button class="btn" data-tk="target">${targetId === id ? "Dejar de apuntarle" : "Apuntar con los ataques"}</button>
-    <button class="btn" data-tk="attack">Atacar con ${esc(c.name)}</button>
-    <button class="btn" data-tk="focus">Centrar la cámara de la party aquí</button>
-    <button class="btn" data-tk="conditions">Estados</button>
-    <button class="btn" data-tk="edit">Abrir la ficha</button>
-    ${c.kind === "monster" ? `<button class="btn" data-tk="hide">${c.hidden ? "Enseñar a la party" : "Ocultar a la party"}</button>` : ""}
-    <button class="btn danger" data-tk="off">Sacar del mapa</button>
+  if (!c || !mapView.tokenBox(id)) return;
+  const p = pct(c);
+  const monster = c.kind === "monster";
+  const item = (tk, ico, label, tone = "") =>
+    `<button class="tk-item ${tone}" data-tk="${tk}" role="menuitem">${icon(ico, 16)}<span>${label}</span></button>`;
+  const node = el(`<div class="token-pop" role="menu" aria-label="${esc(c.name)}" style="--tone:${esc(c.color)}">
+    <div class="tk-head">
+      ${c.avatarId ? `<img class="avatar" src="${imgURL(c.avatarId)}" alt="">` : `<div class="avatar">${initials(c.name)}</div>`}
+      <div class="tk-id">
+        <b>${esc(c.name)}</b>
+        <small><span class="tnum">${c.hp}/${c.maxHp}</span> PV · CA <span class="tnum">${c.ac}</span></small>
+        ${hpBar(c.id, p)}
+      </div>
+    </div>
+    <div class="tk-list">
+      ${item("target", "target", targetId === id ? "Dejar de apuntarle" : "Apuntar con los ataques")}
+      ${item("attack", "sword", "Atacar con " + esc(c.name))}
+      ${item("focus", "tv", "Centrar la cámara de la party aquí")}
+      ${item("conditions", "sparkle", "Estados")}
+      ${item("edit", "pencil", "Abrir la ficha")}
+      ${monster ? item("hide", c.hidden ? "eye" : "eyeOff", c.hidden ? "Enseñar a la party" : "Ocultar a la party") : ""}
+      ${item("off", "close", "Sacar del mapa", "danger")}
+    </div>
   </div>`);
-  const m = modal({ title: c.name, body, actions: [{ label: "Cerrar" }] });
-  on(body, "click", "[data-tk]", (e, b) => {
+  document.body.appendChild(node);
+
+  const outside = e => { if (!node.contains(e.target)) closeTokenMenu(); };
+  const keys = e => { if (e.key === "Escape") { e.stopPropagation(); closeTokenMenu(); } };
+  const canvas = $("#canvas");
+  const away = () => closeTokenMenu();
+  /* El clic que lo abre todavía está en curso: se escucha desde el siguiente */
+  setTimeout(() => { if (tokenPop && tokenPop.node === node) document.addEventListener("pointerdown", outside, true); }, 0);
+  document.addEventListener("keydown", keys, true);
+  window.addEventListener("resize", away);
+  if (canvas) canvas.addEventListener("wheel", away, { passive: true });
+  tokenPop = { id, node, cleanup: () => {
+    document.removeEventListener("pointerdown", outside, true);
+    document.removeEventListener("keydown", keys, true);
+    window.removeEventListener("resize", away);
+    if (canvas) canvas.removeEventListener("wheel", away);
+  } };
+  placeTokenMenu();
+  const first = node.querySelector(".tk-item");
+  if (first) first.focus({ preventScroll: true });
+
+  on(node, "click", "[data-tk]", (e, b) => {
     const what = b.dataset.tk;
-    m.close();
+    closeTokenMenu();
     if (what === "target") { targetId = targetId === id ? null : id; mapView.target = targetId; return render(); }
     if (what === "attack") return attack(c);
     if (what === "focus") { patchSession({ focusId: id }); return toast("La cámara sigue a " + c.name); }
@@ -1357,6 +1438,131 @@ function tokenMenu(id) {
 }
 
 /* ---------- Notas clavadas y accesos ---------- */
+/* Un sonido del mapa: qué archivo, cómo se oye y hasta dónde */
+const SOUND_MODES_UI = [["point", "Desde este punto"], ["room", "En toda la sala"], ["map", "En todo el mapa (música)"]];
+function editSound(seed) {
+  const map = activeMap();
+  const existing = (map.sounds || []).find(s => s.x === seed.x && s.y === seed.y);
+  const snd = normalizeSound(existing || { ...seed, radius: 6 });
+  let audioId = snd.audioId, fileName = snd.fileName, lib = snd.lib;
+  const libName = id => (libSound(id) || {}).name || "";
+  const srcName = () => lib ? `${libName(lib)} · biblioteca` : fileName || (audioId ? "Audio subido" : "Sin audio todavía");
+  const inRoom = Object.prototype.hasOwnProperty.call(map.rooms || {}, seed.x + "," + seed.y);
+  const body = el(`<div class="sound-edit">
+    <label class="field"><span>Nombre</span><input name="name" value="${esc(snd.name)}" placeholder="Hoguera, río, taberna…"></label>
+    <div class="sound-file">
+      <button type="button" class="btn sm" data-sf="pick">${withIcon("upload", "Elegir audio", 15)}</button>
+      <span class="sound-file-name" id="sfName">${esc(srcName())}</span>
+      <button type="button" class="icon-btn" data-sf="play" title="Escuchar" aria-label="Escuchar" ${audioId || lib ? "" : "disabled"}>${icon("play")}</button>
+      <input type="file" id="sfFile" accept="audio/*" hidden>
+    </div>
+    <p class="prose small-note">MP3, OGG, WAV o M4A, hasta 15 MB. Mejor un bucle que empiece y acabe igual: sonará sin cortes.</p>
+    <details class="sound-lib" ${!audioId ? "open" : ""}>
+      <summary>${icon("music", 15)}<span>Biblioteca de Mesa</span><small class="tnum">${SOUND_LIBRARY.length}</small></summary>
+      <div class="lib-cats" role="tablist">${SOUND_CATS.map(([k, l], i) => `<button type="button" role="tab" data-lcat="${k}" aria-selected="${i === 0}">${l}</button>`).join("")}</div>
+      <div class="lib-list"></div>
+      <p class="prose small-note">Sonidos y música hechos para Mesa: se pueden usar sin pedir permiso a nadie.</p>
+    </details>
+    <div class="cols2">
+      <label class="field"><span>Cómo se oye</span><select name="mode">
+        ${SOUND_MODES_UI.map(([k, l]) => `<option value="${k}" ${k === snd.mode ? "selected" : ""}>${l}</option>`).join("")}
+      </select></label>
+      <label class="field"><span>Volumen</span><input name="volume" type="range" min="0" max="100" value="${Math.round(snd.volume * 100)}"></label>
+    </div>
+    <div class="sound-point">
+      <label class="field"><span>Alcance (casillas)</span><input name="radius" type="number" min="1" max="60" value="${snd.radius}"></label>
+      <label class="check"><input type="checkbox" name="falloff" ${snd.falloff ? "checked" : ""}> Más fuerte a medida que se acercan</label>
+      <label class="check"><input type="checkbox" name="walls" ${snd.walls ? "checked" : ""}> Las paredes lo tapan: detrás de un muro o una puerta cerrada apenas se oye</label>
+    </div>
+    <p class="prose small-note sound-room-note">${inRoom ? "Suena igual en toda la sala de esta casilla, y fuera de ella no se oye." : "Esta casilla no está en ninguna sala: márcala con la herramienta «Sala» para que suene en toda ella."}</p>
+    <label class="check"><input type="checkbox" name="on" ${snd.on ? "checked" : ""}> Sonando</label>
+  </div>`);
+  const paintMode = () => {
+    const mode = body.querySelector('[name="mode"]').value;
+    body.querySelector(".sound-point").classList.toggle("hidden", mode !== "point");
+    body.querySelector(".sound-room-note").classList.toggle("hidden", mode !== "room");
+  };
+  body.querySelector('[name="mode"]').addEventListener("change", paintMode);
+  paintMode();
+
+  /* La biblioteca: por categorías, con escucha y «Usar» */
+  let cat = (lib && (libSound(lib) || {}).cat) || SOUND_CATS[0][0];
+  let hearing = "";
+  const paintLib = () => {
+    body.querySelectorAll("[data-lcat]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.lcat === cat)));
+    body.querySelector(".lib-list").innerHTML = SOUND_LIBRARY.filter(x => x.cat === cat).map(x => `<div class="lib-item ${x.id === lib ? "on" : ""}">
+        <button type="button" class="icon-btn" data-lplay="${x.id}" aria-pressed="${x.id === hearing}" title="Escuchar o parar" aria-label="Escuchar o parar">${icon("play", 15)}</button>
+        <span class="lib-name"><b>${esc(x.name)}</b><small class="tnum">${Math.round(x.len)} s</small></span>
+        <button type="button" class="btn sm ${x.id === lib ? "primary" : ""}" data-luse="${x.id}">${x.id === lib ? "Elegido" : "Usar"}</button>
+      </div>`).join("");
+  };
+  paintLib();
+  on(body, "click", "[data-lcat]", (e, b) => { cat = b.dataset.lcat; paintLib(); });
+  /* Escuchar y, pulsando otra vez, parar */
+  on(body, "click", "[data-lplay]", (e, b) => {
+    body.querySelectorAll("[data-lplay]").forEach(x => x.setAttribute("aria-pressed", "false"));
+    if (hearing === b.dataset.lplay) { stopPreview(); hearing = ""; return; }
+    const vol = +body.querySelector('[name="volume"]').value / 100;
+    if (previewSound({ lib: b.dataset.lplay }, vol)) { hearing = b.dataset.lplay; b.setAttribute("aria-pressed", "true"); }
+  });
+  on(body, "click", "[data-luse]", (e, b) => {
+    const it = libSound(b.dataset.luse);
+    const nameBox = body.querySelector('[name="name"]');
+    if (!nameBox.value.trim() || nameBox.value === libName(lib)) nameBox.value = it.name;
+    lib = it.id; audioId = ""; fileName = "";
+    /* Lo que suele ir bien con ese sonido; el DM lo cambia si quiere */
+    body.querySelector('[name="mode"]').value = it.mode;
+    body.querySelector('[name="radius"]').value = it.radius;
+    body.querySelector('[name="volume"]').value = Math.round(it.volume * 100);
+    paintMode();
+    body.querySelector("#sfName").textContent = srcName();
+    playBtn.disabled = false;
+    paintLib();
+  });
+  const file = body.querySelector("#sfFile");
+  const playBtn = body.querySelector('[data-sf="play"]');
+  on(body, "click", "[data-sf]", (e, b) => {
+    if (b.dataset.sf === "pick") return file.click();
+    const vol = +body.querySelector('[name="volume"]').value / 100;
+    hearing = "";
+    body.querySelectorAll("[data-lplay]").forEach(x => x.setAttribute("aria-pressed", "false"));
+    const a = previewSound({ audioId, lib }, vol);
+    if (a) toast("Sonando de prueba. Se para al cerrar la ventana");
+  });
+  file.addEventListener("change", async () => {
+    const f = file.files[0];
+    if (!f) return;
+    if (f.size > 15 * 1024 * 1024) return toast("Ese audio pasa de 15 MB. Prueba con un MP3 u OGG más corto", "bad");
+    try {
+      body.querySelector("#sfName").textContent = "Subiendo…";
+      audioId = await uploadImage(f);
+      fileName = f.name;
+      lib = "";
+      paintLib();
+      body.querySelector("#sfName").textContent = f.name;
+      playBtn.disabled = false;
+      if (!body.querySelector('[name="name"]').value) body.querySelector('[name="name"]').value = f.name.replace(/\.[a-z0-9]+$/i, "");
+    } catch (err) { body.querySelector("#sfName").textContent = fileName || "Sin audio todavía"; toast(err.message, "bad"); }
+  });
+  modal({
+    title: existing ? "Sonido del mapa" : "Poner un sonido",
+    body,
+    onClose: stopPreview,
+    actions: [
+      ...(existing ? [{ label: "Quitar", tone: "danger", run: () => { stopPreview(); op("sound.set", { mapId: map.id, sound: snd, remove: true }); } }] : []),
+      { label: "Cancelar", run: stopPreview },
+      { label: "Guardar", tone: "primary", run: host => {
+        stopPreview();
+        const v = n => host.querySelector(`[name="${n}"]`);
+        if (!audioId && !lib) { toast("Elige un audio tuyo o uno de la biblioteca", "bad"); return false; }
+        op("sound.set", { mapId: map.id, sound: { ...snd, audioId, fileName, lib,
+          name: v("name").value.trim(), mode: v("mode").value, volume: +v("volume").value / 100,
+          radius: +v("radius").value || 6, falloff: v("falloff").checked, walls: v("walls").checked, on: v("on").checked } });
+      } }
+    ]
+  });
+}
+
 function editPin(seed) {
   const map = activeMap();
   const existing = (map.pins || []).find(p => p.x === seed.x && p.y === seed.y);
@@ -1474,6 +1680,13 @@ function mapAction(what) {
   if (what === "zoomOut") return mapView.setZoom(mapView.zoom / 1.25);
   if (what === "fit") return mapView.setZoom(1);
   if (what === "settings") return openMapSettings(map);
+  if (what === "roomCam") {
+    const on = !map.roomCamera;
+    patchMap(map.id, { roomCamera: on });
+    const rooms = Object.keys(map.rooms || {}).length;
+    return toast(on ? (rooms ? "La cámara de la party encuadrará cada sala al entrar"
+      : "Activado. Marca las salas con la herramienta «Sala» para que se encuadren") : "La cámara de la party ya no encuadra las salas");
+  }
 }
 
 function openMapSettings(map) {
@@ -1522,6 +1735,7 @@ function openMapSettings(map) {
             <option value="full" ${map.camera === "full" ? "selected" : ""}>Todo el mapa</option>
             <option value="follow" ${map.camera === "follow" ? "selected" : ""}>Centrada en el personaje</option>
           </select></label>
+        <label class="check" style="grid-column:1 / -1"><input type="checkbox" name="roomCamera" ${map.roomCamera ? "checked" : ""}> Encuadrar cada sala marcada cuando la party entre en ella (al salir, vuelve esta cámara)</label>
         <label class="field"><span>Casillas a lo ancho al seguir</span>
           <input name="followSpan" type="number" min="4" max="60" value="${map.followSpan}"></label>
         <label class="field"><span>Pies por casilla</span>
@@ -1637,6 +1851,7 @@ function openMapSettings(map) {
           remember: v("remember").checked,
           grid: v("grid").checked,
           camera: v("camera").value,
+          roomCamera: v("roomCamera").checked,
           followSpan: +v("followSpan").value || 14,
           dark: v("dark").checked,
           playerZoom: v("playerZoom").checked,
@@ -1874,7 +2089,7 @@ function bindKeys() {
     const meta = e.ctrlKey || e.metaKey;
     if (meta && e.key.toLowerCase() === "k") { e.preventDefault(); toggleCombat(); }
     else if (meta && e.key.toLowerCase() === "b") { e.preventDefault(); toggleDrawer(); }
-    else if (meta && e.key.toLowerCase() === "n") { e.preventDefault(); openCharEditor(null, {}); }
+    else if (meta && e.key.toLowerCase() === "n") { e.preventDefault(); newCharacter(); }
     else if (e.key === " " || e.key === "Enter" || (meta && e.key === "ArrowRight")) { e.preventDefault(); step(1); }
     else if (meta && e.key.toLowerCase() === "z") { e.preventDefault(); op("undo"); toast("Deshecho"); }
     else if (e.key === "Escape" && mapView) { mapView.selection.clear(); mapView.pending = null; mapView.draw(); }

@@ -11,11 +11,12 @@
      absorbImages(d) saca las imágenes incrustadas de una copia antigua
      onPresence()    avisa de que ha cambiado quién está conectado */
 
-import { emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier } from "./schema.js";
-import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells } from "./los.js";
+import { emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier, withBuffs, canSneak, canSmite, sneakDice, smiteDice, smiteFoe } from "./schema.js";
+import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells, partyRoomFrame } from "./los.js";
 import { roll, detail } from "./dice.js";
 import { cutWalls, doorAt } from "./freewalls.js";
 import { critDamage } from "./attacks-core.js";
+import { soundsHeard, listenersFor } from "./sound-core.js";
 import "./spells.js";   // la biblioteca, para pasar a la lista los conjuros escritos a mano
 
 export const ROLES = ["dm", "player", "screen"];
@@ -78,13 +79,28 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
      cercanos, niebla). */
   let partyCache = null;
 
+  /* El sonido ambiente se calcula por oyente: un jugador oye desde su
+     personaje; la tele y el DM, lo que oiga cualquiera de la party. */
+  let soundCache = { rev: -1, byChar: new Map() };
+  function soundsFor(charId) {
+    if (soundCache.rev !== rev) soundCache = { rev, byChar: new Map() };
+    const key = charId || "";
+    if (!soundCache.byChar.has(key)) {
+      const map = doc.maps.find(m => m.id === doc.session.activeMapId) || null;
+      const heard = map && doc.session.showMapToParty ? soundsHeard(map, listenersFor(doc, map, charId)) : [];
+      soundCache.byChar.set(key, heard);
+    }
+    return soundCache.byChar.get(key);
+  }
+
   function redact(client) {
-    if (client.role === "dm") return { ...doc, you: null };
+    if (client.role === "dm") return { ...doc, you: null, sounds: soundsFor(null) };
     if (!partyCache || partyCache.rev !== rev) partyCache = { rev, view: partyView() };
     return {
       ...partyCache.view,
       log: doc.log.filter(e => canRead(client, e)),
-      you: client.charId || null
+      you: client.charId || null,
+      sounds: soundsFor(client.role === "player" ? client.charId : null)
     };
   }
 
@@ -159,6 +175,9 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         imgGrid: map.imgGrid || null,
         cols: map.cols, rows: map.rows, radius: map.radius, remember: map.remember,
         camera: map.camera, followSpan: map.followSpan, partyZoom: map.partyZoom,
+        /* Solo el rectángulo de la sala donde está la party: el plano de las
+           salas no viaja, que enseñaría lo que aún no han explorado */
+        roomFrame: map.roomCamera ? partyRoomFrame(doc, map, doc.session.focusId) : null,
         grid: map.grid, revealAll: doc.session.revealAll,
         explored: doc.session.revealAll ? [] : explored,
         visible: visibleList,
@@ -283,7 +302,8 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
      puesta. Al jugador no se le enseña la CA ni la vida de nadie: solo lo que
      ha pasado. */
   const ABILITY_ES = { str: "Fuerza", dex: "Destreza", con: "Constitución", int: "Inteligencia", wis: "Sabiduría", cha: "Carisma" };
-  const rollSave = (c, ability) => roll("1d20" + signed(modOf(c[ability]) + ((c.saves || []).includes(ability) ? (c.proficiency || 2) : 0)));
+  /* Las salvaciones de los objetivos llevan sus efectos (Bendecir, Perdición…) */
+  const rollSave = (c, ability) => roll(withBuffs(c, "save", "1d20" + signed(modOf(c[ability]) + ((c.saves || []).includes(ability) ? (c.proficiency || 2) : 0))).formula);
   const signed = n => (n >= 0 ? "+" : "") + n;
   const concentrationNote = (c, dc, push) => push({ kind: "event",
     text: `${c.name} tiene que superar una salvación de Constitución CD ${dc} o pierde la concentración en ${c.concentration}` });
@@ -393,7 +413,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       head(`${sp.name} (${lvlText}): ${rays > 1 ? rays + " ataques" : "ataque"} de conjuro ${signed(atkBonus)}`);
       for (let i = 0; i < rays; i++) {
         const t = targets[i % targets.length];
-        const atk = roll("1d20" + signed(atkBonus), op.mode === "adv" || op.mode === "dis" ? op.mode : "normal");
+        const atk = roll(withBuffs(caster, "attack", "1d20" + signed(atkBonus)).formula, op.mode === "adv" || op.mode === "dis" ? op.mode : "normal");
         const hit = atk.crit || (!atk.fumble && atk.total >= (t.ac || 10));
         let text = `${t.name}: ${atk.total}${atk.crit ? " · ¡CRÍTICO!" : atk.fumble ? " · pifia" : hit ? " · impacta" : " · falla"}`;
         if (hit && damage) {
@@ -491,11 +511,36 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       return null;
     }
 
-    const atk = roll("1d20" + (a.atk >= 0 ? "+" : "") + a.atk, mode);
+    const toHit = withBuffs(attacker, "attack", "1d20" + (a.atk >= 0 ? "+" : "") + a.atk);
+    const atk = roll(toHit.formula, mode);
     if (!atk) return "Ese ataque no tiene una fórmula válida";
     const ac = target ? target.ac : null;
+    /* Sin objetivo no se sabe si entra: se tira el daño igual, para quien lo quiera */
     const hit = atk.crit || (!atk.fumble && ac !== null && atk.total >= ac);
-    const dmg = hit && a.damage ? roll(atk.crit ? critDamage(a.damage) : a.damage) : null;
+    const lands = hit || (!target && !atk.fumble);
+
+    /* Daño: el del arma, los efectos encendidos y lo que se haya pedido al
+       atacar. Furtivo y castigo los calcula aquí la ficha, no el navegador, y
+       el castigo solo gasta su espacio si el golpe entra. */
+    const ex = op.extras || {};
+    const extras = [];
+    let formula = a.damage ? withBuffs(attacker, "damage", a.damage).formula : "";
+    const dmgBuffs = a.damage ? withBuffs(attacker, "damage", "").names : [];
+    if (lands && ex.sneak && canSneak(attacker)) { formula += "+" + sneakDice(attacker); extras.push("ataque furtivo"); }
+    const smiteSlot = Math.trunc(Number(ex.smite) || 0);
+    if (lands && smiteSlot >= 1 && smiteSlot <= 9 && canSmite(attacker) && attacker.kind === "pc") {
+      if ((attacker.slots[smiteSlot - 1] || 0) - (attacker.slotsUsed[smiteSlot - 1] || 0) > 0) {
+        const used = [...attacker.slotsUsed];
+        used[smiteSlot - 1] = (used[smiteSlot - 1] || 0) + 1;
+        attacker.slotsUsed = used;
+        formula += "+" + smiteDice(smiteSlot, smiteFoe(target));
+        extras.push(`castigo divino de nivel ${smiteSlot}`);
+      } else extras.push(`sin espacios de nivel ${smiteSlot} para el castigo`);
+    }
+    const free = String(ex.extra || "").replace(/\s+/g, "").slice(0, 24);
+    if (lands && free && roll(free)) { formula += (/^[+-]/.test(free) ? "" : "+") + free; extras.push("daño extra " + free); }
+    const dmg = lands && formula ? roll(atk.crit ? critDamage(formula) : formula) : null;
+    const notes = [...toHit.names.filter(n => !dmgBuffs.includes(n)), ...dmgBuffs, ...extras];
 
     /* Al jugador no se le dice la CA, solo si ha entrado o no. */
     push({
@@ -504,7 +549,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         (target ? (atk.crit ? " · ¡CRÍTICO!" : atk.fumble ? " · pifia" : hit ? " · impacta" : " · falla") : "") +
         (dmg ? ` · ${dmg.total} de daño${a.type ? " " + a.type : ""}` : ""),
       total: atk.total, crit: atk.crit, fumble: atk.fumble,
-      detail: detail(atk) + (dmg ? "  |  daño " + detail(dmg) : "")
+      detail: detail(atk) + (dmg ? "  |  daño " + detail(dmg) : "") + (notes.length ? "  |  " + notes.join(", ") : "")
     });
 
     if (dmg && target) {
@@ -548,7 +593,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
   }
 
   /* ---------- Operaciones ---------- */
-  const LIST_FIELDS = ["attacks", "items", "features", "spellbook", "resources", "weapons", "inventory", "spells"];
+  const LIST_FIELDS = ["attacks", "items", "features", "spellbook", "resources", "weapons", "inventory", "spells", "buffs"];
   const PLAYER_LOCKED = new Set(["id", "kind", "hidden", "xp", "cr", "mapId", "mx", "my", "claimedBy"]);
   const findChar = id => doc.chars.find(c => c.id === id);
 
@@ -740,6 +785,11 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         break;
       case "log.add": {
         const entry = { ...op.entry, id: rid(6), ts: Date.now(), actor: client.name };
+        /* Un jugador no tira en secreto para nadie: lo que tira «al DM» lo
+           ven el DM y él, como un susurro */
+        if (!dm && entry.secret && entry.kind === "roll" && client.role === "player") {
+          Object.assign(entry, { private: true, byClient: client.id, from: client.charId || "", to: [], names: ["DM"] });
+        }
         if (!dm) entry.secret = false;
         doc.log.push(entry);
         if (doc.log.length > 150) doc.log = doc.log.slice(-150);
@@ -938,6 +988,15 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         break;
       }
 
+      case "sound.set": {
+        if (!dm) return "Solo el DM";
+        const m = doc.maps.find(x => x.id === op.mapId);
+        if (!m || !op.sound) return "No existe ese mapa";
+        const sound = normalizeSound(op.sound);
+        const list = (m.sounds || []).filter(x => x.id !== sound.id);
+        m.sounds = op.remove ? list : [...list, sound].slice(-40);
+        break;
+      }
       case "ping":
         doc.session.ping = { x: op.x, y: op.y, mapId: op.mapId || doc.session.activeMapId, ts: Date.now(), by: client.name, color: op.color || "#ffd27f" };
         break;

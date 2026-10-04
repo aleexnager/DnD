@@ -187,7 +187,7 @@ export class MapView {
     const W = box.width, H = box.height;
     const free = this.mode === "dm" || map.playerZoom !== false;
     const aspect = W / H;
-    let cropW, focus, fill = false;
+    let cropW, focus, fill = false, room = null;
     if (this.mode === "dm") {
       cropW = map.cols / this.zoom;
       focus = this.center || { x: map.cols / 2, y: map.rows / 2 };
@@ -196,6 +196,11 @@ export class MapView {
       cropW = map.cols / this.zoom;
       focus = this.center || { x: map.cols / 2, y: map.rows / 2 };
       fill = true;
+    } else if (map.roomFrame) {
+      /* La party está en una sala: se ve entera, con una casilla de aire */
+      room = map.roomFrame;
+      cropW = Math.max(room.w + 2, (room.h + 2) * aspect);
+      focus = { x: room.x + room.w / 2, y: room.y + room.h / 2 };
     } else if (map.camera === "follow") {
       cropW = Math.min(map.cols, map.followSpan) / (map.partyZoom || 1);
       const f = this.data.chars.find(c => c.id === (this.data.session && this.data.session.focusId));
@@ -211,7 +216,11 @@ export class MapView {
        borde del plano, lo que se mueve es él dentro del encuadre, en vez de
        quedarse el mapa a un lado con una franja negra al otro. */
     let cropH;
-    if (fill) {
+    if (room) {
+      /* La sala entera manda: si para que quepa a lo alto hay que ver más
+         ancho que el mapa, se ve, aunque a los lados quede algo de negro */
+      cropH = cropW / aspect;
+    } else if (fill) {
       cropH = cropW / aspect;
       if (cropH > map.rows) { cropH = map.rows; cropW = cropH * aspect; }
       if (cropW > map.cols) { cropW = map.cols; cropH = cropW / aspect; }
@@ -219,10 +228,39 @@ export class MapView {
       cropH = cropW * (map.rows / map.cols);
     }
 
-    const cx = clamp(focus.x, cropW / 2, Math.max(cropW / 2, map.cols - cropW / 2));
-    const cy = clamp(focus.y, cropH / 2, Math.max(cropH / 2, map.rows - cropH / 2));
+    let cx = clamp(focus.x, cropW / 2, Math.max(cropW / 2, map.cols - cropW / 2));
+    let cy = clamp(focus.y, cropH / 2, Math.max(cropH / 2, map.rows - cropH / 2));
+    if (room) {
+      /* Si el encuadre cabe en el mapa, se arrima al borde sin dejar la sala
+         fuera; si es más grande que el mapa, la sala va en el centro */
+      cx = cropW >= map.cols ? focus.x : clamp(cx, room.x + room.w + 1 - cropW / 2, room.x - 1 + cropW / 2);
+      cy = cropH >= map.rows ? focus.y : clamp(cy, room.y + room.h + 1 - cropH / 2, room.y - 1 + cropH / 2);
+    }
+    if (this.mode !== "dm") ({ cx, cy, cropW, cropH } = this.smoothCrop(map, { cx, cy, cropW, cropH }));
     const cell = Math.min(W / cropW, H / cropH);
     return { W, H, dpr, cell, originX: W / 2 - cx * cell, originY: H / 2 - cy * cell, cols: map.cols, rows: map.rows };
+  }
+
+  /* Al entrar o salir de una sala encuadrada, la cámara se desliza hasta el
+     nuevo encuadre en vez de saltar. Solo se anima el cambio de encuadre: el
+     seguimiento normal ya va suavizado por su cuenta. */
+  smoothCrop(map, to) {
+    const key = map.roomFrame ? `${map.id}:${map.roomFrame.x},${map.roomFrame.y},${map.roomFrame.w},${map.roomFrame.h}` : map.id;
+    const t = performance.now(), DUR = 650;
+    const g = this._crop;
+    if (!g || g.mapId !== map.id || this.still()) {
+      this._crop = { key, mapId: map.id, from: to, t0: t - DUR, last: to };
+      return to;
+    }
+    if (g.key !== key) Object.assign(g, { key, from: g.last, t0: t });
+    const k = Math.min(1, (t - g.t0) / DUR), e = 1 - Math.pow(1 - k, 3);
+    const out = k >= 1 ? to : {
+      cx: g.from.cx + (to.cx - g.from.cx) * e, cy: g.from.cy + (to.cy - g.from.cy) * e,
+      cropW: g.from.cropW + (to.cropW - g.from.cropW) * e, cropH: g.from.cropH + (to.cropH - g.from.cropH) * e
+    };
+    if (k < 1) this._moving = true;
+    g.last = out;
+    return out;
   }
 
   /* La cámara que sigue a un personaje lo acompaña en vez de dar saltos */
@@ -286,6 +324,14 @@ export class MapView {
     const x = Math.floor(fx), y = Math.floor(fy);
     const dx = fx - x, dy = fy - y;
     return Math.abs(dx - dy) <= Math.abs(dx + dy - 1) ? "d" : "a";
+  }
+
+  /* Dónde se ve una ficha, en coordenadas de pantalla: para anclarle un menú */
+  tokenBox(id) {
+    const g = this._geom, c = this.data.chars.find(x => x.id === id);
+    if (!g || !c || c.mx === null) return null;
+    const n = footprint(c), box = this.canvas.getBoundingClientRect();
+    return { x: box.left + g.originX + (c.mx + n / 2) * g.cell, y: box.top + g.originY + (c.my + n / 2) * g.cell, r: n * g.cell / 2, board: box };
   }
 
   /* Una ficha grande responde en todas las casillas que ocupa. */
@@ -400,6 +446,7 @@ export class MapView {
         return;
       }
       if (this.mode === "dm" && this.tool === "pin") return this.opts.onPin && this.opts.onPin(p.x, p.y);
+      if (this.mode === "dm" && this.tool === "sound") return this.opts.onSound && this.opts.onSound(p.x, p.y);
       if (this.mode === "dm" && this.tool === "portal") return this.opts.onPortal && this.opts.onPortal(p.x, p.y);
 
       const token = this.tokenAt(p.x, p.y);
@@ -955,6 +1002,7 @@ export class MapView {
       if (!dm && !pin.party) continue;
       this.pinBadge(ctx, g, pin, X, Y);
     }
+    if (dm) for (const s of map.sounds || []) this.soundBadge(ctx, g, s, X, Y, this.tool === "sound");
 
     /* Dibujos a mano alzada, y el que se está haciendo ahora */
     for (const d of map.drawings || []) this.stroke2d(ctx, g, d.points, d.color, d.width, X, Y, dm && !d.party);
@@ -1291,6 +1339,36 @@ export class MapView {
       }
       ctx.restore();
     }
+  }
+
+  /* Una fuente de sonido, solo en la vista del DM: el altavoz, y su alcance
+     cuando se oye desde un punto (más marcado con la herramienta de sonido) */
+  soundBadge(ctx, g, s, X, Y, active) {
+    const cx = X(s.x) + g.cell / 2, cy = Y(s.y) + g.cell / 2;
+    const r = Math.max(7, g.cell * 0.3);
+    const tone = s.on ? "#7fd0ff" : "#6b7680";
+    ctx.save();
+    if (s.mode === "point") {
+      ctx.beginPath();
+      ctx.arc(cx, cy, (s.radius + 0.5) * g.cell, 0, Math.PI * 2);
+      ctx.setLineDash([g.cell * 0.18, g.cell * 0.14]);
+      ctx.strokeStyle = active ? "rgba(127,208,255,.75)" : "rgba(127,208,255,.28)";
+      ctx.lineWidth = Math.max(1, g.cell * 0.03);
+      ctx.stroke();
+      if (active) { ctx.fillStyle = "rgba(127,208,255,.06)"; ctx.fill(); }
+      ctx.setLineDash([]);
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(9,11,16,.9)";
+    ctx.fill();
+    ctx.strokeStyle = tone;
+    ctx.lineWidth = Math.max(2, g.cell * 0.07);
+    if (!s.on) ctx.setLineDash([r * 0.55, r * 0.45]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawGlyph(ctx, s.mode === "map" ? "music" : s.mode === "room" ? "room" : "volume", cx, cy, r * 1.25, tone);
+    ctx.restore();
   }
 
   pinBadge(ctx, g, pin, X, Y) {

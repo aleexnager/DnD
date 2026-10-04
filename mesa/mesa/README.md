@@ -312,6 +312,12 @@ Eliges objetivo, ventaja o desventaja y ya: se tira el ataque, se compara con la
 CA, un 20 natural duplica los dados de daño y el daño se resta de la ficha del
 objetivo. Todo queda en el registro con los dados a la vista.
 
+En la ventana del ataque se puede sumar daño al impactar: **Ataque furtivo**
+para el pícaro (los dados de su nivel), **Castigo divino** para el paladín
+(eliges el espacio; solo se gasta si el golpe entra, y suma un dado más contra
+muertos vivientes e infernales) y una casilla de **daño extra** para lo demás.
+Sin objetivo, se tira el golpe y el daño igual.
+
 **La tirada la hace el servidor, no tu navegador.** Es lo que permite que un
 jugador ataque a un monstruo sin saber su CA y sin poder decidir por su cuenta
 que ha impactado. Los ataques con salvación ("CD 13 de Destreza") también se
@@ -605,6 +611,31 @@ recibe dónde están):
 Si en los ajustes del mapa está «revelar entero», manda eso: se ve todo,
 también lo ocultado.
 
+### Sonido ambiente y música
+
+La herramienta **Sonido** del mapa pone audio en una casilla: una hoguera, un
+río, la música de la taberna. Cada sonido se oye **desde ese punto** (con su
+alcance, más fuerte al acercarse si quieres, y apagado detrás de una pared o
+una puerta cerrada), **en toda la sala** donde está o **en todo el mapa**. Cada
+móvil oye lo que oye su personaje; la tele, lo que oye la party.
+
+Si no tienes tus propios audios, la **Biblioteca de Mesa** trae 36 listos para
+usar, en bucle sin cortes: clima (lluvia, tormenta, ventisca…), naturaleza
+(bosque, noche, arroyo, costa, pantano…), fuego y forja, lugares (taberna,
+plaza, templo, biblioteca, barco), bajo tierra (cueva, mazmorra, cripta,
+alcantarillas), magia y nueve piezas de música (taberna, exploración, descanso,
+bosque feérico, misterio, lamento, combate, batalla épica y terror). Al elegir
+uno se propone cómo colocarlo; todo se puede cambiar.
+
+Están **sintetizados para Mesa** con `tools/sonidos/generar.mjs` (hace falta
+ffmpeg): no hay grabaciones ni música de nadie, así que se pueden usar y
+compartir sin pedir permiso. Van en estéreo y se apoyan en modelos físicos:
+las gotas son golpes y burbujas que resuenan como en el agua de verdad, y la
+gente habla con una voz humana sintetizada (pulso glotal, formantes,
+consonantes y entonación) a la distancia justa para no entenderse. Cada
+aparato guarda los que ha sonado y no los vuelve a descargar, y suelta de la
+memoria los que llevan un rato sin sonar.
+
 ## Ver un área antes de lanzarla
 
 Un jugador con conjuros de área tiene en su mapa el botón **Mis áreas**. Elige
@@ -693,6 +724,19 @@ el DM: un jugador puede pasarle una idea a otro, y el DM puede contarles algo a
 dos a la vez sin que se entere el resto. Lo que susurras no llega siquiera al
 navegador de los demás y **nunca sale en la tele de la mesa**. Sin marcar a
 nadie, lo lee toda la mesa.
+
+Como con Beyond20, **las fórmulas de los textos se tocan para tirar**: el
+«2d6» de un rasgo, el «1d6 + 2» de una acción del bestiario o el «+5 al ataque»
+de un objeto salen subrayados y un clic los tira a nombre de quien los tiene.
+Y con el teclado, cualquier tirada se modifica al pulsar: **Mayús** tira con
+ventaja, **Ctrl** (o **Cmd**) con desventaja y **Alt** en secreto; un jugador,
+con Alt, tira **solo para el DM** (lo ven el DM y él, nadie más).
+
+Cada ficha tiene **Efectos** en su pestaña de Acciones: Bendecir, Perdición,
+Guía, Furia, Marca del cazador, Maleficio… o uno a medida. Mientras estén
+encendidos se suman solos al ataque, al daño, a las salvaciones o a las
+pruebas, también en las tiradas que hace el servidor y en las salvaciones de
+quien recibe un conjuro. Se apagan con un toque sin borrarlos.
 
 El registro se filtra por **Todo**, **Tiradas** o **Charla**, y en el móvil sale
 un punto en la pestaña cuando hay algo sin leer.

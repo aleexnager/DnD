@@ -7,8 +7,10 @@
 
 import { el, on, esc, toast, modal } from "./util.js";
 import { store, op } from "./net.js";
-import { normalizeAttack, modOf, parseAttackLine } from "./schema.js";
+import { normalizeAttack, modOf, parseAttackLine, canSneak, canSmite, sneakDice, buffsFor } from "./schema.js";
 import { critDamage } from "./attacks-core.js";
+import { keyMods } from "./dice-panel.js";
+import { icon } from "./icons.js";
 
 /* Todo lo que una ficha sabe hacer: lo que tenga guardado más lo que se pueda
    leer de sus acciones y de su lista de armas. */
@@ -65,13 +67,15 @@ function spendSlot(c, attack) {
 /* ---------- Resolución ---------- */
 /* La tirada la hace el servidor: es el único que conoce la clase de armadura
    del enemigo y los puntos de vida de verdad. Aquí solo se pide. */
-export function resolveAttack({ attacker, attack, target, mode = "normal", secret = false }) {
+export function resolveAttack({ attacker, attack, target, mode = "normal", secret = false, extras = {} }) {
   if (!spendSlot(attacker, normalizeAttack(attack))) return false;
+  const keys = keyMods();
   op("attack.resolve", {
     attackerId: attacker.id,
     attack: normalizeAttack(attack),
     targetId: target ? target.id : "",
-    mode, secret
+    mode: keys.mode || mode, secret: secret || (keys.secret && store.session && store.session.role === "dm"),
+    extras
   });
   return true;
 }
@@ -85,6 +89,12 @@ export function openAttacks(attacker, { targets = [], preselect = null, secret =
   }
   let targetId = preselect || (targets[0] && targets[0].id) || "";
   let mode = "normal";
+  /* Lo que se suma al daño si entra. El castigo ofrece los niveles de los
+     que le quedan espacios; sin ninguno, la casilla no sale. */
+  const sneak = canSneak(attacker);
+  const smiteLevels = canSmite(attacker) && attacker.kind === "pc"
+    ? attacker.slots.map((n, i) => n - (attacker.slotsUsed[i] || 0) > 0 ? i + 1 : 0).filter(Boolean).slice(0, 5) : [];
+  const active = [...new Set([...buffsFor(attacker, "attack").names, ...buffsFor(attacker, "damage").names])];
 
   const body = el(`<div>
     <div class="field">
@@ -99,6 +109,14 @@ export function openAttacks(attacker, { targets = [], preselect = null, secret =
       <button type="button" data-m="normal" aria-pressed="true">Normal</button>
       <button type="button" data-m="adv" aria-pressed="false">Ventaja</button>
     </div>
+    ${active.length ? `<p class="atk-buffs">${icon("sparkle", 14)}<span>Se suma:</span> ${active.map(n => `<b>${esc(n)}</b>`).join(" ")}</p>` : ""}
+    <div class="atk-extras">
+      ${sneak ? `<label class="check"><input type="checkbox" id="atkSneak"><span>Ataque furtivo</span> <small class="tnum">+${sneakDice(attacker)}</small></label>` : ""}
+      ${smiteLevels.length ? `<label class="check"><input type="checkbox" id="atkSmite"><span>Castigo divino</span></label>
+        <select id="atkSmiteLv" aria-label="Espacio para el castigo">${smiteLevels.map(l => `<option value="${l}">${l}</option>`).join("")}</select>` : ""}
+      <label class="atk-extra"><span>Daño extra</span><input id="atkExtra" placeholder="1d6" maxlength="20" autocomplete="off" inputmode="text"></label>
+    </div>
+    <p class="atk-keys hint-keys"><kbd>Mayús</kbd> <span>ventaja</span> · <kbd>Ctrl</kbd> <span>desventaja</span></p>
     <div class="atk-list">
       ${list.map((a, i) => {
         const left = slotsLeft(attacker, a);
@@ -120,7 +138,12 @@ export function openAttacks(attacker, { targets = [], preselect = null, secret =
   });
   on(body, "click", "[data-i]", (e, b) => {
     const target = targets.find(t => t.id === targetId) || null;
-    if (resolveAttack({ attacker, attack: list[+b.dataset.i], target, mode, secret })) m.close();
+    const extras = {
+      sneak: !!(body.querySelector("#atkSneak") || {}).checked,
+      smite: (body.querySelector("#atkSmite") || {}).checked ? Number(body.querySelector("#atkSmiteLv").value) : 0,
+      extra: (body.querySelector("#atkExtra").value || "").trim()
+    };
+    if (resolveAttack({ attacker, attack: list[+b.dataset.i], target, mode, secret, extras })) m.close();
   });
 }
 
