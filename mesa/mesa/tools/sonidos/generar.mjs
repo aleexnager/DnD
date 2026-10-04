@@ -13,7 +13,7 @@ import { writeFileSync, mkdirSync, rmSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { SR, rng, loopOf, finish, filt, rms } from "./dsp.mjs";
+import { SR, rng, loopOf, finish, filt, rms, panning } from "./dsp.mjs";
 import { SCENES } from "./escenas.mjs";
 import { PIECES } from "./musica.mjs";
 
@@ -66,13 +66,15 @@ mkdirSync(OUT, { recursive: true });
 const tmp = join(tmpdir(), "mesa-sonidos");
 mkdirSync(tmp, { recursive: true });
 
+/* WAV estéreo de 16 bits */
 function wav(x) {
-  const b = Buffer.alloc(44 + x.length * 2);
-  b.write("RIFF", 0); b.writeUInt32LE(36 + x.length * 2, 4); b.write("WAVE", 8);
-  b.write("fmt ", 12); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
-  b.writeUInt32LE(SR, 24); b.writeUInt32LE(SR * 2, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34);
-  b.write("data", 36); b.writeUInt32LE(x.length * 2, 40);
-  for (let i = 0; i < x.length; i++) b.writeInt16LE(Math.max(-32767, Math.min(32767, Math.round(x[i] * 32767))), 44 + i * 2);
+  const n = x.length, bytes = n * 4, b = Buffer.alloc(44 + bytes);
+  b.write("RIFF", 0); b.writeUInt32LE(36 + bytes, 4); b.write("WAVE", 8);
+  b.write("fmt ", 12); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(2, 22);
+  b.writeUInt32LE(SR, 24); b.writeUInt32LE(SR * 4, 28); b.writeUInt16LE(4, 32); b.writeUInt16LE(16, 34);
+  b.write("data", 36); b.writeUInt32LE(bytes, 40);
+  const q = v => Math.max(-32767, Math.min(32767, Math.round(v * 32767)));
+  for (let i = 0; i < n; i++) { b.writeInt16LE(q(x.L[i]), 44 + i * 4); b.writeInt16LE(q(x.R[i]), 46 + i * 4); }
   return b;
 }
 
@@ -82,6 +84,7 @@ const meta = [];
 for (const [id, name, cat, sec, db, mode, radius] of LIST) {
   const music = cat === "musica";
   const R = rng(seedOf(id));
+  panning(seedOf(id) ^ 0x5bd1e995, 0.8);
   let x, L;
   const t0 = Date.now();
   if (music) {
@@ -99,11 +102,12 @@ for (const [id, name, cat, sec, db, mode, radius] of LIST) {
   }
   const file = `sonidos/${id}.mp3`;
   if (x) {
+    if ([x.L, x.R].some(c => c.some(v => !Number.isFinite(v)))) throw new Error(`${id}: la síntesis ha dado valores no numéricos`);
     finish(x, db);
-    let peak = 0; for (const v of x) peak = Math.max(peak, Math.abs(v));
+    let peak = 0; for (const c of [x.L, x.R]) for (const v of c) peak = Math.max(peak, Math.abs(v));
     const w = join(tmp, id + ".wav");
     writeFileSync(w, wav(x));
-    execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-i", w, "-codec:a", "libmp3lame", "-b:a", music ? "64k" : "48k", "-ac", "1", new URL(file, ROOT).pathname]);
+    execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-i", w, "-codec:a", "libmp3lame", "-b:a", music ? "96k" : "80k", "-ac", "2", new URL(file, ROOT).pathname]);
     const kb = statSync(new URL(file, ROOT)).size / 1024;
     console.log(`${id.padEnd(20)} ${L.toFixed(1).padStart(5)} s  rms ${(20 * Math.log10(rms(x))).toFixed(1)} dB  pico ${(20 * Math.log10(peak)).toFixed(1)} dB  ${kb.toFixed(0)} KB  ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   }

@@ -15,6 +15,7 @@ const KEY = "mesa.ambient";
 const FADE = 0.8;                 // segundos del fundido
 let ctx = null, master = null;
 const buffers = new Map();        // clave -> Promise<AudioBuffer>
+const lastUse = new Map();        // clave -> cuándo sonó por última vez (ms)
 const playing = new Map();        // id -> { node, gain, filter, key }
 
 /* Un sonido es un audio subido por el DM (audioId) o uno de la biblioteca
@@ -81,6 +82,7 @@ for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, unlock, { capt
 
 function load(s) {
   const key = keyOf(s);
+  lastUse.set(key, Date.now());
   if (!buffers.has(key)) {
     const url = urlOf(s);
     const p = (url ? fetch(url) : Promise.reject(new Error("No existe ese sonido")))
@@ -157,9 +159,24 @@ export function syncAmbient(list) {
   }
 }
 
+/* Un minuto de audio descodificado en estéreo son unos 20 MB: lo que lleva
+   un rato sin sonar se suelta (se vuelve a pedir, ya guardado, si hace falta)
+   y nunca se quedan más de cuatro en reserva. */
+const IDLE_MS = 90000, SPARE = 4;
+function trimBuffers() {
+  const busy = new Set([...playing.values()].map(p => p.key));
+  for (const k of busy) lastUse.set(k, Date.now());
+  const idle = [...buffers.keys()].filter(k => !busy.has(k)).sort((a, b) => (lastUse.get(b) || 0) - (lastUse.get(a) || 0));
+  idle.forEach((k, i) => {
+    if (i >= SPARE || Date.now() - (lastUse.get(k) || 0) > IDLE_MS) { buffers.delete(k); lastUse.delete(k); }
+  });
+}
+setInterval(trimBuffers, 30000);
+
 /* Para comprobar qué está sonando (pruebas y diagnóstico) */
 export const ambientState = () => ({
   context: ctx ? ctx.state : "none",
+  cached: buffers.size,
   playing: [...playing].map(([id, p]) => ({ id, gain: Math.round(p.gain.gain.value * 1000) / 1000, loaded: !!p.node, muffled: p.filter.frequency.value < 1000 }))
 });
 

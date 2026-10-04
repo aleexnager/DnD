@@ -629,8 +629,12 @@ uno se propone cómo colocarlo; todo se puede cambiar.
 
 Están **sintetizados para Mesa** con `tools/sonidos/generar.mjs` (hace falta
 ffmpeg): no hay grabaciones ni música de nadie, así que se pueden usar y
-compartir sin pedir permiso. Cada aparato guarda los que ha sonado y no los
-vuelve a descargar.
+compartir sin pedir permiso. Van en estéreo y se apoyan en modelos físicos:
+las gotas son golpes y burbujas que resuenan como en el agua de verdad, y la
+gente habla con una voz humana sintetizada (pulso glotal, formantes,
+consonantes y entonación) a la distancia justa para no entenderse. Cada
+aparato guarda los que ha sonado y no los vuelve a descargar, y suelta de la
+memoria los que llevan un rato sin sonar.
 
 ## Ver un área antes de lanzarla
 

@@ -8,7 +8,7 @@
    frase) con una semilla fija: suenan igual cada vez que se generan. */
 
 import {
-  SR, TAU, U, pick, buf, Biquad, filt, add, mixInto, every, reverb, mtof,
+  SR, TAU, U, pick, buf, sbuf, Biquad, filt, add, mixInto, every, reverb, mtof,
   pluck, flute, pad, brass, choir, celesta, bell, drum, snare, shaker, swell, partials, click
 } from "./dsp.mjs";
 
@@ -19,16 +19,24 @@ function session(T, L) {
     if (!tracks.has(name)) tracks.set(name, buf(T));
     every(L, T, t, tt => add(tracks.get(name), sig, tt, g));
   };
+  /* Cada instrumento en su sitio, como en un escenario */
   const mix = (eq = {}) => {
-    const out = buf(T);
+    const out = sbuf(T);
     for (const [name, x] of tracks) {
       for (const [type, f, q, gain] of eq[name] || []) filt(x, type, f, q, gain);
-      mixInto(out, x);
+      x.pan = PAN[name] ?? 0;
+      add(out, x);
     }
     return out;
   };
   return { put, mix };
 }
+
+const PAN = {
+  flauta: 0.3, laud: -0.3, perc: 0.1, arpa: -0.35, cuerdas: 0.25, bajo: 0, flautin: 0.3, pedal: 0, golpe: 0, acordes: 0.2,
+  pizz: -0.3, celesta: 0.4, reloj: -0.5, taiko: 0, caja: 0.15, metales: -0.2, coro: 0, platillo: 0.2, colchon: 0.15,
+  aire: 0.3, destellos: -0.45, viola: 0.2, latido: 0, racimo: 0.2, chirrido: -0.4, roce: 0.45
+};
 
 /* Notas de una escala entre lo y hi (MIDI) */
 const scaleNotes = (root, steps, lo, hi) => {

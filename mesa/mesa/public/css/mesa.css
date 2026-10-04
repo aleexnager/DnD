@@ -633,7 +633,10 @@ button .ico { pointer-events: none; }
   .map-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .map-bar::-webkit-scrollbar { display: none; }
   .map-bar > * { flex: 0 0 auto; }
-  .tool-set { flex: 0 0 auto; flex-wrap: nowrap; }
+  /* Cada grupo, tan ancho como sus botones: con el tope del 100 % el primer
+     grupo se quedaba del ancho de la pantalla y sus botones se salían por
+     debajo del grupo siguiente, que los tapaba (Sonido, Acceso, Dibujar). */
+  .tool-set { flex: 0 0 auto; flex-wrap: nowrap; max-width: none; }
   .rail { flex-wrap: wrap; gap: 8px; }
   .rail .strip { order: 3; width: 100%; }
   .gate .panel { padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
