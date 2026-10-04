@@ -446,6 +446,7 @@ export class MapView {
         return;
       }
       if (this.mode === "dm" && this.tool === "pin") return this.opts.onPin && this.opts.onPin(p.x, p.y);
+      if (this.mode === "dm" && this.tool === "sound") return this.opts.onSound && this.opts.onSound(p.x, p.y);
       if (this.mode === "dm" && this.tool === "portal") return this.opts.onPortal && this.opts.onPortal(p.x, p.y);
 
       const token = this.tokenAt(p.x, p.y);
@@ -1001,6 +1002,7 @@ export class MapView {
       if (!dm && !pin.party) continue;
       this.pinBadge(ctx, g, pin, X, Y);
     }
+    if (dm) for (const s of map.sounds || []) this.soundBadge(ctx, g, s, X, Y, this.tool === "sound");
 
     /* Dibujos a mano alzada, y el que se está haciendo ahora */
     for (const d of map.drawings || []) this.stroke2d(ctx, g, d.points, d.color, d.width, X, Y, dm && !d.party);
@@ -1337,6 +1339,36 @@ export class MapView {
       }
       ctx.restore();
     }
+  }
+
+  /* Una fuente de sonido, solo en la vista del DM: el altavoz, y su alcance
+     cuando se oye desde un punto (más marcado con la herramienta de sonido) */
+  soundBadge(ctx, g, s, X, Y, active) {
+    const cx = X(s.x) + g.cell / 2, cy = Y(s.y) + g.cell / 2;
+    const r = Math.max(7, g.cell * 0.3);
+    const tone = s.on ? "#7fd0ff" : "#6b7680";
+    ctx.save();
+    if (s.mode === "point") {
+      ctx.beginPath();
+      ctx.arc(cx, cy, (s.radius + 0.5) * g.cell, 0, Math.PI * 2);
+      ctx.setLineDash([g.cell * 0.18, g.cell * 0.14]);
+      ctx.strokeStyle = active ? "rgba(127,208,255,.75)" : "rgba(127,208,255,.28)";
+      ctx.lineWidth = Math.max(1, g.cell * 0.03);
+      ctx.stroke();
+      if (active) { ctx.fillStyle = "rgba(127,208,255,.06)"; ctx.fill(); }
+      ctx.setLineDash([]);
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(9,11,16,.9)";
+    ctx.fill();
+    ctx.strokeStyle = tone;
+    ctx.lineWidth = Math.max(2, g.cell * 0.07);
+    if (!s.on) ctx.setLineDash([r * 0.55, r * 0.45]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawGlyph(ctx, s.mode === "map" ? "music" : s.mode === "room" ? "room" : "volume", cx, cy, r * 1.25, tone);
+    ctx.restore();
   }
 
   pinBadge(ctx, g, pin, X, Y) {

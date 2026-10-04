@@ -47,6 +47,11 @@ async function start(role) {
   await once;                       // no se pinta nada hasta tener el estado
   app().className = "";
   mount(app());
+  /* Sonido ambiente: lo que el servidor diga que se oye desde aquí */
+  const { ambientUpdate } = await import("./ambient.js");
+  const sound = () => ambientUpdate(role, store.doc ? store.doc.sounds : []);
+  onState(sound);
+  sound();
 }
 
 async function gate(wanted) {

@@ -9,6 +9,9 @@ const P = {
   copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 5.5H6a1.5 1.5 0 0 0-1.5 1.5v9"/>',
   pencil: '<path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="M15 6l3 3"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  volume: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10"/>',
+  volumeOff: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 10l4 4M20 10l-4 4"/>',
+  music: '<path d="M9 18V6l10-2v12"/><path d="M9 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM19 16a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>',
   up: '<path d="M6 14l6-6 6 6"/>',
   down: '<path d="M6 10l6 6 6-6"/>',
   trash: '<path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6.5 7l.8 12.1A1.5 1.5 0 0 0 8.8 20.5h6.4a1.5 1.5 0 0 0 1.5-1.4L17.5 7"/>',
@@ -122,6 +125,21 @@ export function drawGlyph(ctx, name, cx, cy, size, color) {
     ctx.moveTo(3.5, 20.5); ctx.lineTo(7.5, 20.5); ctx.lineTo(7.5, 16.5); ctx.lineTo(11.5, 16.5);
     ctx.lineTo(11.5, 12.5); ctx.lineTo(15.5, 12.5); ctx.lineTo(15.5, 8.5); ctx.lineTo(19.5, 8.5);
     ctx.stroke();
+  } else if (P[name]) {
+    /* Cualquier otro icono hecho de trazos: los mismos caminos del SVG */
+    const num = (tag, k) => Number((tag.match(new RegExp(` ${k}="([\\d.]+)"`)) || [0, 0])[1]);
+    for (const [tag] of P[name].matchAll(/<(path|rect|circle)[^>]*>/g)) {
+      if (tag.startsWith("<path")) ctx.stroke(new Path2D(tag.match(/ d="([^"]+)"/)[1]));
+      else if (tag.startsWith("<rect")) {
+        ctx.beginPath();
+        ctx.roundRect(num(tag, "x"), num(tag, "y"), num(tag, "width"), num(tag, "height"), num(tag, "rx"));
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(num(tag, "cx"), num(tag, "cy"), num(tag, "r"), 0, Math.PI * 2);
+        tag.includes('fill="currentColor"') ? ctx.fill() : ctx.stroke();
+      }
+    }
   }
   ctx.restore();
 }

@@ -410,6 +410,7 @@ const MAP_DEFAULTS = {
   cells: {},            // casillas pintadas: niebla, oscuridad o luz fija
   shapes: [],           // plantillas de área puestas en el tablero
   pins: [],             // chinchetas con nota
+  sounds: [],           // sonido ambiente: ver normalizeSound
   portals: [],          // accesos a otros mapas
   playerZoom: true,     // dejar que los jugadores se acerquen
   /* Dónde cae la cuadrícula dibujada en la imagen, en píxeles de la imagen:
@@ -448,6 +449,7 @@ export function normalizeMap(raw = {}) {
   m.cells = m.cells && typeof m.cells === "object" && !Array.isArray(m.cells) ? { ...m.cells } : {};
   m.shapes = Array.isArray(m.shapes) ? m.shapes.map(normalizeShape).slice(0, 40) : [];
   m.pins = Array.isArray(m.pins) ? m.pins.map(normalizePin).slice(0, 60) : [];
+  m.sounds = Array.isArray(m.sounds) ? m.sounds.map(normalizeSound).slice(0, 40) : [];
   m.portals = Array.isArray(m.portals) ? m.portals.map(normalizePortal).slice(0, 40) : [];
   m.edges = m.edges && typeof m.edges === "object" && !Array.isArray(m.edges) ? { ...m.edges } : {};
   /* Capas por casilla que pinta el DM:
@@ -527,6 +529,24 @@ export function normalizeShape(raw = {}) {
     party: raw.party !== false               // ¿la ve la party?
   };
 }
+/* Sonido ambiente en el mapa (sound-core.js explica cómo se oye) */
+export const SOUND_MODES = ["point", "room", "map"];
+export function normalizeSound(raw = {}) {
+  return {
+    id: raw.id || uid(),
+    x: Math.trunc(num(raw.x)), y: Math.trunc(num(raw.y)),
+    name: String(raw.name || "").slice(0, 60),
+    audioId: /^[\w.-]{1,64}$/.test(String(raw.audioId || "")) ? String(raw.audioId) : "",
+    fileName: String(raw.fileName || "").slice(0, 80),
+    volume: clamp(num(raw.volume, 0.7), 0, 1),
+    radius: clamp(num(raw.radius, 6), 1, 60),            // alcance, en casillas
+    mode: SOUND_MODES.includes(raw.mode) ? raw.mode : "point",
+    falloff: raw.falloff !== false,                       // más fuerte al acercarse
+    walls: raw.walls !== false,                           // las paredes lo apagan
+    on: raw.on !== false
+  };
+}
+
 export const PIN_KINDS = [
   ["nota", "Nota"], ["peligro", "Peligro"], ["tesoro", "Tesoro"], ["pregunta", "Algo raro"]
 ];

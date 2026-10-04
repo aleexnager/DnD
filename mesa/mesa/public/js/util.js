@@ -86,7 +86,7 @@ export function toast(message, tone = "") {
 }
 
 /* ---------- Ventanas ---------- */
-export function modal({ title, body, actions = [], wide = false, onOpen }) {
+export function modal({ title, body, actions = [], wide = false, onOpen, onClose }) {
   const back = el(`
     <div class="modal-back">
       <div class="modal ${wide ? "wide" : ""}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
@@ -105,6 +105,7 @@ export function modal({ title, body, actions = [], wide = false, onOpen }) {
     if (closed) return;
     closed = true;
     document.removeEventListener("keydown", onKey);
+    if (onClose) onClose();
     if (reducedMotion()) return back.remove();
     back.classList.add("closing");
     setTimeout(() => back.remove(), 140);

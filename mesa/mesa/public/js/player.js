@@ -12,6 +12,7 @@ import { openCharEditor, openConditions } from "./char-editor.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
 import { sheetTabsHTML, handleSheetAct } from "./sheet.js";
+import { ambientToggle } from "./ambient.js";
 import { langPicker } from "./i18n.js";
 import { icon, withIcon } from "./icons.js";
 
@@ -61,6 +62,7 @@ export function mountPlayer(root) {
         <span class="spacer"></span>
         <div class="who"><span class="dot" id="dot"></span><span class="pill" id="whoami"></span></div>
         <span id="voiceSlot"></span>
+        <span id="ambientSlot"></span>
         <span id="plang"></span>
         <button class="icon-btn" id="leaveBtn" title="Salir de la partida" aria-label="Salir de la partida">${icon("exit")}</button>
       </header>
@@ -83,6 +85,7 @@ export function mountPlayer(root) {
   $("#plang", root).appendChild(langPicker());
   $("#voiceSlot", root).replaceWith(voiceWidget());
   $("#leaveBtn", root).addEventListener("click", () => leave());
+  $("#ambientSlot", root).replaceWith(ambientToggle("player"));
   onStatus(ok => {
     $("#offline", root).classList.toggle("hidden", ok);
     $("#dot", root).classList.toggle("off", !ok);

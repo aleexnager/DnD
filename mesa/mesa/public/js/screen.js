@@ -2,6 +2,7 @@
    Solo enseña lo que el DM quiere enseñar, y no tiene ningún control con el
    que alguien pueda descuadrarla al pasar por delante. */
 
+import { ambientToggle } from "./ambient.js";
 import { $, esc, pct, hpTone, initials, imgURL, hpBar, tweenBars, reducedMotion } from "./util.js";
 import { store, onState, onStatus, leave } from "./net.js";
 import { conditionName } from "./schema.js";
@@ -27,6 +28,7 @@ export function mountScreen(root) {
         <span id="stitle"></span>
         <span class="spacer"></span>
         <span id="slang"></span>
+        <span id="ambientSlot"></span>
         <button class="icon-btn" id="sfull" title="Pantalla completa">${icon("screen")}</button>
         <button class="icon-btn" id="sout" title="Salir de la pantalla">${icon("exit")}</button>
       </div>
@@ -45,6 +47,7 @@ export function mountScreen(root) {
   $("#slang", root).appendChild(langPicker());
   $("#sout", root).addEventListener("click", leave);
   $("#sfull", root).addEventListener("click", fullscreen);
+  $("#ambientSlot", root).replaceWith(ambientToggle("screen"));
   render();
 
   document.addEventListener("dblclick", e => { if (!e.target.closest("button")) fullscreen(); });

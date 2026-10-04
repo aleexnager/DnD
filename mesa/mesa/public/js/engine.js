@@ -11,11 +11,12 @@
      absorbImages(d) saca las imágenes incrustadas de una copia antigua
      onPresence()    avisa de que ha cambiado quién está conectado */
 
-import { emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier } from "./schema.js";
+import { emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier } from "./schema.js";
 import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells, partyRoomFrame } from "./los.js";
 import { roll, detail } from "./dice.js";
 import { cutWalls, doorAt } from "./freewalls.js";
 import { critDamage } from "./attacks-core.js";
+import { soundsHeard, listenersFor } from "./sound-core.js";
 import "./spells.js";   // la biblioteca, para pasar a la lista los conjuros escritos a mano
 
 export const ROLES = ["dm", "player", "screen"];
@@ -78,13 +79,28 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
      cercanos, niebla). */
   let partyCache = null;
 
+  /* El sonido ambiente se calcula por oyente: un jugador oye desde su
+     personaje; la tele y el DM, lo que oiga cualquiera de la party. */
+  let soundCache = { rev: -1, byChar: new Map() };
+  function soundsFor(charId) {
+    if (soundCache.rev !== rev) soundCache = { rev, byChar: new Map() };
+    const key = charId || "";
+    if (!soundCache.byChar.has(key)) {
+      const map = doc.maps.find(m => m.id === doc.session.activeMapId) || null;
+      const heard = map && doc.session.showMapToParty ? soundsHeard(map, listenersFor(doc, map, charId)) : [];
+      soundCache.byChar.set(key, heard);
+    }
+    return soundCache.byChar.get(key);
+  }
+
   function redact(client) {
-    if (client.role === "dm") return { ...doc, you: null };
+    if (client.role === "dm") return { ...doc, you: null, sounds: soundsFor(null) };
     if (!partyCache || partyCache.rev !== rev) partyCache = { rev, view: partyView() };
     return {
       ...partyCache.view,
       log: doc.log.filter(e => canRead(client, e)),
-      you: client.charId || null
+      you: client.charId || null,
+      sounds: soundsFor(client.role === "player" ? client.charId : null)
     };
   }
 
@@ -941,6 +957,15 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         break;
       }
 
+      case "sound.set": {
+        if (!dm) return "Solo el DM";
+        const m = doc.maps.find(x => x.id === op.mapId);
+        if (!m || !op.sound) return "No existe ese mapa";
+        const sound = normalizeSound(op.sound);
+        const list = (m.sounds || []).filter(x => x.id !== sound.id);
+        m.sounds = op.remove ? list : [...list, sound].slice(-40);
+        break;
+      }
       case "ping":
         doc.session.ping = { x: op.x, y: op.y, mapId: op.mapId || doc.session.activeMapId, ts: Date.now(), by: client.name, color: op.color || "#ffd27f" };
         break;

@@ -1930,6 +1930,17 @@ button.st-pill:hover { background: var(--accent-wash); border-color: var(--accen
 .tk-item.danger { color: var(--danger-text); }
 .tk-item.danger .ico { color: var(--danger-text); }
 
+/* ---------- Sonido ambiente ---------- */
+.sound-edit { display: grid; gap: 4px; }
+.sound-file {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  border: 1px solid var(--edge); border-radius: 4px; background: var(--well);
+}
+.sound-file-name { flex: 1; min-width: 0; color: var(--dim); font-size: 13px; overflow-wrap: anywhere; }
+.sound-point { display: grid; gap: 8px; margin: 4px 0 6px; }
+.sound-point .field { max-width: 200px; margin: 0; }
+.sound-edit input[type=range] { accent-color: var(--accent); padding: 0; }
+
 /* ---------- Editor de listas ---------- */
 .list-editor { display: grid; gap: 8px; }
 .le-rows { display: grid; gap: 8px; }
