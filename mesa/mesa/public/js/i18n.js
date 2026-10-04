@@ -7,6 +7,8 @@
    los nombres de los personajes, lo que escribe la gente en el chat y las
    notas del DM se quedan como están. */
 
+import { CATALOG } from "./catalog.js";
+
 const KEY = "mesa.lang";
 export const LANGS = [["es", "Español"], ["en", "English"]];
 
@@ -141,7 +143,7 @@ const EN = {
   "Sensibilidad": "Sensitivity", "Menos muros": "Fewer walls", "Más muros": "More walls",
   "Muro en diagonal": "Diagonal wall", "Diagonal o muro libre": "Diagonal or freehand wall", "Enseñar con este plano": "Teach with this floor plan",
   "Olvidar lo aprendido": "Forget what was learned", "Olvidar": "Forget", "Muro libre": "Freehand wall", "Muros libres": "Freehand walls",
-  "Traza la pared como un dibujo; con Mayúsculas sale recta. Es un muro como los demás: Puerta y Borrar también valen": "Draw the wall like a sketch; hold Shift for a straight line. It is a wall like any other: Door and Erase work on it too", "Ahora no": "Not now", "Poner muros y puertas": "Place walls and doors",
+  "Traza la pared como un dibujo (con Mayúsculas, recta). Puerta y Borrar valen igual": "Draw the wall like a sketch (Shift for a straight line). Door and Erase work the same", "Ahora no": "Not now", "Poner muros y puertas": "Place walls and doors",
   "Sustituirlos por los propuestos": "Replace them with the proposed ones",
   "Añadir los propuestos y dejar los que hay": "Add the proposed ones and keep the current ones",
   "Cuadrícula ajustada a la imagen": "Grid fitted to the image",
@@ -302,6 +304,10 @@ const EN = {
   "Arrastra por los bordes de las casillas": "Drag along the edges of the squares",
   "Pulsa un borde: cerrada, abierta, sin puerta": "Tap an edge: closed, open, no door",
   "Pulsa un borde o un muro diagonal: cerrada, abierta, sin puerta": "Tap an edge or a diagonal wall: closed, open, no door",
+  "Muro: por los bordes, recto; desde el centro de una casilla, en diagonal": "Wall: along edges for straight, from a square's centre for diagonal",
+  "Puerta, recta o en diagonal: se abre y se cierra": "Door, straight or diagonal: opens and closes",
+  "Arrastra por los bordes para un muro recto, o empieza en el centro de una casilla para uno en diagonal": "Drag along edges for a straight wall, or start in a square's centre for a diagonal one",
+  "Pulsa un borde para una puerta recta, o el centro de una casilla para una en diagonal. Otra pulsación la abre o la cierra; para quitarla, Borrar": "Tap an edge for a straight door, or a square's centre for a diagonal one. Tap again to open or close it; to remove it, Erase",
   "Arrastra para quitar muros y puertas": "Drag to remove walls and doors",
   "Pulsa donde quieras clavar la nota": "Tap where you want to pin the note",
   "Pulsa donde esté la escalera": "Tap where the stairs are",
@@ -649,9 +655,39 @@ const EN = {
   "Alguien tiene que estar sobre el acceso": "Someone has to be standing on the passage",
   "Solo cruza quien lo pisa y quien elija ir con él": "Only whoever steps on it, and those they choose, go through",
   "No hay sitio al otro lado": "There's no room on the other side",
+  "Dejar que los jugadores dibujen en el mapa": "Let players draw on the map",
+  "Enseñar los muros y las puertas a la party": "Show walls and doors to the party",
+  "El DM ha desactivado el dibujo": "The DM has turned off drawing",
   "Entendido": "Got it", "La pantalla no entra en la voz": "The screen doesn't join voice",
-  "Esa persona no está en la voz": "That person isn't in voice chat"
+  "Esa persona no está en la voz": "That person isn't in voice chat",
+
+  /* Bestiario: filtros y ficha desplegable */
+  "Ficha": "Stat block", "Todos los tipos": "All types", "Tipo de criatura": "Creature type",
+  "Cualquier VD": "Any CR", "Valor de desafío": "Challenge rating",
+  "VD 0 a 1/2": "CR 0 to 1/2", "VD 1 a 2": "CR 1 to 2", "VD 3 a 4": "CR 3 to 4", "VD 5 a 8": "CR 5 to 8",
+  "VD 9 a 16": "CR 9 to 16", "VD 17 o más": "CR 17 or higher",
+  "No hay ninguna criatura así.": "No creature matches.", "1 criatura": "1 creature",
+  "Volver a la ficha de serie": "Back to the stock stat block",
+  "Humanoide": "Humanoid", "Bestia": "Beast", "Muerto viviente": "Undead", "Monstruosidad": "Monstrosity",
+  "Gigante": "Giant", "Dragón": "Dragon", "Aberración": "Aberration", "Infernal": "Fiend", "Hada": "Fey",
+  "Elemental": "Elemental", "Constructo": "Construct", "Cieno": "Ooze", "Planta": "Plant", "Celestial": "Celestial"
 };
+
+/* Las criaturas de serie traen su inglés en el catálogo: nombre, tipo, sentidos
+   y cada línea de rasgos y acciones, con el nombre del ataque suelto para los
+   botones de «Atacar». Lo que ya esté a mano arriba manda. */
+for (const b of CATALOG) {
+  const pair = (es, en) => { if (es && en && !(es in EN)) EN[es] = en; };
+  pair(b.name, b.en.name);
+  for (const k of ["sizeType", "senses", "languages", "resistances"]) pair(b[k], b.en[k]);
+  for (const k of ["traits", "actions"]) {
+    const es = String(b[k] || "").split("\n"), en = String(b.en[k] || "").split("\n");
+    es.forEach((line, i) => {
+      pair(line, en[i]);
+      pair(line.split(" — ")[0], (en[i] || "").split(" — ")[0]);
+    });
+  }
+}
 
 /* Tamaños y tipos de criatura, para «Humanoide pequeño» y compañía */
 const SIZES = { diminuto: "Tiny", pequeño: "Small", mediano: "Medium", grande: "Large", enorme: "Huge", gargantuesco: "Gargantuan" };
@@ -697,6 +733,11 @@ const SPELL_PARTS = [
   [/^(\d+) puntos de sueño$/, "$1 points of sleep"]
 ];
 const PATTERNS = [
+  [/^(\d+) criaturas$/, "$1 creatures"],
+  [/^(\d+) pies$/, "$1 ft."],
+  [/^vd (\S+)$/i, "CR $1"],
+  [/^¿Borrar (.+) del bestiario\?$/, "Delete $1 from the bestiary?"],
+  [/^¿Devolver (.+) a su ficha de serie\? Se pierden tus cambios\.$/, "Put $1 back to its stock stat block? Your changes will be lost."],
   /* Conjuros */
   [/^Conjuros de (.+)$/, "$1 · spells"],
   [/^Conjuros \((\d+)\)$/, "Spells ($1)"],

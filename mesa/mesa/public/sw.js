@@ -14,7 +14,7 @@
    Todas las rutas son relativas al sitio donde vive Mesa: en GitHub Pages es
    una subcarpeta (/DnD/), no la raíz. */
 
-const VERSION = "mesa-2.6.0";
+const VERSION = "mesa-2.7.0";
 const SHELL_CACHE = VERSION + "-app";
 const IMG_CACHE = "mesa-img";
 const IMG_LIMIT = 80;

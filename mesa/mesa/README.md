@@ -193,7 +193,7 @@ El inglés se aplica sobre la interfaz ya escrita en español, con un
 diccionario. Se traducen los botones, los rótulos, los avisos, las pistas de las
 herramientas, los dieciséis estados con su explicación, las dieciocho
 habilidades, lo que escribe el programa en el registro y **el bestiario que
-viene de fábrica**, con sus trece criaturas, sus fichas técnicas, sus rasgos y
+viene de fábrica**, con sus 115 criaturas, sus fichas técnicas, sus rasgos y
 sus ataques ("Cimitarra — +4 al ataque — 1d6+2 cortante" sale como "Scimitar —
 +4 to hit — 1d6+2 slashing"). Lo que escribís vosotros no se toca: los
 nombres de los personajes, la charla, tus notas y las criaturas que te inventes
@@ -323,19 +323,60 @@ medio, difícil o mortal antes de que empiece.
 
 ## Bestiario
 
-Cada criatura puede llevar **su retrato**, igual que un personaje: se sube una
-vez en el bestiario y todas las que invoques salen ya con esa cara, en la
-tarjeta y en su ficha del mapa. El tamaño también viaja, así que un ogro
-guardado como «Grande» ocupa 2×2 en cuanto lo pones en el tablero.
+Trae **115 criaturas listas**, de VD 0 a 30: del plebeyo y el goblin a la
+tarasca, pasando por necrófagos, oso lechuza, mantícora, trol, elementales,
+gigantes, dragones de cría a adulto, vampiro, liche, balor y kraken. Hay de los
+catorce tipos (humanoides, bestias, muertos vivientes, monstruosidades,
+infernales, hadas, dragones, gigantes, elementales, constructos, cienos,
+plantas, celestiales y aberraciones), con fichas completas: características,
+sentidos, idiomas, resistencias, rasgos y acciones, y sus ataques listos para
+tirar de un clic, alientos y conjuros con salvación incluidos.
 
-Trece criaturas listas (goblin, kobold, bandido, guardia, lobo, esqueleto,
-zombi, orco, trasgo, araña gigante, oso pardo, osgo y ogro), buscables, con
-cantidad y **PV al azar** para que dos goblins no aguanten lo mismo. Entran al
-encuentro numerados (Goblin 1, Goblin 2…) y con su iniciativa tirada.
+Arriba del bestiario se busca por nombre (también en inglés: «owlbear»
+encuentra al oso lechuza) y se filtra **por tipo** y **por VD** (0 a 1/2, 1 a
+2, 3 a 4, 5 a 8, 9 a 16, 17 o más). La lista sale ordenada por desafío, y
+cada criatura despliega su **ficha** sin salir de ella.
 
-Puedes editar cualquiera y crear las tuyas; las propias se pueden borrar y las
-básicas no. El ojo (👁) de cada ficha ya en la mesa la oculta por completo de
-las otras dos vistas, para emboscadas.
+**Todas tienen retrato y todas del mismo estilo**: una silueta en tinta sobre
+el color de su tipo, de modo que en el tablero se distingue de un vistazo un
+muerto viviente (hueso) de un infernal (carmesí) o un cieno (verde ácido), y
+la silueta dice cuál es. Dragones y elementales llevan el color de su
+elemento. Al ser siluetas se leen igual a 30 píxeles en el móvil que en la
+tele, que es donde un retrato pintado se convierte en una mancha.
+
+Cada criatura puede llevar **su propio retrato**: se sube una vez en el
+bestiario y todas las que invoques salen ya con esa cara, en la tarjeta y en
+su ficha del mapa. El tamaño también viaja, así que un ogro guardado como
+«Grande» ocupa 2×2 en cuanto lo pones en el tablero.
+
+Se elige cantidad y **PV al azar** para que dos goblins no aguanten lo mismo.
+Entran al encuentro numerados (Goblin 1, Goblin 2…) y con su iniciativa
+tirada.
+
+Puedes editar cualquiera y crear las tuyas. Las de serie no viven en la
+partida sino en la aplicación, así que no pesan en lo que viaja por la red y
+las nuevas llegan solas al actualizar Mesa. Si retocas una de serie, se guarda
+tu versión en la partida; la equis la devuelve a la ficha original. Las tuyas
+se borran con esa misma equis. El ojo (👁) de cada ficha ya en la mesa la oculta
+por completo de las otras dos vistas, para emboscadas.
+
+Las partidas de antes se ponen al día solas al abrirlas: conservan lo que
+editaste y los monstruos que ya estaban en la mesa estrenan retrato.
+
+### Créditos del bestiario
+
+Las fichas incluyen material del *System Reference Document 5.1* de Wizards
+of the Coast, publicado bajo [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+Los retratos son iconos de [game-icons.net](https://game-icons.net) (Lorc,
+Delapouite y otros autores), bajo [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/),
+recoloreados para la mesa con `tools/retratos-bestiario.mjs`. El detalle está
+en `public/bestiario/LICENCIA.txt`.
+
+No se incluyen ilustraciones oficiales de los manuales: son de Wizards of the
+Coast, no tienen licencia libre y esta aplicación se publica en abierto (la
+versión de prueba está en GitHub Pages). Si las tienes por tus libros, súbelas
+como retrato de cada criatura y se quedan en tu partida, sin salir de tu
+ordenador.
 
 ## Mapa
 
@@ -354,17 +395,21 @@ no salga deformado.
   arrastras antes de soltar, la giras. Para moverla, vuelve a pulsar su botón.
   Se ven en la mesa y en los móviles, y se quitan todas con la ✕.
 - **Niebla**, **Oscuridad** y **Luz** son pinceles de casilla. Ver más abajo.
-- **Muro** pinta paredes sobre los bordes; se puede arrastrar para trazar un tramo.
-- **Diagonal** pone muros a 45 grados, de esquina a esquina de la casilla, para
-  salas en diagonal, torres redondas o cuevas. Arrastra por las casillas: la
+- **Muro**, recto o en diagonal con la misma herramienta. **Junto a un
+  borde** de casilla pinta una pared recta y se puede arrastrar para trazar un
+  tramo. **Empezando en el centro** de una casilla pone un muro a 45 grados,
+  de esquina a esquina, para salas en diagonal, torres redondas o cuevas: la
   dirección del arrastre decide si es `\` o `/`, y el trazo se ajusta solo a
   la diagonal aunque el pulso no sea perfecto. Cortan la visión y el paso
   igual que un muro normal, y **la casilla que atraviesa un muro diagonal no
   se puede pisar** (es medio muro: así nadie se cuela por la rendija).
-- **Puerta** pone una puerta cerrada; púlsala otra vez y queda abierta. Cerrada
-  corta la visión, abierta la deja pasar. Vale también para los **muros
-  diagonales**: pulsa encima de uno y se convierte en puerta. Abierta, su
-  casilla se puede pisar y cruzar; cerrada, es pared.
+- **Puerta**, también recta o en diagonal: pulsa **junto a un borde** para una
+  puerta recta o **en el centro de una casilla** para una en diagonal (no hace
+  falta muro debajo; si lo hay, se convierte en puerta). Cada pulsación la
+  **abre o la cierra**; para quitarla se usa **Borrar**. Cerrada corta la
+  visión y es pared; abierta deja ver y pasar, también por su casilla si es
+  diagonal. En el plano se ven como un bloque: macizo si está cerrada y hueco
+  si está abierta.
 - **Borrar** quita muros, diagonales y puertas.
 - **Difícil** pinta terreno difícil (escombros, barro, maleza): **entrar en
   esas casillas cuesta el doble**. Se ve con un rayado suave en todas las
@@ -411,6 +456,15 @@ explorado** activado, todo lo que la party ha llegado a ver se queda dibujado
 el resto de la partida, con un velo muy leve encima para distinguir lo que
 están viendo ahora de lo que solo recuerdan. El plano se va destapando solo a
 medida que caminan.
+
+En las pantallas de los jugadores y en la tele la niebla **no va a
+escalones**: el borde de lo que se ve sale redondeado y se apaga con un
+degradado suave, como la luz de una antorcha. Justo más allá de la vista hay
+una franja de **penumbra**: esas casillas no se ven, pero se adivinan tras una
+bruma. **Si en la penumbra hay una criatura, se ve una sombra con un
+interrogante**: la party sabe que hay algo y dónde (y si es grande), pero no
+qué es. Del servidor solo sale eso, la casilla y el tamaño: ni el nombre, ni
+el color, ni nada más. Lo que esté detrás de un muro no se intuye.
 
 La memoria vale también para los enemigos: una criatura que hayan visto se
 queda dibujada, apagada y con el borde a rayas, **en el sitio donde la vieron**.
@@ -477,7 +531,11 @@ la casilla de destino se marca en rojo cuando no cabe. Un ogro de 2×2 no pasa
 por una puerta de una casilla, que es justo lo que se quiere que se note.
 
 En **Ajustes del mapa** decides si la party ve el mapa, si se revela entero, si
-cada jugador puede mover su ficha desde el móvil, si puede acercarse y alejarse,
+cada jugador puede mover su ficha desde el móvil, si los jugadores pueden
+**dibujar** en el mapa (quitado, desaparece su botón y el servidor rechaza
+cualquier trazo; tú sigues dibujando), si la party ve **los muros y las
+puertas** dibujados (quitado, no les llega ni el trazo: siguen cortando la
+vista y el paso igual, solo deja de verse la línea), si puede acercarse y alejarse,
 si se pinta el alcance al arrastrar, cuántos pies mide una casilla, cómo cuentan
 las diagonales y si la cámara enseña todo el plano o sigue al personaje.
 

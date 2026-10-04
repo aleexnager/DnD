@@ -12,6 +12,7 @@
 
 import { createEngine } from "./engine.js";
 import { normalizeChar, normalizeMap, edgeKey } from "./schema.js";
+import { CATALOG_BY_ID } from "./catalog.js";
 
 const DB = "mesa-demo";
 const STORE = "kv";
@@ -89,8 +90,10 @@ function sampleDoc(doc) {
 
   const pc = (name, className, race, color, hp, ac, mx, my, extra = {}) =>
     normalizeChar({ kind: "pc", name, className, race, color, hp, maxHp: hp, ac, level: 3, speed: 30, mapId: map.id, mx, my, ...extra });
+  const goblin = CATALOG_BY_ID.get("cat-goblin");
+  const { id: _id, en: _en, hpAvg: _hp, hpDice: _dice, custom: _c, ...goblinSheet } = goblin;
   const foe = (name, hp, ac, mx, my, initiative) =>
-    normalizeChar({ kind: "monster", name, color: "#b8383b", hp, maxHp: hp, ac, sizeType: "Humanoide pequeño", speed: 30, mapId: map.id, mx, my, initiative, xp: 50, cr: "1/4" });
+    normalizeChar({ ...goblinSheet, kind: "monster", monsterKey: goblin.id, name, hp, maxHp: hp, ac, speed: 30, mapId: map.id, mx, my, initiative });
   doc.chars = [
     pc("Aria", "Pícara", "Elfa", "#4f9d5d", 21, 15, 5, 7, { initiative: 17 }),
     pc("Borin", "Guerrero", "Enano", "#c89b4a", 31, 18, 6, 8, { initiative: 9 }),

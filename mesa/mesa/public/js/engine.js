@@ -11,8 +11,8 @@
      absorbImages(d) saca las imágenes incrustadas de una copia antigua
      onPresence()    avisa de que ha cambiado quién está conectado */
 
-import { emptyDoc, migrate, cellKey, normalizeChar, normalizeMap, normalizeShape, normalizePin, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier } from "./schema.js";
-import { visibleCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells } from "./los.js";
+import { emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier } from "./schema.js";
+import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells } from "./los.js";
 import { roll, detail } from "./dice.js";
 import { cutWalls, doorAt } from "./freewalls.js";
 import { critDamage } from "./attacks-core.js";
@@ -100,6 +100,10 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
     const inCombat = new Set(doc.session.combat.on ? doc.session.combat.order : []);
     const occupiedCells = c => occupied(c);
     const chars = [];
+    /* Penumbra: lo que está justo más allá de la vista. De lo que haya ahí
+       solo viaja que hay algo y dónde: ni qué es, ni cómo se llama. */
+    const fringe = showMap && !doc.session.revealAll ? fringeCells(doc, map, seen) : new Set();
+    const hints = [];
     for (const c of doc.chars) {
       if (c.kind === "pc") {
         chars.push({ ...c });
@@ -117,6 +121,9 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
          recuerda es el sitio, no lo que la criatura esté haciendo ahora. */
       const memory = !shown && c.discovered && map && map.remember && !doc.session.revealAll
         && c.lastSeen && c.lastSeen.mapId === map.id;
+      if (!shown && placed && c.hp > 0 && occupiedCells(c).some(([x, y]) => fringe.has(cellKey(x, y)))) {
+        hints.push({ x: c.mx, y: c.my, n: occupiedCells(c).length > 1 ? Math.round(Math.sqrt(occupiedCells(c).length)) : 1 });
+      }
       if (!shown && !memory && !(c.discovered && inCombat.has(c.id))) continue;
       chars.push({
         id: c.id, kind: "monster", name: c.name, color: c.color, avatarId: c.avatarId,
@@ -154,8 +161,12 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         grid: map.grid, revealAll: doc.session.revealAll,
         explored: doc.session.revealAll ? [] : explored,
         visible: visibleList,
-        edges: doc.session.revealAll ? map.edges : edgesNear(map, seen, explored),
-        walls: doc.session.revealAll ? map.walls || [] : wallsNear(map, seen, explored),
+        fringe: [...fringe],
+        hints,
+        /* Los muros siguen cortando la vista y el paso aunque no se enseñen:
+           solo deja de viajar el dibujo */
+        edges: doc.session.showWallsToParty === false ? {} : doc.session.revealAll ? map.edges : edgesNear(map, seen, explored),
+        walls: doc.session.showWallsToParty === false ? [] : doc.session.revealAll ? map.walls || [] : wallsNear(map, seen, explored),
         dark: map.dark, feet: map.feet, diagonals: map.diagonals, playerZoom: map.playerZoom,
         cells: pickCells(map, seen, explored),
         shapes: (map.shapes || []).filter(sh => sh.party),
@@ -717,7 +728,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         break;
       case "bestiary.set":
         if (!dm) return "Solo el DM";
-        doc.bestiary = op.list;
+        doc.bestiary = (Array.isArray(op.list) ? op.list : []).map(normalizeBeast);
         break;
       case "log.add": {
         const entry = { ...op.entry, id: rid(6), ts: Date.now(), actor: client.name };
@@ -875,6 +886,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
          del DM, según decida. Cada uno borra lo suyo, el DM borra todo. */
       case "drawing.add": {
         if (client.role === "screen") return "La pantalla no dibuja";
+        if (!dm && doc.session.allowPlayerDraw === false) return "El DM ha desactivado el dibujo";
         const mp = doc.maps.find(x => x.id === (op.mapId || doc.session.activeMapId));
         if (!mp) return "No existe ese mapa";
         const d = normalizeDrawing({ ...op.drawing, party: dm ? op.drawing && op.drawing.party !== false : true, by: client.name, byId: client.id });

@@ -438,6 +438,14 @@ function renderMap(pane, mine) {
       if (what === "fit") mapView.setZoom(1);
     });
   }
+  /* Si el DM quita el dibujo, desaparecen los botones (y se vuelve a mover) */
+  const canDraw = doc().session.allowPlayerDraw !== false;
+  pane.querySelectorAll('[data-ptool="draw"], [data-ptool="drawErase"]').forEach(b => b.classList.toggle("hidden", !canDraw));
+  if (!canDraw && (mapView.tool === "draw" || mapView.tool === "drawErase")) {
+    mapView.tool = "token";
+    mapView.stroke = null;
+    pane.querySelectorAll("[data-ptool]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.ptool === "token")));
+  }
   mapView.set({ map, chars: doc().chars, session: doc().session, you: mine.id });
 }
 

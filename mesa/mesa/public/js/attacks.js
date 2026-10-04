@@ -29,8 +29,12 @@ export function parseAttackLine(line) {
     || text.match(/^[^.:]{2,40}[.:]\s*([+-]\s*\d+)/);
   const save = text.match(/CD\s*(\d+)\s*(?:de\s+)?(fuerza|destreza|constituci[oó]n|inteligencia|sabidur[ií]a|carisma)/i);
   if (!dice && !save) return null;
+  /* En el formato del bestiario («Tragar — … 3d6 de ácido por turno») una línea
+     sin bonificador ni CD describe un efecto, no un ataque que tirar. */
+  if (!hit && !save && /\s—\s/.test(text)) return null;
 
-  const name = (text.split(/[.:]/)[0] || "Ataque").trim().slice(0, 48);
+  /* «Cimitarra. Ataque…» o, como escribe el bestiario, «Cimitarra — +4 al ataque — …» */
+  const name = (text.split(/\s[—–]\s|[.:]/)[0] || "Ataque").trim().slice(0, 48);
   const type = DAMAGE_WORDS.find(w => new RegExp("\\b" + w + "\\b", "i").test(text)) || "";
   const range = (text.match(/(alcance[^,.;]*|distancia[^,.;]*|reach[^,.;]*|range[^,.;]*)/i) || [""])[0].trim();
 

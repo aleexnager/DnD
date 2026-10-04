@@ -4,8 +4,8 @@
 
    - La goma quita solo el trozo por el que pasa, no el trazo entero.
    - La herramienta Puerta convierte el trozo de una casilla que se pulsa en
-     puerta; pulsar otra vez la abre, y otra vez la quita (queda el hueco),
-     como en un borde de casilla.
+     puerta; pulsar otra vez la abre o la cierra, como en un borde de
+     casilla. Para quitarla (y dejar el hueco), la goma.
 
    Lo usa el motor (engine.js), en el servidor y en la versión de prueba. */
 
@@ -73,7 +73,7 @@ export function cutWalls(walls, x, y, r = 0.3) {
 
 /* La herramienta Puerta sobre un muro libre, en (x, y). Sobre un muro: el
    trozo de una casilla alrededor del punto pasa a ser puerta. Sobre una
-   puerta: se abre. Sobre una puerta abierta: se quita y queda el hueco. */
+   puerta: se abre o se cierra. */
 export function doorAt(walls, x, y, r = 0.3, size = 1) {
   let best = null;
   walls.forEach((w, i) => {
@@ -83,7 +83,7 @@ export function doorAt(walls, x, y, r = 0.3, size = 1) {
   if (!best) return null;
   const w = walls[best.i], rest = walls.filter((_, i) => i !== best.i);
   if (w.type === "door") return [...rest, { ...w, type: "doorOpen" }];
-  if (w.type === "doorOpen") return rest;
+  if (w.type === "doorOpen") return [...rest, { ...w, type: "door" }];
   /* Un trazo corto entero se vuelve puerta; en uno largo se recorta una casilla */
   const L = lengthOf(w.points);
   if (L <= size * 1.5) return [...rest, { ...w, type: "door" }];

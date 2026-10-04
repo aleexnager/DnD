@@ -250,7 +250,12 @@ export class MapView {
     return { fx, fy, x: Math.floor(fx), y: Math.floor(fy) };
   }
 
-  edgeAt(fx, fy, withDiagonals = false) {
+  /* El borde (o la diagonal) más cercano al puntero. Con «diagonals»:
+     "existing" solo cuentan las diagonales que ya hay (para borrar), "any"
+     también las que no hay (la puerta se puede poner en diagonal sin muro
+     debajo). Las diagonales nuevas tienen que estar algo más cerca que un
+     borde para ganar: así pulsar junto a un borde sigue siendo el borde. */
+  edgeAt(fx, fy, diagonals = false) {
     const x = Math.floor(fx), y = Math.floor(fy);
     const dx = fx - x, dy = fy - y;
     const options = [
@@ -259,13 +264,21 @@ export class MapView {
       { d: dy, key: edgeKey(x, y, "h") },
       { d: 1 - dy, key: edgeKey(x, y + 1, "h") }
     ];
-    /* La puerta y la goma también cogen las diagonales que haya en la casilla */
-    if (withDiagonals) {
+    if (diagonals) {
       const edges = (this.data.map && this.data.map.edges) || {};
-      if (edges[edgeKey(x, y, "d")]) options.push({ d: Math.abs(dx - dy) / Math.SQRT2, key: edgeKey(x, y, "d") });
-      if (edges[edgeKey(x, y, "a")]) options.push({ d: Math.abs(dx + dy - 1) / Math.SQRT2, key: edgeKey(x, y, "a") });
+      for (const [dir, dist] of [["d", Math.abs(dx - dy) / Math.SQRT2], ["a", Math.abs(dx + dy - 1) / Math.SQRT2]]) {
+        const key = edgeKey(x, y, dir);
+        if (edges[key]) options.push({ d: dist, key });
+        else if (diagonals === "any") options.push({ d: dist + 0.12, key });
+      }
     }
     return options.sort((a, b) => a.d - b.d)[0].key;
+  }
+
+  /* ¿El puntero está hacia el centro de la casilla, lejos de sus bordes? */
+  nearCenter(fx, fy) {
+    const dx = fx - Math.floor(fx), dy = fy - Math.floor(fy);
+    return Math.min(dx, 1 - dx, dy, 1 - dy) > 0.24;
   }
 
   /* Muro en diagonal: la que pase más cerca del puntero (\ o /) */
@@ -343,7 +356,9 @@ export class MapView {
         cv.setPointerCapture(e.pointerId);
         return;
       }
-      if (this.mode === "dm" && this.tool === "diag") {
+      /* Muro: cerca de un borde, recto; desde el centro de una casilla, en
+         diagonal. La herramienta «diag» de antes sigue valiendo. */
+      if (this.mode === "dm" && (this.tool === "diag" || (this.tool === "wall" && this.nearCenter(p.fx, p.fy)))) {
         /* La dirección se elige en la primera casilla y se mantiene durante
            el trazo: así una pared larga sale recta */
         this.painting = "diag";
@@ -368,8 +383,8 @@ export class MapView {
       }
       if (this.mode === "dm" && (this.tool === "wall" || this.tool === "door" || this.tool === "erase")) {
         this.painting = this.tool;
-        /* La puerta y la goma también valen para los muros diagonales */
-        this.opts.onEdge && this.opts.onEdge(this.edgeAt(p.fx, p.fy, this.tool !== "wall"), this.tool);
+        /* La puerta vale también en diagonal; la goma quita lo que haya */
+        this.opts.onEdge && this.opts.onEdge(this.edgeAt(p.fx, p.fy, this.tool === "door" ? "any" : this.tool === "erase" ? "existing" : false), this.tool);
         cv.setPointerCapture(e.pointerId);
         return;
       }
@@ -475,7 +490,7 @@ export class MapView {
         return;
       }
       if (this.painting) {
-        if (this.painting !== "door") this.opts.onEdge && this.opts.onEdge(this.edgeAt(p.fx, p.fy, this.painting === "erase"), this.painting);
+        if (this.painting !== "door") this.opts.onEdge && this.opts.onEdge(this.edgeAt(p.fx, p.fy, this.painting === "erase" ? "existing" : false), this.painting);
         return;
       }
       if (this.stroke) {
@@ -792,17 +807,7 @@ export class MapView {
           ctx.fillRect(X(x), Y(y), g.cell + 0.5, g.cell + 0.5);
         });
       } else {
-        /* Dos trazados y dos rellenos, en vez de un relleno por casilla */
-        const fog = new Path2D(), memo = new Path2D();
-        for (let y = 0; y < map.rows; y++) {
-          for (let x = 0; x < map.cols; x++) {
-            const k = cellKey(x, y);
-            if (seen.has(k)) continue;
-            (known.has(k) ? memo : fog).rect(X(x) - 0.5, Y(y) - 0.5, g.cell + 1, g.cell + 1);
-          }
-        }
-        ctx.fillStyle = COLORS.known; ctx.fill(memo);
-        ctx.fillStyle = COLORS.fog; ctx.fill(fog);
+        this.fogLayer(ctx, g, map, seen, known, X, Y);
       }
     }
 
@@ -861,16 +866,36 @@ export class MapView {
       const cx = Number(x), cy = Number(y);
       if (!dm && seen && !seen.has(cellKey(cx, cy)) && !known.has(cellKey(cx, cy))
         && !seen.has(cellKey(cx - (dir === "v" ? 1 : 0), cy - (dir === "h" ? 1 : 0)))) continue;
+      let x1, y1, x2, y2;
+      if (dir === "v") { x1 = X(cx); y1 = Y(cy); x2 = X(cx); y2 = Y(cy + 1); }
+      else if (dir === "d") { x1 = X(cx); y1 = Y(cy); x2 = X(cx + 1); y2 = Y(cy + 1); }
+      else if (dir === "a") { x1 = X(cx + 1); y1 = Y(cy); x2 = X(cx); y2 = Y(cy + 1); }
+      else { x1 = X(cx); y1 = Y(cy); x2 = X(cx + 1); y2 = Y(cy); }
+      if (type === "door" || type === "doorOpen") {
+        /* Puerta: un bloque sobre el borde, macizo si está cerrada y hueco si
+           está abierta. Igual en recto que en diagonal. */
+        const len = Math.hypot(x2 - x1, y2 - y1), w = Math.max(4, g.cell * 0.2);
+        ctx.save();
+        ctx.translate((x1 + x2) / 2, (y1 + y2) / 2);
+        ctx.rotate(Math.atan2(y2 - y1, x2 - x1));
+        ctx.lineWidth = Math.max(1.5, g.cell * 0.05);
+        ctx.strokeStyle = COLORS.door;
+        ctx.fillStyle = type === "door" ? COLORS.door : "rgba(20,16,10,.55)";
+        ctx.beginPath();
+        ctx.roundRect(-len * 0.42, -w / 2, len * 0.84, w, w * 0.25);
+        ctx.fill(); ctx.stroke();
+        if (type === "door") {   // la junta de las hojas, para que se lea como puerta
+          ctx.strokeStyle = "rgba(30,20,10,.7)";
+          ctx.beginPath(); ctx.moveTo(0, -w / 2 + 1); ctx.lineTo(0, w / 2 - 1); ctx.stroke();
+        }
+        ctx.restore();
+        continue;
+      }
       ctx.lineWidth = thick;
       ctx.lineCap = "round";
-      ctx.strokeStyle = type === "wall" ? COLORS.wall : type === "door" ? COLORS.door : COLORS.doorOpen;
-      ctx.setLineDash(type === "doorOpen" ? [thick, thick * 1.6] : []);
-      ctx.beginPath();
-      if (dir === "v") { ctx.moveTo(X(cx), Y(cy)); ctx.lineTo(X(cx), Y(cy + 1)); }
-      else if (dir === "d") { ctx.moveTo(X(cx), Y(cy)); ctx.lineTo(X(cx + 1), Y(cy + 1)); }
-      else if (dir === "a") { ctx.moveTo(X(cx + 1), Y(cy)); ctx.lineTo(X(cx), Y(cy + 1)); }
-      else { ctx.moveTo(X(cx), Y(cy)); ctx.lineTo(X(cx + 1), Y(cy)); }
-      ctx.stroke();
+      ctx.strokeStyle = type === "window" ? COLORS.doorOpen : COLORS.wall;
+      ctx.setLineDash(type === "window" ? [thick, thick * 1.6] : []);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
       ctx.setLineDash([]);
     }
 
@@ -1103,6 +1128,73 @@ export class MapView {
       ctx.restore();
     }
     ctx.restore();
+  }
+
+  /* Niebla de guerra con bordes suaves. Se arma una máscara de una celda por
+     píxel (vista: nada; explorado: un velo leve; penumbra: bruma; el resto:
+     negro), se difumina a poca resolución y se estira sobre el tablero. Así el
+     borde de la vista sale redondeado y con degradado en vez de a escalones,
+     y no cuesta nada por fotograma: solo se rehace cuando cambia lo que se ve. */
+  fogLayer(ctx, g, map, seen, known, X, Y) {
+    const key = [map.id, map.cols, map.rows, map.visible, map.explored, map.fringe].map(v => Array.isArray(v) ? v.length + ":" + v[0] + ":" + v[v.length - 1] : v).join("|");
+    let fog = this._fog;
+    if (!fog || fog.key !== key || fog.visible !== map.visible || fog.explored !== map.explored) {
+      const W = map.cols + 2, H = map.rows + 2, SUB = 8;
+      const mask = (fog && fog.mask) || document.createElement("canvas");
+      mask.width = W; mask.height = H;
+      const mctx = mask.getContext("2d");
+      const img = mctx.createImageData(W, H);
+      const fringe = new Set(map.fringe || []);
+      for (let y = -1; y <= map.rows; y++) {
+        for (let x = -1; x <= map.cols; x++) {
+          const k = cellKey(x, y);
+          const a = seen.has(k) ? 0 : known.has(k) ? 0.24 : fringe.has(k) ? 0.6 : 1;
+          const i = ((y + 1) * W + (x + 1)) * 4;
+          img.data[i] = 5; img.data[i + 1] = 6; img.data[i + 2] = 10; img.data[i + 3] = Math.round(a * 255);
+        }
+      }
+      mctx.putImageData(img, 0, 0);
+      const soft = (fog && fog.soft) || document.createElement("canvas");
+      soft.width = W * SUB; soft.height = H * SUB;
+      const sctx = soft.getContext("2d");
+      sctx.clearRect(0, 0, soft.width, soft.height);
+      sctx.imageSmoothingEnabled = true;
+      sctx.imageSmoothingQuality = "high";
+      if ("filter" in sctx) sctx.filter = `blur(${SUB * 0.42}px)`;
+      sctx.drawImage(mask, 0, 0, soft.width, soft.height);
+      if ("filter" in sctx) sctx.filter = "none";
+      fog = this._fog = { key, visible: map.visible, explored: map.explored, mask, soft };
+    }
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    /* Por fuera del tablero no hace falta difuminar: se recorta al borde */
+    ctx.beginPath();
+    ctx.rect(X(0), Y(0), map.cols * g.cell, map.rows * g.cell);
+    ctx.clip();
+    ctx.drawImage(fog.soft, X(-1), Y(-1), (map.cols + 2) * g.cell, (map.rows + 2) * g.cell);
+    ctx.restore();
+
+    /* Algo se mueve en la penumbra: una sombra con un interrogante, sin
+       nombre ni color. Del servidor solo llega dónde y cuánto ocupa. */
+    for (const h of map.hints || []) {
+      const n = h.n || 1;
+      const cx = X(h.x) + (g.cell * n) / 2, cy = Y(h.y) + (g.cell * n) / 2, r = g.cell * n * 0.46;
+      ctx.save();
+      const grad = ctx.createRadialGradient(cx, cy, r * 0.15, cx, cy, r);
+      grad.addColorStop(0, "rgba(14,12,18,.85)");
+      grad.addColorStop(0.7, "rgba(14,12,18,.5)");
+      grad.addColorStop(1, "rgba(14,12,18,0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+      if (g.cell > 12) {
+        ctx.fillStyle = "rgba(226,214,190,.6)";
+        ctx.font = `600 ${Math.round(g.cell * 0.46 * Math.min(n, 2))}px Georgia, serif`;
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("?", cx, cy + 1);
+      }
+      ctx.restore();
+    }
   }
 
   dmLayers(ctx, g, map, X, Y) {
@@ -1602,5 +1694,5 @@ const PIN_MARKS = {
 
 const ROOM_TONES = [[127, 208, 255], [217, 154, 43], [229, 107, 111], [143, 214, 148], [200, 160, 240], [240, 200, 120]];
 
-export const EDGE_CYCLE = { none: "wall", wall: "door", door: "doorOpen", doorOpen: null };
+export const EDGE_CYCLE = { none: "wall", wall: "door", door: "doorOpen", doorOpen: "door" };
 export { cellKey, edgeKey };

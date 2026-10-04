@@ -1,7 +1,7 @@
 /* Forma de los datos. Lo usan el servidor y el navegador, así que aquí no
    puede haber nada que dependa del DOM. */
 
-import { CATALOG } from "./catalog.js";
+import { CATALOG, CATALOG_BY_ID } from "./catalog.js";
 
 export const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 export const num = (v, d = 0) => (Number.isFinite(Number(v)) ? Number(v) : d);
@@ -235,13 +235,36 @@ const BEAST_DEFAULTS = {
   color: "#8a5a3b", custom: false, avatarId: "", size: "Mediano"
 };
 export function normalizeBeast(raw = {}) {
-  const b = { ...BEAST_DEFAULTS, ...raw };
+  const { en, ...rest } = raw;   // la traducción vive en el catálogo, no en la partida
+  const b = { ...BEAST_DEFAULTS, ...rest };
   b.id = raw.id || uid();
   b.size = sizeFromText(raw.size) || sizeFromText(b.sizeType) || "Mediano";
   ["xp", "ac", "hpAvg", "speed", "str", "dex", "con", "int", "wis", "cha"].forEach(k => { b[k] = num(b[k]); });
   b.hpAvg = Math.max(1, b.hpAvg);
   b.custom = !!b.custom;
   return b;
+}
+
+/* La partida solo guarda las criaturas del DM: las que se ha inventado y las
+   de serie que ha retocado (con el mismo id). Las de serie viven en
+   catalog.js y no viajan con cada cambio: son más de cien fichas. */
+const BASE = CATALOG.map(normalizeBeast);
+export function bestiaryOf(doc) {
+  const own = new Map((doc && doc.bestiary || []).map(b => [b.id, b]));
+  return [...BASE.map(b => own.get(b.id) || b), ...[...own.values()].filter(b => !CATALOG_BY_ID.has(b.id))];
+}
+export const isBaseBeast = id => CATALOG_BY_ID.has(id);
+
+/* Las copias de antes guardaban el catálogo entero. Lo que está igual que de
+   serie se quita (ya lo pone bestiaryOf, y en su versión nueva); lo retocado
+   se queda, con el retrato de serie si no tenía otro. */
+function ownBeasts(list) {
+  return (Array.isArray(list) ? list : [])
+    .filter(b => b && (b.custom || !CATALOG_BY_ID.has(b.id)))
+    .map(b => {
+      const base = CATALOG_BY_ID.get(b.id);
+      return normalizeBeast(base && !b.avatarId ? { ...b, avatarId: base.avatarId } : b);
+    });
 }
 
 /* ---------- Mapas ---------- */
@@ -421,15 +444,17 @@ const SESSION_DEFAULTS = {
   requests: [],         // tiradas pedidas a los jugadores
   showFoeHP: false,     // ¿enseñar a la party la vida de los enemigos?
   showMoveRange: true,  // pintar el alcance al arrastrar
+  allowPlayerDraw: true,   // ¿los jugadores pueden dibujar en el mapa?
+  showWallsToParty: true,  // ¿la party ve los muros y las puertas dibujados?
   autoSkipDown: true    // saltar en la iniciativa a los que están fuera de combate
 };
 
-export function emptyDoc(catalog = CATALOG) {
+export function emptyDoc() {
   const map = normalizeMap({ name: "Mazmorra" });
   return {
     version: 7,
     chars: [],
-    bestiary: catalog.map(normalizeBeast),
+    bestiary: [],
     maps: [map],
     session: { ...SESSION_DEFAULTS, combat: { ...SESSION_DEFAULTS.combat, order: [] }, activeMapId: map.id },
     log: []
@@ -452,6 +477,9 @@ export function migrate(raw) {
       }
     }
     if (old && old.resourceName) c.resources = [{ name: old.resourceName, uses: num(old.resourceUses), max: num(old.resourceMax || old.resourceUses) }];
+    /* Los monstruos de serie ya en la mesa estrenan retrato */
+    const base = old && old.kind === "monster" && CATALOG_BY_ID.get(old.monsterKey);
+    if (base && !c.avatarId) c.avatarId = base.avatarId;
     return normalizeChar(c);
   });
 
@@ -472,7 +500,7 @@ export function migrate(raw) {
   return {
     version: 7,
     chars,
-    bestiary: (Array.isArray(src.bestiary) && src.bestiary.length ? src.bestiary : CATALOG).map(normalizeBeast),
+    bestiary: ownBeasts(src.bestiary),
     maps,
     session,
     log: Array.isArray(src.log) ? src.log.slice(-150) : []

@@ -167,10 +167,12 @@ export function shrinkImage(file, maxSide) {
 
 /* Las imágenes van por ruta relativa: Mesa puede vivir en una subcarpeta
    (GitHub Pages la sirve en /DnD/). En la versión de prueba, la que se acaba
-   de subir en esta pestaña se enseña directamente desde memoria. */
+   de subir en esta pestaña se enseña directamente desde memoria. Los retratos
+   del bestiario de serie no se suben: vienen con la aplicación
+   («bestiario/goblin-head.svg») y se piden tal cual. */
 const localImages = new Map();
 export const registerLocalImage = (id, url) => localImages.set(id, url);
-export const imgURL = id => (id ? localImages.get(id) || "img/" + id : "");
+export const imgURL = id => (id ? localImages.get(id) || (String(id).includes("/") ? id : "img/" + id) : "");
 
 /* ---------- Fechas ---------- */
 export const hhmm = ts => new Date(ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });

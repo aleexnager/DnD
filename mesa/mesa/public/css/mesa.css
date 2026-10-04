@@ -267,6 +267,20 @@ main { padding: 18px max(14px, 2.2vw) 60px; min-width: 0; }
 .beast small { color: var(--dim); font-size: 12px; }
 .beast .go { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
 .beast .go input { width: 62px; }
+.beast .beast-id { min-width: 0; display: grid; gap: 1px; }
+.beast .beast-id b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.beast .cr { white-space: nowrap; align-self: flex-start; }
+.beast .avatar { border-radius: 50%; }
+.beast details { margin-top: 6px; }
+.beast summary { cursor: pointer; font-size: 12px; color: var(--gold-soft); width: max-content; }
+.beast .detail { margin-top: 6px; border: 1px solid var(--edge); border-radius: 8px; padding: 10px; gap: 8px; }
+.beast .abil:hover { border-color: var(--edge); }
+.beast-filters { display: flex; gap: 6px; margin-top: 8px; }
+.beast-filters select { flex: 1 1 0; min-width: 0; }
+.beast-count { margin: 0; font-size: 12px; color: var(--dim); }
+.beast .go .check { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.beast .go .check input { width: auto; flex: none; }
+.beast .go input[data-qty] { flex: 0 0 64px; width: 64px; min-width: 0; }
 
 /* ---------- Mapa ---------- */
 .map-wrap { display: grid; grid-template-rows: auto 1fr; gap: 10px; height: calc(100vh - 110px); }

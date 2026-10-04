@@ -559,6 +559,38 @@ export function wallsNear(map, seen, explored = []) {
   }));
 }
 
+/* La franja de penumbra: casillas justo más allá de lo que se ve (pegadas a
+   una casilla vista), sin muro de por medio. No se ven, pero se intuyen: el
+   jugador las ve tras una bruma y, si hay una criatura, sabe que algo hay
+   ahí, no qué. */
+export function fringeCells(doc, map, seen) {
+  const out = new Set();
+  if (!map || !seen || !seen.size) return out;
+  const vis = map.vis || {}, cells = map.cells || {};
+  const heroes = doc.chars.filter(c => c.kind === "pc" && c.hp > 0 && onMap(c, map));
+  for (const c of heroes) {
+    const trueSight = Math.min(40, Math.max(c.vision || 0, c.light || 0));
+    const reach = Math.max(trueSight, Math.min(60, map.dark ? trueSight : Math.max(map.radius, trueSight)));
+    if (!reach) continue;
+    const outer = reach + 1.5, n = Math.ceil(outer);
+    for (let dy = -n; dy <= n; dy++) {
+      for (let dx = -n; dx <= n; dx++) {
+        if (dx * dx + dy * dy > outer * outer) continue;
+        const x = c.mx + dx, y = c.my + dy;
+        if (x < 0 || y < 0 || x >= map.cols || y >= map.rows) continue;
+        const k = cellKey(x, y);
+        if (seen.has(k) || out.has(k) || vis[k] === "hide" || cells[k] === "dark") continue;
+        let touches = false;
+        for (let oy = -1; oy <= 1 && !touches; oy++) for (let ox = -1; ox <= 1; ox++) {
+          if ((ox || oy) && seen.has(cellKey(x + ox, y + oy))) { touches = true; break; }
+        }
+        if (touches && hasSight(map, c.mx, c.my, x, y)) out.add(k);
+      }
+    }
+  }
+  return out;
+}
+
 /* Solo se mandan los muros que tocan lo que ya se ha visto: el plano completo
    no sale del servidor mientras la party no lo haya explorado. */
 export function edgesNear(map, seen, explored = []) {

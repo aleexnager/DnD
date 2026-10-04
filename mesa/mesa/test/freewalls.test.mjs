@@ -56,7 +56,7 @@ test("la goma quita solo el trozo que toca", () => {
   assert.equal(cutWalls(far, 7, 8), far, "lejos no toca nada");
 });
 
-test("la herramienta Puerta: una casilla de puerta, abierta y sin puerta", () => {
+test("la herramienta Puerta: una casilla de puerta que se abre y se cierra; la goma la quita", () => {
   let walls = doorAt(line(), 7, 5);
   const door = walls.find(w => w.type === "door");
   assert.ok(door, "no hay puerta");
@@ -65,7 +65,9 @@ test("la herramienta Puerta: una casilla de puerta, abierta y sin puerta", () =>
   walls = doorAt(walls, 7, 5);
   assert.equal(walls.find(w => w.id === door.id).type, "doorOpen");
   walls = doorAt(walls, 7, 5);
-  assert.equal(walls.length, 2, "queda el hueco");
+  assert.equal(walls.find(w => w.id === door.id).type, "door");
+  walls = cutWalls(walls.filter(w => w.id === door.id), 7, 5, 0.6);
+  assert.equal(walls.length, 0, "la goma deja el hueco");
 });
 
 test("una puerta cerrada corta la vista y una abierta no", () => {
