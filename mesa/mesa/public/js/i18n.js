@@ -1172,7 +1172,7 @@ const PATTERNS = [
   [/^(.+?) (cae|encaja el golpe)$/, (m, who, v) => `${who} ${v === "cae" ? "goes down" : "takes the hit"}`],
   [/^(.+?) contra (.+?): (\d+)( · .+)?$/, (m, atk, tgt, n, tail) => `${word(atk)} against ${tgt}: ${n}${(tail || "")
     .replace("· ¡CRÍTICO!", "· CRITICAL!").replace("· impacta", "· hits").replace("· falla", "· misses")
-    .replace("· pifia", "· fumble").replace(/de daño/, "damage")}`],
+    .replace("· pifia", "· fumble").replace(/(\d+) de daño( [^\s·]+)?/, (m, n, t) => `${n} ${t ? word(t.trim()) + " " : ""}damage`)}`],
   /* «Engaño +4»: una habilidad o característica con su modificador */
   [/^([^\d+−-][^+]*?) ([+-]\d+)$/, (m, what, mod) => EN[what.trim()] ? `${EN[what.trim()]} ${mod}` : m]
 ];
