@@ -503,12 +503,12 @@ function bindTable(root) {
       case "checkAbility": {
         const k = btn.dataset.ability;
         const label = `${c.name} · ${ABILITIES.find(a => a[0] === k)[1]}`;
-        return throwDice("1d20" + sign(modOf(c[k])), { label, mode: currentMode(), secret: isSecret() });
+        return throwDice("1d20" + sign(modOf(c[k])), { label, mode: currentMode(), secret: isSecret(), char: c, kind: "check" });
       }
       case "rollSave": return pickAndRoll(c, "save");
       case "rollSkill": return pickAndRoll(c, "skill");
       case "rollInitOne": {
-        const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa" });
+        const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", char: c, kind: "check" });
         if (r) patchChar(c.id, { initiative: r.total });
         return;
       }
@@ -551,7 +551,7 @@ function bindTable(root) {
       case "concSave": {
         const dc = +btn.dataset.dc || 10;
         const r = throwDice("1d20" + sign(modOf(c.con) + (c.saves.includes("con") ? c.proficiency : 0)),
-          { label: `${c.name} · concentración CD ${dc}` });
+          { label: `${c.name} · concentración CD ${dc}`, char: c, kind: "save" });
         if (r && r.total < dc) { patchChar(c.id, { concentration: "" }); tellTable(`${c.name} pierde la concentración`); }
         return;
       }
@@ -646,10 +646,10 @@ function pickForOrder() {
 }
 
 function deathSave(c) {
-  const r = throwDice("1d20", { label: c.name + " · salvación de muerte" });
+  const r = throwDice("1d20", { label: c.name + " · salvación de muerte", char: c, kind: "save" });
   if (!r) return;
-  if (r.total === 20) return patchChar(c.id, { hp: 1, deathOk: 0, deathFail: 0 });
-  if (r.total === 1) return patchChar(c.id, { deathFail: Math.min(3, c.deathFail + 2) });
+  if (r.natural === 20) return patchChar(c.id, { hp: 1, deathOk: 0, deathFail: 0 });
+  if (r.natural === 1) return patchChar(c.id, { deathFail: Math.min(3, c.deathFail + 2) });
   if (r.total >= 10) patchChar(c.id, { deathOk: Math.min(3, c.deathOk + 1) });
   else patchChar(c.id, { deathFail: Math.min(3, c.deathFail + 1) });
 }
@@ -662,7 +662,7 @@ function pickAndRoll(c, kind) {
     `<button class="btn sm" data-pick="${x.id}" data-mod="${x.mod}">${esc(x.name)} ${sign(x.mod)}</button>`).join("")}</div>`);
   const m = modal({ title: (kind === "save" ? "Salvación de " : "Prueba de ") + c.name, body, wide: true, actions: [{ label: "Cerrar" }] });
   on(body, "click", "[data-pick]", (e, b) => {
-    throwDice("1d20" + sign(+b.dataset.mod), { label: `${c.name} · ${b.textContent.trim()}`, mode: currentMode(), secret: isSecret() });
+    throwDice("1d20" + sign(+b.dataset.mod), { label: `${c.name} · ${b.textContent.trim()}`, mode: currentMode(), secret: isSecret(), char: c, kind: kind === "save" ? "save" : "check" });
     m.close();
   });
 }
@@ -752,7 +752,7 @@ function openCombatRoster() {
 
   /* Tirar aquí mismo y que el número caiga en su casilla */
   const rollOne = (c, secret) => {
-    const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", secret });
+    const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", secret, char: c, kind: "check" });
     if (!r) return;
     const box = body.querySelector(`[data-init="${c.id}"]`);
     if (box) box.value = r.total;
@@ -802,7 +802,7 @@ function rollInitiative() {
   const c0 = session().combat;
   const list = c0.on && c0.order.length ? c0.order.map(byId).filter(Boolean) : combatCandidates();
   list.forEach(c => {
-    const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", secret: c.kind === "monster" });
+    const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", secret: c.kind === "monster", char: c, kind: "check" });
     if (r) rolled.set(c.id, r.total);
   });
   rolled.forEach((total, id) => patchChar(id, { initiative: total }));

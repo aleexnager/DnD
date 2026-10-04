@@ -11,7 +11,7 @@
      absorbImages(d) saca las imágenes incrustadas de una copia antigua
      onPresence()    avisa de que ha cambiado quién está conectado */
 
-import { emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier } from "./schema.js";
+import { emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier, withBuffs, canSneak, canSmite, sneakDice, smiteDice, smiteFoe } from "./schema.js";
 import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells, partyRoomFrame } from "./los.js";
 import { roll, detail } from "./dice.js";
 import { cutWalls, doorAt } from "./freewalls.js";
@@ -302,7 +302,8 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
      puesta. Al jugador no se le enseña la CA ni la vida de nadie: solo lo que
      ha pasado. */
   const ABILITY_ES = { str: "Fuerza", dex: "Destreza", con: "Constitución", int: "Inteligencia", wis: "Sabiduría", cha: "Carisma" };
-  const rollSave = (c, ability) => roll("1d20" + signed(modOf(c[ability]) + ((c.saves || []).includes(ability) ? (c.proficiency || 2) : 0)));
+  /* Las salvaciones de los objetivos llevan sus efectos (Bendecir, Perdición…) */
+  const rollSave = (c, ability) => roll(withBuffs(c, "save", "1d20" + signed(modOf(c[ability]) + ((c.saves || []).includes(ability) ? (c.proficiency || 2) : 0))).formula);
   const signed = n => (n >= 0 ? "+" : "") + n;
   const concentrationNote = (c, dc, push) => push({ kind: "event",
     text: `${c.name} tiene que superar una salvación de Constitución CD ${dc} o pierde la concentración en ${c.concentration}` });
@@ -412,7 +413,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       head(`${sp.name} (${lvlText}): ${rays > 1 ? rays + " ataques" : "ataque"} de conjuro ${signed(atkBonus)}`);
       for (let i = 0; i < rays; i++) {
         const t = targets[i % targets.length];
-        const atk = roll("1d20" + signed(atkBonus), op.mode === "adv" || op.mode === "dis" ? op.mode : "normal");
+        const atk = roll(withBuffs(caster, "attack", "1d20" + signed(atkBonus)).formula, op.mode === "adv" || op.mode === "dis" ? op.mode : "normal");
         const hit = atk.crit || (!atk.fumble && atk.total >= (t.ac || 10));
         let text = `${t.name}: ${atk.total}${atk.crit ? " · ¡CRÍTICO!" : atk.fumble ? " · pifia" : hit ? " · impacta" : " · falla"}`;
         if (hit && damage) {
@@ -510,11 +511,36 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       return null;
     }
 
-    const atk = roll("1d20" + (a.atk >= 0 ? "+" : "") + a.atk, mode);
+    const toHit = withBuffs(attacker, "attack", "1d20" + (a.atk >= 0 ? "+" : "") + a.atk);
+    const atk = roll(toHit.formula, mode);
     if (!atk) return "Ese ataque no tiene una fórmula válida";
     const ac = target ? target.ac : null;
+    /* Sin objetivo no se sabe si entra: se tira el daño igual, para quien lo quiera */
     const hit = atk.crit || (!atk.fumble && ac !== null && atk.total >= ac);
-    const dmg = hit && a.damage ? roll(atk.crit ? critDamage(a.damage) : a.damage) : null;
+    const lands = hit || (!target && !atk.fumble);
+
+    /* Daño: el del arma, los efectos encendidos y lo que se haya pedido al
+       atacar. Furtivo y castigo los calcula aquí la ficha, no el navegador, y
+       el castigo solo gasta su espacio si el golpe entra. */
+    const ex = op.extras || {};
+    const extras = [];
+    let formula = a.damage ? withBuffs(attacker, "damage", a.damage).formula : "";
+    const dmgBuffs = a.damage ? withBuffs(attacker, "damage", "").names : [];
+    if (lands && ex.sneak && canSneak(attacker)) { formula += "+" + sneakDice(attacker); extras.push("ataque furtivo"); }
+    const smiteSlot = Math.trunc(Number(ex.smite) || 0);
+    if (lands && smiteSlot >= 1 && smiteSlot <= 9 && canSmite(attacker) && attacker.kind === "pc") {
+      if ((attacker.slots[smiteSlot - 1] || 0) - (attacker.slotsUsed[smiteSlot - 1] || 0) > 0) {
+        const used = [...attacker.slotsUsed];
+        used[smiteSlot - 1] = (used[smiteSlot - 1] || 0) + 1;
+        attacker.slotsUsed = used;
+        formula += "+" + smiteDice(smiteSlot, smiteFoe(target));
+        extras.push(`castigo divino de nivel ${smiteSlot}`);
+      } else extras.push(`sin espacios de nivel ${smiteSlot} para el castigo`);
+    }
+    const free = String(ex.extra || "").replace(/\s+/g, "").slice(0, 24);
+    if (lands && free && roll(free)) { formula += (/^[+-]/.test(free) ? "" : "+") + free; extras.push("daño extra " + free); }
+    const dmg = lands && formula ? roll(atk.crit ? critDamage(formula) : formula) : null;
+    const notes = [...toHit.names.filter(n => !dmgBuffs.includes(n)), ...dmgBuffs, ...extras];
 
     /* Al jugador no se le dice la CA, solo si ha entrado o no. */
     push({
@@ -523,7 +549,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         (target ? (atk.crit ? " · ¡CRÍTICO!" : atk.fumble ? " · pifia" : hit ? " · impacta" : " · falla") : "") +
         (dmg ? ` · ${dmg.total} de daño${a.type ? " " + a.type : ""}` : ""),
       total: atk.total, crit: atk.crit, fumble: atk.fumble,
-      detail: detail(atk) + (dmg ? "  |  daño " + detail(dmg) : "")
+      detail: detail(atk) + (dmg ? "  |  daño " + detail(dmg) : "") + (notes.length ? "  |  " + notes.join(", ") : "")
     });
 
     if (dmg && target) {
@@ -567,7 +593,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
   }
 
   /* ---------- Operaciones ---------- */
-  const LIST_FIELDS = ["attacks", "items", "features", "spellbook", "resources", "weapons", "inventory", "spells"];
+  const LIST_FIELDS = ["attacks", "items", "features", "spellbook", "resources", "weapons", "inventory", "spells", "buffs"];
   const PLAYER_LOCKED = new Set(["id", "kind", "hidden", "xp", "cr", "mapId", "mx", "my", "claimedBy"]);
   const findChar = id => doc.chars.find(c => c.id === id);
 
@@ -759,6 +785,11 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         break;
       case "log.add": {
         const entry = { ...op.entry, id: rid(6), ts: Date.now(), actor: client.name };
+        /* Un jugador no tira en secreto para nadie: lo que tira «al DM» lo
+           ven el DM y él, como un susurro */
+        if (!dm && entry.secret && entry.kind === "roll" && client.role === "player") {
+          Object.assign(entry, { private: true, byClient: client.id, from: client.charId || "", to: [], names: ["DM"] });
+        }
         if (!dm) entry.secret = false;
         doc.log.push(entry);
         if (doc.log.length > 150) doc.log = doc.log.slice(-150);

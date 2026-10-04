@@ -7,6 +7,8 @@ import { op, patchChar } from "./net.js";
 import { normalizeSpell, modOf, conditionName } from "./schema.js";
 import { SPELL_LIBRARY, guessAbility } from "./spells.js";
 import { icon, withIcon } from "./icons.js";
+import { keyMods } from "./dice-panel.js";
+import { rollable } from "./rollable.js";
 
 const ABIL = { int: "Inteligencia", wis: "Sabiduría", cha: "Carisma" };
 const SAVE = { str: "FUE", dex: "DES", con: "CON", int: "INT", wis: "SAB", cha: "CAR" };
@@ -152,7 +154,7 @@ export function openCast(c, sp, ctx = {}) {
 
   const body = el(`<div class="cast">
     <p class="cast-what">${esc(spellTags(sp))}${sp.mode === "save" ? ` · CD ${st.dc}` : sp.mode === "attack" ? ` · ${st.atk >= 0 ? "+" : ""}${st.atk} al ataque` : ""}</p>
-    ${sp.desc ? `<p class="prose small"><span>${esc(sp.desc)}</span></p>` : ""}
+    ${sp.desc ? `<p class="prose small"><span>${rollable(sp.desc, `${c.name} · ${sp.name}`)}</span></p>` : ""}
     ${levels.length ? `<label class="field"><span>Espacio</span><select id="castSlot">${levels.map(l =>
       `<option value="${l}">Nivel ${l}${hasSlots ? ` · quedan ${slotsLeft(c, l)}` : ""}${l > sp.level ? " · potenciado" : ""}</option>`).join("")}</select></label>` : ""}
     ${sp.mode === "attack" ? `<div class="adv cast-adv">
@@ -188,7 +190,7 @@ export function openCast(c, sp, ctx = {}) {
         if (needsTarget && !ids.length) { toast("Elige al menos un objetivo", "bad"); return false; }
         const max = maxFor(slot);
         if (ids.length > max) { toast(`Este conjuro llega a ${max} objetivo${max > 1 ? "s" : ""}`, "bad"); return false; }
-        op("spell.cast", { casterId: c.id, spellId: sp.id, slot, targets: ids, mode,
+        op("spell.cast", { casterId: c.id, spellId: sp.id, slot, targets: ids, mode: keyMods().mode || mode,
           secret: !!(host.querySelector("#castSecret") && host.querySelector("#castSecret").checked) });
       } }
     ]

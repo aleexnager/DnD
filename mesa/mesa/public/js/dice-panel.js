@@ -6,13 +6,43 @@ import { el, on, esc, hhmm, toast, modal } from "./util.js";
 import { icon, withIcon } from "./icons.js";
 import { roll, detail } from "./dice.js";
 import { store, addLog, op } from "./net.js";
+import { withBuffs } from "./schema.js";
 
 let mode = "normal";
 let secret = false;
 let filter = "todo";
 let whisperTo = [];      // identificadores de ficha, y "dm" para el máster
 
-export function throwDice(formula, { label = "", mode: m = mode, secret: s = false } = {}) {
+/* Teclas al pulsar, como en Beyond20: Mayús tira con ventaja, Ctrl (o Cmd)
+   con desventaja y Alt en secreto (el jugador, solo para el DM). Se apunta en
+   cada clic antes de que llegue a su botón y vale para la tirada que salga de
+   ese clic, aunque se pida un momento después. */
+let held = { at: -1e9 };
+const holdFrom = e => { held = { adv: e.shiftKey, dis: e.ctrlKey || e.metaKey, secret: e.altKey, at: performance.now() }; };
+addEventListener("pointerdown", holdFrom, true);
+addEventListener("click", holdFrom, true);
+/* Una fórmula pulsable en un texto (rollable.js): se tira con el modo del
+   panel y, en el DM, con su interruptor de secreto */
+addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-roll-formula]");
+  if (!b) return;
+  e.preventDefault();
+  e.stopPropagation();
+  throwDice(b.dataset.rollFormula, { label: b.dataset.rollLabel || "", secret });
+}, true);
+
+export function keyMods() {
+  if (performance.now() - held.at > 1500) return {};
+  const mode = held.adv && !held.dis ? "adv" : held.dis && !held.adv ? "dis" : "";
+  return { mode, secret: !!held.secret };
+}
+
+/* kind: attack, damage, save o check, para sumar los efectos de la ficha (char) */
+export function throwDice(formula, { label = "", mode: m = mode, secret: s = false, char = null, kind = "" } = {}) {
+  const keys = keyMods();
+  if (keys.mode) m = keys.mode;
+  if (keys.secret) s = true;
+  if (char && kind) ({ formula, label } = withBuffs(char, kind, formula, label));
   const result = roll(formula, m);
   if (!result) { toast("No entiendo esa fórmula. Prueba con 1d20+3", "bad"); return null; }
   addLog({
@@ -72,6 +102,7 @@ export function dicePanel({ isDM = false } = {}) {
           <button data-mode="normal" aria-pressed="true">Normal</button>
           <button data-mode="adv" aria-pressed="false">Ventaja</button>
         </div>
+        <p class="hint-keys"><kbd>Mayús</kbd> <span>ventaja</span> · <kbd>Ctrl</kbd> <span>desventaja</span> · <kbd>Alt</kbd> <span>${isDM ? "en secreto" : "solo al DM"}</span></p>
         ${isDM ? `<button class="secret-toggle" data-secret aria-pressed="false" title="En secreto: nadie más lo ve">
           ${icon("eyeOff", 16)}<span class="secret-text"><b>Tirada secreta</b><small>Solo la ves tú</small></span>
           <span class="switch"><i></i></span></button>` : ""}
@@ -146,6 +177,16 @@ export function dicePanel({ isDM = false } = {}) {
     secretBtn.setAttribute("aria-pressed", String(secret));
   });
 
+  /* Mientras se mantiene la tecla, se enciende el modo que va a usar */
+  const hold = e => {
+    const adv = e.shiftKey, dis = e.ctrlKey || e.metaKey;
+    node.dataset.hold = adv && !dis ? "adv" : dis && !adv ? "dis" : "";
+    node.dataset.secretHold = e.altKey ? "1" : "";
+  };
+  addEventListener("keydown", hold);
+  addEventListener("keyup", hold);
+  addEventListener("blur", () => { node.dataset.hold = ""; node.dataset.secretHold = ""; });
+
   node.querySelector("[data-toggle]").addEventListener("click", () => node.classList.toggle("open"));
   node.querySelector("header").addEventListener("click", e => {
     if (window.innerWidth <= 1080 && !e.target.closest("button")) node.classList.toggle("open");
@@ -212,7 +253,7 @@ export function renderLog(host, { toEnd = false } = {}) {
   if (!grew && !first && !toEnd) return;   // nada nuevo: no se repinta ni se mueve
 
   host.innerHTML = list.map(e => {
-    const cls = [e.kind, e.crit ? "crit" : "", e.fumble ? "fumble" : "", e.secret ? "secret" : ""].join(" ");
+    const cls = [e.kind, e.crit ? "crit" : "", e.fumble ? "fumble" : "", e.secret || e.private ? "secret" : ""].join(" ");
     if (e.kind === "chat") {
       const mine = store.session && e.actor === store.session.name;
       const who = (e.names || []).join(", ");
@@ -243,7 +284,7 @@ export function renderLog(host, { toEnd = false } = {}) {
     return `<div class="entry ${cls}">
       <div class="top">
         <span class="who">${esc(e.actor || "")}</span>
-        <span class="detail">${esc(e.label || e.formula)}${tag}${e.secret ? " · en secreto" : ""}</span>
+        <span class="detail">${esc(e.label || e.formula)}${tag}${e.secret ? " · en secreto" : ""}${e.private ? " · solo al DM" : ""}</span>
         <span class="time">${hhmm(e.ts)}</span>
       </div>
       <div><span class="result tnum">${e.total}</span>

@@ -14,7 +14,7 @@
    Todas las rutas son relativas al sitio donde vive Mesa: en GitHub Pages es
    una subcarpeta (/DnD/), no la raíz. */
 
-const VERSION = "mesa-2.10.1";
+const VERSION = "mesa-2.11.0";
 const SHELL_CACHE = VERSION + "-app";
 const IMG_CACHE = "mesa-img";
 const IMG_LIMIT = 80;
@@ -34,7 +34,7 @@ const SHELL = [
   "js/dice-panel.js", "js/attacks.js", "js/attacks-core.js", "js/char-editor.js",
   "js/dm.js", "js/player.js", "js/screen.js",
   "js/engine.js", "js/local.js", "js/local-host.js", "js/local-worker.js",
-  "js/spells.js", "js/spellbook.js", "js/statblock.js", "js/sheet.js", "js/list-editor.js", "js/sound-core.js", "js/ambient.js", "js/creador.js", "js/creador-datos.js", "js/voice.js", "js/portals.js",
+  "js/spells.js", "js/spellbook.js", "js/statblock.js", "js/sheet.js", "js/list-editor.js", "js/rollable.js", "js/sound-core.js", "js/ambient.js", "js/creador.js", "js/creador-datos.js", "js/voice.js", "js/portals.js",
   "js/gridfind.js", "js/gridfit.js", "js/wallfind.js", "js/wallmodel.js", "js/freewalls.js",
   /* Siluetas del creador de personajes */
   ...["barbaro", "bardo", "clerigo", "druida", "guerrero", "monje", "paladin", "explorador", "picaro", "hechicero", "brujo", "mago",
