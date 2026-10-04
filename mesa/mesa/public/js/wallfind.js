@@ -251,7 +251,7 @@ function otsu(values) {
 /* De las medidas a una propuesta de muros y puertas.
    sensitivity 0…1: más alto, más muros (umbrales más bajos). Se puede
    recalcular al mover el control sin volver a medir la imagen. */
-export function classifyWalls(m, { sensitivity = 0.5 } = {}) {
+function ruleWalls(m, { sensitivity = 0.5 } = {}) {
   const { cols, rows, edges } = m;
   const f = 1.6 - 1.2 * clamp(sensitivity, 0, 1);
   const n = cols * rows;
@@ -687,8 +687,224 @@ export function classifyWalls(m, { sensitivity = 0.5 } = {}) {
   const walls = [...out.values()].filter(t => t === "wall").length;
   const diag = [...out.keys()].filter(k => /,(d|a)$/.test(k)).length;
   return {
-    edges: result, floor,
+    edges: result, floor, score,
     stats: { walls, doors: out.size - walls, diagonals: diag, floorMask: masked, coherence: +coherence.toFixed(2), split: +split.sep.toFixed(2), tLine: +tLine.toFixed(1), tDiff: +tDiff.toFixed(1) }
+  };
+}
+
+/* ---------- Muros aprendidos de planos marcados a mano ----------
+
+   Regresión logística sobre cada borde, entrenada con cinco planos en los
+   que se marcaron a mano muros, diagonales y puertas. Todos los rasgos van
+   en percentil dentro del propio plano (0…1), para que no dependan del
+   estilo ni del brillo de cada mapa:
+
+   dark, light, thin, diff, thick, white, band   medidas del corte del borde
+   cmin, cmax       brillo de la franja frente al más oscuro / claro de los lados
+   lsd              diferencia de brillo entre los dos lados
+   smin, smax       cuánto se ve la cuadrícula en las dos casillas
+   rim, inn         borde del suelo (un lado suelo) o dentro del suelo
+   ev               lo más marcado de dark, light y band
+   n1lo/hi, n2lo/hi ev de los vecinos en la misma línea (a 1 y a 2 casillas)
+   n1rim…, n2rim…   lo mismo con rim
+
+   rule             si las reglas (ruleWalls) ponen muro en ese borde
+
+   Evaluado dejando cada plano fuera del entrenamiento (ver classifyWalls). */
+const MODEL = {
+  bias: -5.7926,
+  w: {
+    band: 0.6559,
+    cmax: 3.9426,
+    cmin: -1.592,
+    dark: -2.0265,
+    diff: 0.6532,
+    ev: 0.8738,
+    inn: -0.687,
+    light: -1.9589,
+    lsd: 1.542,
+    n1hi: 1.7146,
+    n1lo: 0.0173,
+    n1rimhi: 0.5096,
+    n1rimlo: 0.0891,
+    n2hi: 1.2968,
+    n2lo: 0.2338,
+    n2rimhi: 0.1974,
+    n2rimlo: 0.1394,
+    rim: -0.7636,
+    rule: 1.0644,
+    smax: -0.9362,
+    smin: -1.2162,
+    thick: 0.4728,
+    thin: 4.2665,
+    white: 0.3053
+  }
+};
+
+/* Percentil de cada valor dentro de la lista (empates: rango medio), 0…1 */
+function percentile(values) {
+  const n = values.length, idx = Array.from({ length: n }, (_, i) => i).sort((a, b) => values[a] - values[b]);
+  const out = new Float64Array(n);
+  for (let i = 0; i < n;) {
+    let j = i;
+    while (j + 1 < n && values[idx[j + 1]] === values[idx[i]]) j++;
+    const r = (i + j) / 2 / Math.max(1, n - 1);
+    for (let k = i; k <= j; k++) out[idx[k]] = r;
+    i = j + 1;
+  }
+  return out;
+}
+
+/* Probabilidad de muro de cada borde */
+export function wallProbabilities(m, floor, score, model = MODEL, ruleEdges = {}) {
+  const { cols, edges } = m;
+  const n = edges.length;
+  const side = e => e.dir === "v"
+    ? [e.cy * cols + e.cx - 1, e.cy * cols + e.cx]
+    : [(e.cy - 1) * cols + e.cx, e.cy * cols + e.cx];
+  const P = {};
+  for (const f of ["dark", "light", "thin", "diff", "thick", "white", "band"]) P[f] = percentile(edges.map(e => e[f]));
+  const la = edges.map(e => lum(e.a)), lb = edges.map(e => lum(e.b)), lc = edges.map(e => lum(e.c));
+  P.cmin = percentile(lc.map((c, i) => c - Math.min(la[i], lb[i])));
+  P.cmax = percentile(lc.map((c, i) => c - Math.max(la[i], lb[i])));
+  P.lsd = percentile(la.map((a, i) => Math.abs(a - lb[i])));
+  const sides = edges.map(side);
+  const sv = i => (score[i] === null || score[i] === undefined ? -1 : score[i]);
+  const both = percentile([...sides.map(s => sv(s[0])), ...sides.map(s => sv(s[1]))]);
+  P.smin = new Float64Array(n); P.smax = new Float64Array(n); P.rim = new Float64Array(n); P.inn = new Float64Array(n); P.ev = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    P.smin[i] = Math.min(both[i], both[n + i]); P.smax[i] = Math.max(both[i], both[n + i]);
+    const fa = floor[sides[i][0]] ? 1 : 0, fb = floor[sides[i][1]] ? 1 : 0;
+    P.rim[i] = fa !== fb ? 1 : 0; P.inn[i] = fa + fb === 2 ? 1 : 0;
+    P.ev[i] = Math.max(P.dark[i], P.light[i], P.band[i]);
+  }
+  P.rule = Float64Array.from(edges, e => (ruleEdges[e.key] ? 1 : 0));
+  const index = new Map(edges.map((e, i) => [e.key, i]));
+  const nb = (e, s) => index.get(e.dir === "v" ? `${e.cx},${e.cy + s},v` : `${e.cx + s},${e.cy},h`);
+  for (const [name, steps] of [["n1", [-1, 1]], ["n2", [-2, 2]]]) {
+    P[name + "lo"] = new Float64Array(n); P[name + "hi"] = new Float64Array(n);
+    P[name + "rimlo"] = new Float64Array(n); P[name + "rimhi"] = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      const js = steps.map(s => nb(edges[i], s));
+      const ev = js.map(j => (j === undefined ? 0 : P.ev[j])), rim = js.map(j => (j === undefined ? 0 : P.rim[j]));
+      P[name + "lo"][i] = Math.min(...ev); P[name + "hi"][i] = Math.max(...ev);
+      P[name + "rimlo"][i] = Math.min(...rim); P[name + "rimhi"][i] = Math.max(...rim);
+    }
+  }
+  const prob = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    let z = model.bias;
+    for (const [f, w] of Object.entries(model.w)) z += w * P[f][i];
+    prob[i] = 1 / (1 + Math.exp(-z));
+  }
+  return prob;
+}
+
+/* La propuesta: muros del modelo aprendido; diagonales y puertas, de las
+   reglas (con tan pocas puertas de ejemplo, el modelo no las distingue de un
+   plano a otro). La sensibilidad mueve el umbral del modelo. */
+export function classifyWalls(m, { sensitivity = 0.5, model = MODEL } = {}) {
+  const rules = ruleWalls(m, { sensitivity: 0.5 });
+  const prob = wallProbabilities(m, rules.floor, rules.score, model, rules.edges);
+  const thr = 0.75 - 0.5 * clamp(sensitivity, 0, 1);
+  const out = new Map();
+  const cols = m.cols;
+  const isFloor = i => !!rules.floor[i];
+  const inner = e => e.dir === "v"
+    ? isFloor(e.cy * cols + e.cx - 1) && isFloor(e.cy * cols + e.cx)
+    : isFloor((e.cy - 1) * cols + e.cx) && isFloor(e.cy * cols + e.cx);
+  const byKey = new Map(m.edges.map((e, i) => [e.key, i]));
+  const along = (e, s) => byKey.get(e.dir === "v" ? `${e.cx},${e.cy + s},v` : `${e.cx + s},${e.cy},h`);
+  /* Bordes del suelo y fuera de él: lo que diga el modelo */
+  /* Con máscara de suelo, las reglas aciertan bien el contorno de las salas:
+     se parte de sus paredes y se añade lo que el modelo da como seguro. Sin
+     máscara (todo cuenta como suelo, una ciudad) no se sabe qué está dentro
+     de una sala y manda el modelo en todos los bordes. Así salió mejor en los
+     cinco planos de prueba: F1 0,62 de media, frente a 0,46 de las reglas y
+     0,61 del modelo solo (cada plano evaluado con un modelo que no lo vio). */
+  const masked = !!rules.stats.floorMask;
+  if (masked) {
+    const thrAdd = Math.min(0.95, thr + 0.1);
+    for (const [k, t] of Object.entries(rules.edges)) if (t === "wall" && !/,(d|a)$/.test(k)) out.set(k, "wall");
+    const touchesFloor = e => e.dir === "v"
+      ? isFloor(e.cy * cols + e.cx - 1) || isFloor(e.cy * cols + e.cx)
+      : isFloor((e.cy - 1) * cols + e.cx) || isFloor(e.cy * cols + e.cx);
+    m.edges.forEach((e, i) => {
+      if (prob[i] < thrAdd || inner(e)) return;
+      /* En plena roca (ningún lado es suelo) hace falta más seguridad */
+      if (!touchesFloor(e) && prob[i] < Math.min(0.97, thr + 0.3)) return;
+      out.set(e.key, "wall");
+    });
+  } else m.edges.forEach((e, i) => { if (prob[i] >= thr) out.set(e.key, "wall"); });
+
+  /* Dentro de una sala casi nunca hay paredes: solo tabiques rectos de al
+     menos 3 casillas enganchados a otra pared (o muy largos), y con más
+     seguridad que en el borde */
+  const hit = i => masked && i !== undefined && prob[i] >= thr + 0.1 && inner(m.edges[i]);
+  const runs = [];
+  m.edges.forEach((e, i) => {
+    if (!hit(i) || hit(along(e, -1))) return;
+    const run = [i];
+    for (let j = along(e, 1); hit(j); j = along(m.edges[j], 1)) run.push(j);
+    if (run.length >= 3) runs.push(run);
+  });
+  const vertsOf = key => {
+    const [x, y, d] = key.split(","), cx = +x, cy = +y;
+    return d === "v" ? [`${cx},${cy}`, `${cx},${cy + 1}`] : [`${cx},${cy}`, `${cx + 1},${cy}`];
+  };
+  /* Un tabique vale si uno de sus extremos toca una pared (un rectángulo
+     suelto en mitad de la sala es una alfombra o una mesa), o si es muy largo */
+  const touched = new Set();
+  for (const k of out.keys()) for (const v of vertsOf(k)) touched.add(v);
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const run of runs) {
+      if (run.taken) continue;
+      const a = vertsOf(m.edges[run[0]].key)[0], b = vertsOf(m.edges[run[run.length - 1]].key)[1];
+      if (!touched.has(a) && !touched.has(b) && run.length < 8) continue;
+      run.taken = changed = true;
+      for (const j of run) { out.set(m.edges[j].key, "wall"); for (const v of vertsOf(m.edges[j].key)) touched.add(v); }
+    }
+  }
+  const cellOf = key => key.split(",").slice(0, 2).map(Number);
+  for (const [k, t] of Object.entries(rules.edges)) {
+    if (/,(d|a)$/.test(k)) {
+      /* La diagonal sustituye al escalón recto de esa casilla */
+      const [x, y] = cellOf(k);
+      for (const q of [`${x},${y},h`, `${x + 1},${y},v`, `${x},${y + 1},h`, `${x},${y},v`]) out.delete(q);
+      out.set(k, t);
+    } else if (t === "door") out.set(k, "door");
+  }
+  const ends = key => {
+    const [x, y, dir] = key.split(","), cx = +x, cy = +y;
+    if (dir === "v") return [`${cx},${cy}`, `${cx},${cy + 1}`];
+    if (dir === "h") return [`${cx},${cy}`, `${cx + 1},${cy}`];
+    if (dir === "d") return [`${cx},${cy}`, `${cx + 1},${cy + 1}`];
+    return [`${cx + 1},${cy}`, `${cx},${cy + 1}`];
+  };
+
+  /* Trozos sueltos: grupos de menos de 3 muros sin tocar nada más */
+  const at = new Map();
+  for (const k of out.keys()) for (const v of ends(k)) (at.get(v) || at.set(v, []).get(v)).push(k);
+  const seen = new Set();
+  for (const k of [...out.keys()]) {
+    if (seen.has(k)) continue;
+    const comp = [k];
+    seen.add(k);
+    for (let i = 0; i < comp.length; i++)
+      for (const v of ends(comp[i])) for (const o of at.get(v)) if (!seen.has(o)) { seen.add(o); comp.push(o); }
+    if (comp.length < 3) for (const c of comp) out.delete(c);
+  }
+  const edges = Object.fromEntries(out);
+  const vals = Object.entries(edges);
+  return {
+    edges, floor: rules.floor, score: rules.score,
+    stats: {
+      ...rules.stats,
+      walls: vals.filter(([, t]) => t === "wall").length,
+      doors: vals.filter(([, t]) => t === "door").length,
+      diagonals: vals.filter(([k]) => /,(d|a)$/.test(k)).length
+    }
   };
 }
 

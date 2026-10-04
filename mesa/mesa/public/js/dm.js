@@ -1065,8 +1065,9 @@ function renderMap() {
             <button data-tool="measure" aria-pressed="false" title="Medir distancias">${icon("ruler", 15)}Regla</button>
             <button data-tool="wall" aria-pressed="false" title="Muro por los bordes de las casillas">${icon("wall", 15)}Muro</button>
             <button data-tool="diag" aria-pressed="false" title="Muro en diagonal, de esquina a esquina">${icon("diagonal", 15)}Diagonal</button>
+            <button data-tool="freewall" aria-pressed="false" title="Muro a mano alzada, para paredes redondas o irregulares (con Mayúsculas, recto)">${icon("scribble", 15)}Muro libre</button>
             <button data-tool="door" aria-pressed="false" title="Puerta: cerrada, abierta, sin puerta">${icon("door", 15)}Puerta</button>
-            <button data-tool="erase" aria-pressed="false" title="Quitar muros, diagonales y puertas">${icon("eraser", 15)}Borrar</button>
+            <button data-tool="erase" aria-pressed="false" title="Quitar muros, diagonales, muros libres y puertas">${icon("eraser", 15)}Borrar</button>
             <button data-tool="pin" aria-pressed="false" title="Clavar una nota">${icon("note", 15)}Nota</button>
             <button data-tool="portal" aria-pressed="false" title="Escalera o pasadizo: a otro mapa o a otro punto de este">${icon("stairs", 15)}Acceso</button>
             <button data-tool="draw" aria-pressed="false" title="Dibujar a mano alzada">${icon("scribble", 15)}Dibujar</button>
@@ -1123,6 +1124,8 @@ function renderMap() {
         tokenMenu(id);
       },
       onEdge: (key, tool) => paintEdge(key, tool),
+      onWall: points => op("wall.add", { mapId: activeMap().id, wall: { points } }),
+      onWallErase: id => op("wall.remove", { mapId: activeMap().id, id }),
       onPaintCell: (x, y, brush) => {
         const k = x + "," + y, mapId = activeMap().id;
         op("map.cells", { mapId, patch: { [k]: brush === "none" ? null : brush } });
@@ -1165,8 +1168,9 @@ function renderMap() {
         wall: "Arrastra por los bordes de las casillas",
         diag: "Arrastra por las casillas: la diagonal (\\ o /) la marca dónde empiezas",
         draw: "Dibuja con el ratón o el dedo; elige color y si lo ve la party",
+        freewall: "Traza la pared siguiendo el plano; con Mayúsculas sale recta. Corta la vista y el paso",
         door: "Pulsa un borde o un muro diagonal: cerrada, abierta, sin puerta",
-        erase: "Arrastra para quitar muros y puertas",
+        erase: "Arrastra para quitar muros y puertas; pulsa un muro libre para quitarlo entero",
         pin: "Pulsa donde quieras clavar la nota",
         portal: "Pulsa donde esté la escalera"
       }[mapTool] || "";

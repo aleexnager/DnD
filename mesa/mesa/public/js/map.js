@@ -351,6 +351,22 @@ export class MapView {
         cv.setPointerCapture(e.pointerId);
         return;
       }
+      /* Muro libre: se traza como un dibujo. Con Mayúsculas, en línea recta
+         desde donde se empezó. */
+      if (this.mode === "dm" && this.tool === "freewall") {
+        this.wallStroke = { points: [[p.fx, p.fy]], straight: e.shiftKey };
+        cv.setPointerCapture(e.pointerId);
+        return this.draw();
+      }
+      if (this.mode === "dm" && this.tool === "erase") {
+        const hit = this.freeWallAt(p.fx, p.fy);
+        if (hit) {
+          this.painting = "eraseFree";
+          this.opts.onWallErase && this.opts.onWallErase(hit.id);
+          cv.setPointerCapture(e.pointerId);
+          return;
+        }
+      }
       if (this.mode === "dm" && (this.tool === "wall" || this.tool === "door" || this.tool === "erase")) {
         this.painting = this.tool;
         /* La puerta y la goma también valen para los muros diagonales */
@@ -441,6 +457,20 @@ export class MapView {
         return this.draw();
       }
       if (this.painting === "diag") { this.diagonalTo(p); return; }
+      if (this.painting === "eraseFree") {
+        const hit = this.freeWallAt(p.fx, p.fy);
+        if (hit && this.opts.onWallErase) this.opts.onWallErase(hit.id);
+        return;
+      }
+      if (this.wallStroke) {
+        const ws = this.wallStroke;
+        if (ws.straight || e.shiftKey) { ws.straight = true; ws.points = [ws.points[0], [p.fx, p.fy]]; }
+        else {
+          const last = ws.points[ws.points.length - 1];
+          if (Math.hypot(p.fx - last[0], p.fy - last[1]) > 0.05) ws.points.push([p.fx, p.fy]);
+        }
+        return this.draw();
+      }
       if (this.painting === "cell" || this.painting === "layer") {
         this.paintAt(p);
         return;
@@ -516,6 +546,15 @@ export class MapView {
         this.opts.onEdge && this.opts.onEdge(edgeKey(d.sx, d.sy, this.diagonalAt(d.fx, d.fy)), "wall");
       }
       if (this.painting) { this.painting = null; this.lastPaint = null; this.diag = null; return; }
+      if (this.wallStroke) {
+        /* Se simplifica con más margen que un dibujo: un muro quiere tramos
+           rectos, y cada tramo de más es trabajo para la línea de visión */
+        const pts = simplify(this.wallStroke.points, 0.12);
+        this.wallStroke = null;
+        if (pts.length > 1 && Math.hypot(pts[0][0] - pts[pts.length - 1][0], pts[0][1] - pts[pts.length - 1][1]) + pts.length > 2.3
+          && this.opts.onWall) this.opts.onWall(pts);
+        return this.draw();
+      }
       if (this.stroke) {
         const pts = simplify(this.stroke.points, 0.04);
         this.stroke = null;
@@ -623,6 +662,18 @@ export class MapView {
       d.done.add(key);
       this.opts.onEdge && this.opts.onEdge(key, "wall");
     }
+  }
+
+  /* El muro libre más cercano al puntero, a menos de un tercio de casilla */
+  freeWallAt(fx, fy) {
+    let best = null, bestD = 0.3;
+    for (const w of (this.data.map && this.data.map.walls) || []) {
+      for (let i = 1; i < w.points.length; i++) {
+        const dist = segDist(fx, fy, w.points[i - 1], w.points[i]);
+        if (dist < bestD) { bestD = dist; best = w; }
+      }
+    }
+    return best;
   }
 
   /* El trazo más cercano al puntero, si está a menos de un tercio de casilla */
@@ -822,6 +873,25 @@ export class MapView {
       else { ctx.moveTo(X(cx), Y(cy)); ctx.lineTo(X(cx + 1), Y(cy)); }
       ctx.stroke();
       ctx.setLineDash([]);
+    }
+
+    /* Muros libres (a los jugadores solo les llegan los que ya conocen) */
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = thick;
+    ctx.strokeStyle = COLORS.wall;
+    for (const w of map.walls || []) {
+      ctx.beginPath();
+      w.points.forEach(([px, py], i) => (i ? ctx.lineTo(X(px), Y(py)) : ctx.moveTo(X(px), Y(py))));
+      ctx.stroke();
+    }
+    if (this.wallStroke) {
+      ctx.save();
+      ctx.globalAlpha = 0.75;
+      ctx.beginPath();
+      this.wallStroke.points.forEach(([px, py], i) => (i ? ctx.lineTo(X(px), Y(py)) : ctx.moveTo(X(px), Y(py))));
+      ctx.stroke();
+      ctx.restore();
     }
 
     /* Accesos a otros mapas */

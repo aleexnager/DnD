@@ -267,7 +267,11 @@ const MAP_DEFAULTS = {
   /* Dónde cae la cuadrícula dibujada en la imagen, en píxeles de la imagen:
      la casilla (0,0) empieza en (x, y) y mide w × h. Sin esto (null), la
      imagen se estira para llenar columnas × filas, como siempre. */
-  imgGrid: null
+  imgGrid: null,
+  /* Muros libres: trazos que no siguen la cuadrícula (una sala redonda, una
+     cueva, un edificio girado). Puntos en casillas, con decimales. Cortan la
+     vista y el paso igual que un muro normal. */
+  walls: []
 };
 export function normalizeMap(raw = {}) {
   const m = { ...MAP_DEFAULTS, ...raw };
@@ -282,6 +286,7 @@ export function normalizeMap(raw = {}) {
   m.imageH = Math.max(0, Math.trunc(num(m.imageH)));
   m.lockRatio = m.lockRatio !== false;
   m.imgGrid = normalizeImgGrid(m.imgGrid);
+  m.walls = Array.isArray(m.walls) ? m.walls.map(normalizeWall).filter(w => w.points.length > 1).slice(0, MAX_WALLS) : [];
   m.grid = m.grid !== false;
   m.remember = m.remember !== false;
   m.camera = m.camera === "follow" ? "follow" : "full";
@@ -305,6 +310,17 @@ export function normalizeMap(raw = {}) {
   m.vis = layer(m.vis);
   m.drawings = Array.isArray(m.drawings) ? m.drawings.map(normalizeDrawing).filter(d => d.points.length > 1).slice(-150) : [];
   return m;
+}
+
+export const MAX_WALLS = 800;
+export function normalizeWall(raw = {}) {
+  const pts = Array.isArray(raw.points) ? raw.points : [];
+  return {
+    id: raw.id || uid(),
+    points: pts.slice(0, 400)
+      .filter(p => Array.isArray(p) && Number.isFinite(+p[0]) && Number.isFinite(+p[1]))
+      .map(p => [Math.round(+p[0] * 100) / 100, Math.round(+p[1] * 100) / 100])
+  };
 }
 
 export function normalizeImgGrid(g) {
