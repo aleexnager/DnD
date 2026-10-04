@@ -4,7 +4,7 @@
 
    Los campos están explicados en normalizeSpell (schema.js). */
 
-import { normalizeSpell } from "./schema.js";
+import { normalizeSpell, registerSpellLibrary } from "./schema.js";
 
 const S = (o) => normalizeSpell(o);
 
@@ -139,6 +139,9 @@ export const SPELL_LIBRARY = [
     mode: "save", save: "wis", cond: "paralizado", condRounds: 10, conc: true, duration: "Concentración, 1 minuto", targetsUp: 1,
     desc: "Como Inmovilizar persona, pero sirve con cualquier criatura." })
 ];
+
+/* Para que las fichas con los conjuros escritos a mano los encuentren aquí */
+registerSpellLibrary(SPELL_LIBRARY);
 
 /* Característica de lanzamiento que suele usar cada clase */
 export function guessAbility(className = "") {

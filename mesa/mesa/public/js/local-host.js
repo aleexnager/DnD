@@ -13,6 +13,7 @@
 import { createEngine } from "./engine.js";
 import { normalizeChar, normalizeMap, edgeKey } from "./schema.js";
 import { CATALOG_BY_ID } from "./catalog.js";
+import { SPELL_LIBRARY } from "./spells.js";
 
 const DB = "mesa-demo";
 const STORE = "kv";
@@ -94,11 +95,60 @@ function sampleDoc(doc) {
   const { id: _id, en: _en, hpAvg: _hp, hpDice: _dice, custom: _c, ...goblinSheet } = goblin;
   const foe = (name, hp, ac, mx, my, initiative) =>
     normalizeChar({ ...goblinSheet, kind: "monster", monsterKey: goblin.id, name, hp, maxHp: hp, ac, speed: 30, mapId: map.id, mx, my, initiative });
+  /* Fichas de nivel 3 completas, para que la prueba enseñe cómo se juega */
+  const atk = (name, atkBonus, damage, type, range) => ({ name, atk: atkBonus, damage, type, range });
+  const item = (name, weight, extra = {}) => ({ name, weight, qty: 1, ...extra });
+  const feat = (name, source, text) => ({ name, source, text });
+  const spells = (...ids) => ids.map(id => ({ ...SPELL_LIBRARY.find(sp => sp.id === id) }));
   doc.chars = [
-    pc("Aria", "Pícara", "Elfa", "#4f9d5d", 21, 15, 5, 7, { initiative: 17 }),
-    pc("Borin", "Guerrero", "Enano", "#c89b4a", 31, 18, 6, 8, { initiative: 9 }),
-    pc("Cael", "Mago", "Humano", "#8878d8", 16, 12, 4, 9, { initiative: 12 }),
-    pc("Dara", "Clériga", "Mediana", "#d99a2b", 24, 16, 5, 10, { initiative: 6 }),
+    pc("Aria", "Pícara", "Elfa", "#4f9d5d", 21, 15, 5, 7, {
+      initiative: 17, str: 10, dex: 17, con: 12, int: 13, wis: 12, cha: 14, hitDice: "3d8", vision: 12,
+      saves: ["dex", "int"], skills: ["acrobacias", "sigilo", "juego_de_manos", "percepcion", "enganio", "investigacion"],
+      attacks: [atk("Espada corta", 5, "1d6+3", "perforante", "5 pies"), atk("Arco corto", 5, "1d6+3", "perforante", "80/320 pies"),
+        atk("Daga", 5, "1d4+3", "perforante", "20/60 pies")],
+      items: [item("Espada corta", 2, { equipped: true }), item("Arco corto", 2, { equipped: true }), item("Flechas", 0.05, { qty: 20 }),
+        item("Daga", 1, { qty: 2 }), item("Armadura de cuero", 10, { equipped: true }), item("Herramientas de ladrón", 1), item("Cuerda de cáñamo", 10, { note: "50 pies" })],
+      features: [feat("Ataque furtivo", "Clase", "Una vez por turno, 2d6 de daño extra si tienes ventaja o un aliado está a 5 pies del objetivo."),
+        feat("Acción astuta", "Clase", "Correr, Destrabarse o Esconderse como acción adicional."),
+        feat("Visión en la oscuridad", "Especie", "Ves en la penumbra a 60 pies como si hubiera luz."),
+        feat("Ascendencia feérica", "Especie", "Ventaja contra quedar encantado; la magia no te duerme.")],
+      notes: "Busca al hombre de la cicatriz que traicionó a su gremio."
+    }),
+    pc("Borin", "Guerrero", "Enano", "#c89b4a", 31, 18, 6, 8, {
+      initiative: 9, str: 16, dex: 12, con: 16, int: 10, wis: 12, cha: 8, hitDice: "3d10", vision: 12,
+      saves: ["str", "con"], skills: ["atletismo", "intimidacion", "percepcion"],
+      attacks: [atk("Hacha de batalla", 5, "1d8+3", "cortante", "5 pies"), atk("Hacha de mano", 5, "1d6+3", "cortante", "20/60 pies")],
+      items: [item("Hacha de batalla", 4, { equipped: true }), item("Cota de malla", 55, { equipped: true }), item("Escudo", 6, { equipped: true }),
+        item("Hacha de mano", 2, { qty: 2 }), item("Raciones", 2, { qty: 5 })],
+      features: [feat("Tomar aliento", "Clase", "Como acción adicional recuperas 1d10 + tu nivel de vida, una vez por descanso."),
+        feat("Oleada de acción", "Clase", "Una acción más en tu turno, una vez por descanso."),
+        feat("Estilo de combate: Defensa", "Clase", "+1 a la CA mientras lleves armadura."),
+        feat("Resistencia enana", "Especie", "Ventaja en salvaciones contra veneno y resistencia a su daño.")],
+      resources: [{ name: "Tomar aliento", uses: 0, max: 1 }, { name: "Oleada de acción", uses: 0, max: 1 }]
+    }),
+    pc("Cael", "Mago", "Humano", "#8878d8", 16, 12, 4, 9, {
+      initiative: 12, str: 8, dex: 14, con: 13, int: 16, wis: 12, cha: 10, hitDice: "3d6",
+      saves: ["int", "wis"], skills: ["arcanos", "historia", "investigacion"],
+      attacks: [atk("Bastón", 1, "1d6-1", "contundente", "5 pies")],
+      castAbility: "int", slots: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+      spellbook: spells("rayo-de-fuego", "proyectil-magico", "manos-ardientes", "dormir", "telarana"),
+      items: [item("Bastón", 4, { equipped: true }), item("Libro de conjuros", 3), item("Bolsa de componentes", 2), item("Tinta y pluma", 0)],
+      features: [feat("Recuperación arcana", "Clase", "En un descanso corto recuperas espacios de conjuro que sumen hasta 2 niveles."),
+        feat("Tradición arcana: Evocación", "Clase", "Tus conjuros de área pueden no afectar a tus aliados.")]
+    }),
+    pc("Dara", "Clériga", "Mediana", "#d99a2b", 24, 16, 5, 10, {
+      initiative: 6, str: 12, dex: 10, con: 14, int: 10, wis: 16, cha: 13, hitDice: "3d8", size: "Pequeño",
+      saves: ["wis", "cha"], skills: ["medicina", "perspicacia", "religion"],
+      attacks: [atk("Maza", 3, "1d6+1", "contundente", "5 pies")],
+      castAbility: "wis", slots: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+      spellbook: spells("llama-sagrada", "bendecir", "curar-heridas", "palabra-curativa", "saeta-guia", "arma-espiritual"),
+      items: [item("Maza", 4, { equipped: true }), item("Cota de escamas", 45, { equipped: true }), item("Escudo", 6, { equipped: true }),
+        item("Símbolo sagrado", 1, { equipped: true }), item("Kit de sanador", 3, { note: "10 usos" })],
+      features: [feat("Canalizar divinidad", "Clase", "Expulsar muertos vivientes, una vez por descanso."),
+        feat("Afortunada", "Especie", "Si sacas un 1 en el d20, vuelves a tirar y te quedas con el nuevo."),
+        feat("Valiente", "Especie", "Ventaja en salvaciones contra quedar asustada.")],
+      resources: [{ name: "Canalizar divinidad", uses: 0, max: 1 }]
+    }),
     foe("Goblin 1", 7, 15, 16, 6, 14),
     foe("Goblin 2", 7, 15, 17, 9, 11),
     foe("Goblin 3", 7, 15, 19, 7, 8)

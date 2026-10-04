@@ -77,6 +77,7 @@ const EN = {
   "Editar ficha": "Edit sheet", "Duplicar": "Duplicate", "Ver más": "Show more",
   "Oculto para la party": "Hidden from the party", "Visible para la party": "Visible to the party",
   "Restar vida": "Take hit points", "Curar": "Heal", "Vida temporal": "Temporary hit points",
+  "Restar vida (1 si no pones cantidad)": "Take hit points (1 if no amount)", "Curar (1 si no pones cantidad)": "Heal (1 if no amount)",
   "Estados": "Conditions", "Atacar": "Attack", "Apuntar con los ataques": "Target with attacks",
   "Tirar un ataque": "Roll an attack", "Iniciativa": "Initiative", "Velocidad": "Speed",
   "Concentrado en": "Concentrating on", "Agotamiento": "Exhaustion", "Inspiración": "Inspiration",
@@ -86,7 +87,7 @@ const EN = {
   "Tirar salvación de muerte": "Roll a death save", "Salvación de muerte": "Death save",
   "Salvación de concentración": "Concentration save", "Tirar iniciativa": "Roll initiative",
   "Sentidos": "Senses", "Idiomas": "Languages", "Resistencias": "Resistances", "Rasgos": "Traits",
-  "Acciones": "Actions", "Ataques": "Attacks", "Conjuros": "Spells", "Equipo": "Gear", "Notas": "Notes",
+  "Acciones": "Actions", "Ataques": "Attacks", "Conjuros": "Spells", "Equipo": "Inventory", "Notas": "Notes",
   "Daño": "Damage", "Curación": "Healing", "Temp": "Temp", "CA": "AC", "Editar": "Edit",
   "Te toca": "Your turn", "Es tu turno": "It's your turn", "ronda": "round", "Ronda": "Round",
   "turno de": "turn of", "después": "next", "después:": "next:",
@@ -668,6 +669,94 @@ const EN = {
   "VD 0 a 1/2": "CR 0 to 1/2", "VD 1 a 2": "CR 1 to 2", "VD 3 a 4": "CR 3 to 4", "VD 5 a 8": "CR 5 to 8",
   "VD 9 a 16": "CR 9 to 16", "VD 17 o más": "CR 17 or higher",
   "No hay ninguna criatura así.": "No creature matches.", "1 criatura": "1 creature",
+
+  /* Ficha del personaje y de las criaturas, al estilo de D&D Beyond */
+  "Puntos de golpe": "Hit Points", "Actuales": "Current", "Máximos": "Max", "Temp.": "Temp",
+  "Competencia": "Proficiency", "Desafío": "Challenge", "Recursos": "Resources",
+  "Sin estados": "No conditions", "Salvaciones de muerte": "Death saves",
+  "Cómo se tira": "Roll mode", "Tirada secreta": "Secret roll", "Solo la ves tú": "Only you see it",
+  "Mensajes nuevos": "New messages",
+
+  /* Pestañas de la ficha */
+  "Ataque": "Attack", "Alcance": "Range", "Golpe/CD": "Hit/DC", "Acciones en combate": "Actions in combat",
+  "Lanzar un conjuro": "Cast a spell", "Correr": "Dash", "Destrabarse": "Disengage", "Esquivar": "Dodge",
+  "Ayudar": "Help", "Esconderse": "Hide", "Preparar": "Ready", "Buscar": "Search", "Usar un objeto": "Use an object",
+  "Agarrar": "Grapple", "Empujar": "Shove",
+  "Un ataque con arma o sin armas (más si tienes Ataque adicional).": "One weapon or unarmed attack (more with Extra Attack).",
+  "Un conjuro cuyo tiempo de lanzamiento sea 1 acción.": "A spell with a casting time of 1 action.",
+  "Ganas tanto movimiento extra como tu velocidad.": "Gain extra movement equal to your speed.",
+  "Tu movimiento no provoca ataques de oportunidad este turno.": "Your movement doesn't provoke opportunity attacks this turn.",
+  "Desventaja para quien te ataque; ventaja en salvaciones de DES.": "Attackers have disadvantage; you have advantage on DEX saves.",
+  "Un aliado tiene ventaja en su próxima prueba o ataque.": "An ally gains advantage on their next check or attack.",
+  "Prueba de Destreza (Sigilo) para ocultarte.": "Dexterity (Stealth) check to hide.",
+  "Eliges un desencadenante y reaccionas cuando ocurra.": "Choose a trigger and react when it happens.",
+  "Prueba de Sabiduría (Percepción) o Inteligencia (Investigación).": "Wisdom (Perception) or Intelligence (Investigation) check.",
+  "Interactuar con un segundo objeto, o usar uno que lo pida.": "Interact with a second object, or use one that requires an action.",
+  "Prueba de Atletismo contra Atletismo o Acrobacias del objetivo.": "Athletics check against the target's Athletics or Acrobatics.",
+  "Derribar o apartar 5 pies a una criatura con Atletismo.": "Knock a creature prone or push it 5 feet with Athletics.",
+  "Tirar el ataque": "Roll the attack", "Tirar el daño": "Roll the damage",
+  "Sin ataques apuntados. Añádelos al editar la ficha.": "No attacks yet. Add them when editing the sheet.", "CD de salvación": "Save DC",
+  "No conoce ningún conjuro todavía.": "Doesn't know any spells yet.", "Gestionar conjuros": "Manage spells",
+  "Equipado": "Equipped", "Sin equipar": "Not equipped", "Objeto": "Item", "Cant.": "Qty", "Peso": "Weight",
+  "Peso total": "Total weight", "Sin equipo apuntado. Añádelo al editar la ficha.": "No items yet. Add them when editing the sheet.",
+  "Sin rasgos apuntados. Añádelos al editar la ficha.": "No features yet. Add them when editing the sheet.", "Especie": "Species", "Dote": "Feat", "Otro": "Other",
+  "Sin notas. Escríbelas al editar la ficha.": "No notes. Write them when editing the sheet.",
+
+  /* Editor de la ficha */ "Tipo": "Type", "Área": "Area", "Tamaño (pies)": "Size (feet)", "Peso (lb)": "Weight (lb)",
+  "Origen": "Source", "Qué hace": "What it does", "Añadir objeto": "Add item", "Añadir rasgo": "Add feature",
+  "Añadir acción": "Add action", "Rasgos y aptitudes": "Features & traits",
+  "Cada ataque sale en la pestaña «Acciones» de la ficha: se toca el golpe o el daño para tirarlo.":
+    "Each attack shows in the sheet's “Actions” tab: tap the hit or the damage to roll it.",
+  "El peso es por unidad, en libras. Lo equipado se marca también desde la ficha.":
+    "Weight is per unit, in pounds. Equipped items can also be toggled from the sheet.",
+  "Se eligen de la biblioteca o se crean desde «Conjuros» en la ficha, y salen en su pestaña listos para lanzar.":
+    "Pick them from the library or create them from “Spells” on the sheet; they show in their tab ready to cast.",
+  "Un ataque se escribe así para poder tirarlo: «+4 al ataque — 1d6+2 cortante».":
+    "Write an attack like this so it can be rolled: “+4 to hit — 1d6+2 slashing”.", "5 pies": "5 ft.", "Cuerda de cáñamo": "Hempen rope",
+  "Ataque furtivo": "Sneak Attack", "Huida ágil": "Nimble escape",
+  "Se desengancha o se esconde como acción adicional.": "Disengages or hides as a bonus action.",
+  "+4 al ataque — 1d6+2 cortante": "+4 to hit — 1d6+2 slashing",
+
+  /* Mapa: lo que faltaba */
+  "Muro a mano alzada, para paredes redondas o irregulares (con Mayúsculas, recto)": "Freehand wall, for round or irregular walls (straight with Shift)",
+  "Puerta, recta, en diagonal o en un muro libre: se abre y se cierra": "Door, straight, diagonal or on a freehand wall: opens and closes",
+  "Quitar muros, diagonales, muros libres y puertas": "Remove walls, diagonals, freehand walls and doors",
+  "Pulsa un borde (recta), el centro de una casilla (diagonal) o un muro libre. Otra pulsación la abre o la cierra; para quitarla, Borrar":
+    "Tap an edge (straight), the centre of a square (diagonal) or a freehand wall. Tap again to open or close it; to remove it, Erase",
+  "Arrastra para quitar muros y puertas, también trozos de muro libre": "Drag to remove walls and doors, including bits of freehand wall",
+  "Todavía no se ha enseñado con ningún plano. Cuando los muros de un plano estén bien, «Enseñar con este plano».":
+    "Nothing has been taught from a map yet. When a map's walls are right, use “Teach from this map”.",
+  "Todavía no se ha enseñado con ningún plano": "Nothing has been taught from a map yet",
+  "Cuando los muros de este plano estén bien puestos, la propuesta aprende de ellos para los próximos planos":
+    "When this map's walls are right, the suggestion learns from them for future maps",
+  "Un archivo con los planos enseñados, para otra instalación o una versión nueva": "A file with the taught maps, for another install or a new version",
+  "Aprender de un archivo exportado desde Mesa": "Learn from a file exported from Mesa",
+
+  /* La partida de ejemplo */
+  "Partida de prueba": "Test game", "Sala de la guardia": "Guard room",
+  "Busca al hombre de la cicatriz que traicionó a su gremio.": "Looking for the scarred man who betrayed her guild.", "Flechas": "Arrows", "Armadura de cuero": "Leather armour",
+  "Herramientas de ladrón": "Thieves' tools", "50 pies": "50 ft.", "Hacha de batalla": "Battleaxe", "Hacha de mano": "Handaxe",
+  "Cota de malla": "Chain mail", "Escudo": "Shield", "Raciones": "Rations", "Bastón": "Quarterstaff", "Libro de conjuros": "Spellbook",
+  "Bolsa de componentes": "Component pouch", "Tinta y pluma": "Ink and quill", "Maza": "Mace", "Cota de escamas": "Scale mail",
+  "Símbolo sagrado": "Holy symbol", "Kit de sanador": "Healer's kit", "10 usos": "10 uses",
+  "Una vez por turno, 2d6 de daño extra si tienes ventaja o un aliado está a 5 pies del objetivo.":
+    "Once per turn, 2d6 extra damage if you have advantage or an ally is within 5 feet of the target.",
+  "Acción astuta": "Cunning Action", "Correr, Destrabarse o Esconderse como acción adicional.": "Dash, Disengage or Hide as a bonus action.",
+  "Visión en la oscuridad": "Darkvision", "Ves en la penumbra a 60 pies como si hubiera luz.": "You see in dim light within 60 feet as if it were bright.",
+  "Ascendencia feérica": "Fey Ancestry", "Ventaja contra quedar encantado; la magia no te duerme.": "Advantage against being charmed; magic can't put you to sleep.",
+  "Tomar aliento": "Second Wind", "Como acción adicional recuperas 1d10 + tu nivel de vida, una vez por descanso.":
+    "As a bonus action, regain 1d10 + your level in hit points, once per rest.",
+  "Oleada de acción": "Action Surge", "Una acción más en tu turno, una vez por descanso.": "One more action on your turn, once per rest.",
+  "Estilo de combate: Defensa": "Fighting Style: Defense", "+1 a la CA mientras lleves armadura.": "+1 to AC while wearing armour.",
+  "Resistencia enana": "Dwarven Resilience", "Ventaja en salvaciones contra veneno y resistencia a su daño.":
+    "Advantage on saves against poison and resistance to poison damage.",
+  "Recuperación arcana": "Arcane Recovery", "En un descanso corto recuperas espacios de conjuro que sumen hasta 2 niveles.":
+    "On a short rest, recover spell slots totalling up to 2 levels.",
+  "Tradición arcana: Evocación": "Arcane Tradition: Evocation", "Tus conjuros de área pueden no afectar a tus aliados.":
+    "Your area spells can spare your allies.",
+  "Canalizar divinidad": "Channel Divinity", "Expulsar muertos vivientes, una vez por descanso.": "Turn Undead, once per rest.",
+  "Afortunada": "Lucky", "Si sacas un 1 en el d20, vuelves a tirar y te quedas con el nuevo.": "When you roll a 1 on the d20, reroll and use the new roll.",
+  "Valiente": "Brave", "Ventaja en salvaciones contra quedar asustada.": "Advantage on saves against being frightened.", "daño": "damage",
   "Volver a la ficha de serie": "Back to the stock stat block",
   "Humanoide": "Humanoid", "Bestia": "Beast", "Muerto viviente": "Undead", "Monstruosidad": "Monstrosity",
   "Gigante": "Giant", "Dragón": "Dragon", "Aberración": "Aberration", "Infernal": "Fiend", "Hada": "Fey",
@@ -686,6 +775,9 @@ for (const b of CATALOG) {
     es.forEach((line, i) => {
       pair(line, en[i]);
       pair(line.split(" — ")[0], (en[i] || "").split(" — ")[0]);
+      /* el resto del rasgo, que la ficha en pergamino pinta con mayúscula */
+      const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+      pair(cap(line.split(" — ").slice(1).join(" — ")), cap((en[i] || "").split(" — ").slice(1).join(" — ")));
     });
   }
 }
@@ -813,11 +905,16 @@ const PATTERNS = [
   [/^(.+) \(pantalla\)$/, (m, who) => `${word(who)} (screen)`],
   [/^VD (.+) · (\d+) PX$/, "CR $1 · $2 XP"],
   [/^CA (\d+)$/, "AC $1"],
+  [/^(\d+)\/(\d+) pies$/, "$1/$2 ft."],
+  [/^Salvación de (.+)$/, "Saving throw · $1"],
+  [/^Prueba de (.+)$/, "Ability check · $1"],
+  [/^Iniciativa de (.+)$/, "Initiative · $1"],
+  [/^(\S+) \((\d+) PX\)$/, "$1 ($2 XP)"],
   [/^(\d+) pies · (\d+) casillas?$/, "$1 feet · $2 squares"],
   [/^(\d+) de (\d+) pies$/, "$1 of $2 feet"],
   [/^Dado de golpe \((\d+)\)$/, "Hit die ($1)"],
-  [/^Ajustes de (.+)$/, "Settings · $1"],
-  [/^Editar (.+)$/, "Edit $1"],
+  [/^Ajustes de (.+)$/, (m, what) => `Settings · ${word(what)}`],
+  [/^Editar (.+)$/, (m, who) => `Edit ${word(who)}`],
   [/^Estados de (.+)$/, "$1 · conditions"],
   [/^Ataques de (.+)$/, "$1 · attacks"],
   [/^(.+) fichas elegidas$/, "$1 tokens selected"],
@@ -877,7 +974,9 @@ const PATTERNS = [
   [/^(.+?) (cae|encaja el golpe)$/, (m, who, v) => `${who} ${v === "cae" ? "goes down" : "takes the hit"}`],
   [/^(.+?) contra (.+?): (\d+)( · .+)?$/, (m, atk, tgt, n, tail) => `${atk} against ${tgt}: ${n}${(tail || "")
     .replace("· ¡CRÍTICO!", "· CRITICAL!").replace("· impacta", "· hits").replace("· falla", "· misses")
-    .replace("· pifia", "· fumble").replace(/de daño/, "damage")}`]
+    .replace("· pifia", "· fumble").replace(/de daño/, "damage")}`],
+  /* «Engaño +4»: una habilidad o característica con su modificador */
+  [/^([^\d+−-][^+]*?) ([+-]\d+)$/, (m, what, mod) => EN[what.trim()] ? `${EN[what.trim()]} ${mod}` : m]
 ];
 
 /* ---------- Aplicación ---------- */

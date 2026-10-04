@@ -11,6 +11,7 @@ import { openAttacks, areaAttacks, slotsLeft, shapeLabel } from "./attacks.js";
 import { openCharEditor, openConditions } from "./char-editor.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
+import { sheetTabsHTML, handleSheetAct } from "./sheet.js";
 import { langPicker } from "./i18n.js";
 import { icon, withIcon } from "./icons.js";
 
@@ -202,86 +203,120 @@ function renderPicker(pane) {
 }
 
 /* ---------- Ficha ---------- */
+/* La pestaña de abajo de la ficha (acciones, conjuros, equipo, rasgos, notas) */
+let sheetTab = "acciones";
+
 function renderSheet(pane, c) {
   const p = pct(c);
   const avatar = c.avatarId
     ? `<img class="avatar" src="${imgURL(c.avatarId)}" alt="" style="--tone:${esc(c.color)}">`
     : `<div class="avatar" style="--tone:${esc(c.color)}">${initials(c.name)}</div>`;
-  const block = (title, text) => text ? `<div class="block"><h4>${title}</h4>${lines(text).map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
+  const abbr = k => ABILITIES.find(a => a[0] === k)[1];
+  /* Una fila que se toca para tirar: el punto dice si tiene competencia */
+  const rollRow = (name, mod, prof, extra = "") => `<button class="roll-row" data-act="rollMod" data-mod="${mod}" data-label="${esc(name)}">
+      <i class="prof ${prof ? "on" : ""}"></i>${extra}<span class="roll-name">${esc(name)}</span><b class="roll-mod tnum">${sign(mod)}</b></button>`;
 
   pane.innerHTML = `
-    <div class="sheet-head">
+    <div class="sheet-head" style="--tone:${esc(c.color)}">
       ${avatar}
-      <div style="flex:1;min-width:0">
+      <div class="sheet-id">
         <h2>${esc(c.name)}</h2>
         <small>${esc([c.className, c.race, "nivel " + c.level].filter(Boolean).join(" · "))}</small>
       </div>
       <button class="btn sm" data-act="edit" title="Editar ficha">${withIcon("pencil", "Editar", 16)}</button>
     </div>
 
-    <div class="big-hp" data-flash>
-      <div class="nums">
-        <b class="tnum">${c.hp}</b><span>/ ${c.maxHp}</span>
-        ${c.tempHp ? `<span class="temp">+${c.tempHp} temporales</span>` : ""}
-        <span class="spacer"></span>
-        <span class="stat-chip" title="Clase de armadura">${icon("shield", 15)}<b class="tnum">${c.ac}</b></span>
-        <span class="stat-chip" title="Iniciativa">${icon("zap", 15)}<b class="tnum">${c.initiative}</b></span>
+    <div class="sheet" style="--tone:${esc(c.color)}">
+      <div class="quick-stats">
+        <div class="qs"><span class="qs-l">Competencia</span><b class="tnum">${sign(c.proficiency)}</b></div>
+        <button class="qs" data-act="initiative" title="Tirar iniciativa"><span class="qs-l">Iniciativa</span><b class="tnum">${c.initiative}</b></button>
+        <div class="qs ac-shield" title="Clase de armadura"><small>CA</small><b class="tnum">${c.ac}</b></div>
+        <div class="qs"><span class="qs-l">Velocidad</span><b class="tnum">${c.speed}</b><small>pies</small></div>
       </div>
-      ${hpBar(c.id, p)}
-      <div class="pad">
-        <button class="hurt" data-act="hp" data-n="-1">−1</button>
-        <button class="hurt" data-act="hp" data-n="-5">−5</button>
-        <button class="heal" data-act="hp" data-n="1">+1</button>
-        <button class="heal" data-act="hp" data-n="5">+5</button>
-      </div>
-      <div class="dealer" style="padding:8px 0 0">
-        <button class="btn sm hurt" data-act="damage">${withIcon("minus", "Daño", 16)}</button>
-        <input class="tnum" data-amount type="number" min="0" placeholder="0" inputmode="numeric" aria-label="Cantidad">
-        <button class="btn sm heal" data-act="heal">${withIcon("heartPlus", "Curar", 16)}</button>
+
+      <section class="sheet-box hp-box" data-flash>
+        <div class="hp-main">
+          <div class="hp-deal">
+            <button class="hp-btn heal" data-act="heal">Curar</button>
+            <input class="tnum" data-amount type="number" min="0" placeholder="0" inputmode="numeric" aria-label="Cantidad">
+            <button class="hp-btn hurt" data-act="damage">Daño</button>
+          </div>
+          <div class="hp-cols">
+            <div class="hp-col"><span>Actuales</span><b class="tnum">${c.hp}</b></div>
+            <i class="hp-sep">/</i>
+            <div class="hp-col"><span>Máximos</span><b class="tnum">${c.maxHp}</b></div>
+            <div class="hp-col temp"><span>Temp.</span><b class="tnum">${c.tempHp || "—"}</b></div>
+          </div>
+        </div>
+        ${hpBar(c.id, p)}
+        <div class="pad">
+          <button class="hurt" data-act="hp" data-n="-1">−1</button>
+          <button class="hurt" data-act="hp" data-n="-5">−5</button>
+          <button class="heal" data-act="hp" data-n="1">+1</button>
+          <button class="heal" data-act="hp" data-n="5">+5</button>
+        </div>
+        <h3 class="box-label">Puntos de golpe</h3>
+      </section>
+
+      ${c.hp <= 0 ? `<section class="sheet-box deaths-box">
+        <div class="deaths">
+          <span class="set ok">Éxitos ${[0, 1, 2].map(i => `<button data-act="death" data-kind="ok" data-n="${i + 1}" class="${c.deathOk > i ? "on" : ""}"></button>`).join("")}</span>
+          <span class="set bad">Fallos ${[0, 1, 2].map(i => `<button data-act="death" data-kind="fail" data-n="${i + 1}" class="${c.deathFail > i ? "on" : ""}"></button>`).join("")}</span>
+        </div>
+        <button class="btn danger" data-act="deathRoll">${withIcon("skull", "Salvación de muerte")}</button>
+        <h3 class="box-label">Salvaciones de muerte</h3>
+      </section>` : ""}
+
+      <section class="sheet-box cond-box">
+        <div class="meta">
+          ${c.conditions.map(id => `<span class="pill cond" title="${esc((CONDITIONS.find(x => x.id === id) || {}).hint || "")}">${esc(conditionName(id))}</span>`).join("")}
+          ${c.exhaustion ? `<span class="pill cond">Agotamiento ${c.exhaustion}</span>` : ""}
+          ${c.concentration ? `<span class="pill conc">Concentrado en ${esc(c.concentration)}</span>` : ""}
+          ${c.inspiration ? `<span class="pill tag">${icon("star", 12)}Inspiración</span>` : ""}
+          ${!c.conditions.length && !c.exhaustion && !c.concentration && !c.inspiration ? '<span class="cond-none">Sin estados</span>' : ""}
+        </div>
         <button class="btn sm" data-act="conditions">${withIcon("sparkle", "Estados", 16)}</button>
+        <h3 class="box-label">Estados</h3>
+      </section>
+
+      <div class="abilities">
+        ${ABILITIES.map(([k, l]) => `<button class="abil" data-act="ability" data-k="${k}">
+          <span>${l}</span><b class="tnum">${sign(modOf(c[k]))}</b><small class="tnum">${c[k]}</small></button>`).join("")}
       </div>
-    </div>
 
-    <div class="meta" style="padding:0 0 14px">
-      ${c.conditions.map(id => `<span class="pill cond" title="${esc((CONDITIONS.find(x => x.id === id) || {}).hint || "")}">${esc(conditionName(id))}</span>`).join("")}
-      ${c.exhaustion ? `<span class="pill cond">Agotamiento ${c.exhaustion}</span>` : ""}
-      ${c.concentration ? `<span class="pill conc">Concentrado en ${esc(c.concentration)}</span>` : ""}
-      ${c.inspiration ? `<span class="pill tag">${icon("star", 12)}Inspiración</span>` : ""}
-    </div>
+      <div class="action-grid">
+        <button class="btn primary" data-act="attack">${withIcon("sword", "Atacar")}</button>
+        <button class="btn" data-act="spells">${withIcon("wand", c.spellbook.length ? `Conjuros (${c.spellbook.length})` : "Conjuros")}</button>
+        ${c.hitDice ? `<button class="btn" data-act="hitDie">${withIcon("heartPlus", `Dado de golpe (${Math.max(0, c.level - c.hitDiceUsed)})`)}</button>` : ""}
+        ${c.concentration ? `<button class="btn" data-act="conc">${withIcon("sparkle", "Salvación de concentración")}</button>` : ""}
+      </div>
 
-    <div class="abilities" style="margin-bottom:12px">
-      ${ABILITIES.map(([k, l]) => `<button class="abil" data-act="ability" data-k="${k}">
-        <span>${l}</span><b class="tnum">${c[k]}</b><small>${sign(modOf(c[k]))}</small></button>`).join("")}
-    </div>
+      ${c.slots.some(n => n) || c.resources.length ? `<section class="sheet-box">
+        ${c.slots.some(n => n) ? `<div class="slots">
+          ${c.slots.map((n, i) => n ? `<span class="slot" data-act="slot" data-level="${i}">${i + 1}º
+            ${Array.from({ length: n }, (_, j) => `<i class="${j < c.slotsUsed[i] ? "used" : ""}"></i>`).join("")}</span>` : "").join("")}
+        </div>` : ""}
+        ${c.resources.length ? `<div class="slots">
+          ${c.resources.map((r, i) => `<span class="slot" data-act="res" data-res="${i}">${esc(r.name)}
+            <b class="tnum">${r.max - r.uses}/${r.max}</b></span>`).join("")}</div>` : ""}
+        <h3 class="box-label">Recursos</h3>
+      </section>` : ""}
 
-    <div class="action-grid">
-      <button class="btn primary" data-act="attack">${withIcon("sword", "Atacar")}</button>
-      <button class="btn" data-act="spells">${withIcon("wand", c.spellbook.length ? `Conjuros (${c.spellbook.length})` : "Conjuros")}</button>
-      <button class="btn" data-act="initiative">${withIcon("zap", "Tirar iniciativa")}</button>
-      <button class="btn" data-act="saves">${withIcon("shield", "Salvaciones")}</button>
-      <button class="btn" data-act="skills">${withIcon("dice", "Habilidades")}</button>
-      ${c.hitDice ? `<button class="btn" data-act="hitDie">${withIcon("heartPlus", `Dado de golpe (${Math.max(0, c.level - c.hitDiceUsed)})`)}</button>` : ""}
-      ${c.concentration ? `<button class="btn" data-act="conc">${withIcon("sparkle", "Salvación de concentración")}</button>` : ""}
-      ${c.hp <= 0 ? `<button class="btn danger" data-act="deathRoll">${withIcon("skull", "Salvación de muerte")}</button>` : ""}
-    </div>
+      <div class="sheet-cols">
+        <section class="sheet-box roll-box">
+          ${ABILITIES.map(([k, l]) => rollRow(l, modOf(c[k]) + (c.saves.includes(k) ? c.proficiency : 0), c.saves.includes(k))).join("")}
+          <h3 class="box-label">Salvaciones</h3>
+        </section>
+        <section class="sheet-box roll-box skills">
+          ${SKILLS.map(([id, name, ab]) => rollRow(name, modOf(c[ab]) + (c.skills.includes(id) ? c.proficiency : 0), c.skills.includes(id),
+            `<small class="roll-ab">${abbr(ab)}</small>`)).join("")}
+          <h3 class="box-label">Habilidades</h3>
+        </section>
+      </div>
 
-    ${c.hp <= 0 ? `<div class="deaths" style="margin-bottom:14px">
-      <span class="set ok">Éxitos ${[0, 1, 2].map(i => `<button data-act="death" data-kind="ok" data-n="${i + 1}" class="${c.deathOk > i ? "on" : ""}"></button>`).join("")}</span>
-      <span class="set bad">Fallos ${[0, 1, 2].map(i => `<button data-act="death" data-kind="fail" data-n="${i + 1}" class="${c.deathFail > i ? "on" : ""}"></button>`).join("")}</span>
-    </div>` : ""}
-
-    ${c.slots.some(n => n) ? `<div class="slots" style="margin-bottom:12px">
-      ${c.slots.map((n, i) => n ? `<span class="slot" data-act="slot" data-level="${i}">${i + 1}º
-        ${Array.from({ length: n }, (_, j) => `<i class="${j < c.slotsUsed[i] ? "used" : ""}"></i>`).join("")}</span>` : "").join("")}
-    </div>` : ""}
-    ${c.resources.length ? `<div class="slots" style="margin-bottom:12px">
-      ${c.resources.map((r, i) => `<span class="slot" data-act="res" data-res="${i}">${esc(r.name)}
-        <b class="tnum">${r.max - r.uses}/${r.max}</b></span>`).join("")}</div>` : ""}
-
-    <div class="detail" style="border-radius:12px;border:1px solid var(--edge)">
-      ${block("Ataques", c.weapons) || ""}${block("Conjuros", c.spells) || ""}
-      ${block("Equipo", c.inventory) || ""}${block("Notas", c.notes) || ""}
-      ${!c.weapons && !c.spells && !c.inventory && !c.notes ? '<p class="prose">Tu ficha aún no tiene ataques ni equipo apuntados. Pulsa «Editar» para rellenarla.</p>' : ""}
+      <section class="sheet-box notes-box">
+        ${sheetTabsHTML(c, sheetTab)}
+      </section>
     </div>`;
 }
 
@@ -296,7 +331,7 @@ function renderParty(pane) {
     <div class="party-strip">
       ${mates.map(c => {
         const p = pct(c);
-        return `<div class="mate" data-flash>
+        return `<div class="mate" data-flash style="--tone:${esc(c.color)}">
           ${c.avatarId ? `<img class="avatar" src="${imgURL(c.avatarId)}" alt="" style="--tone:${esc(c.color)}">`
             : `<div class="avatar" style="--tone:${esc(c.color)}">${initials(c.name)}</div>`}
           <div class="info">
@@ -321,7 +356,7 @@ function renderParty(pane) {
       </div>` : ""}`;
 }
 
-const foeRow = f => `<div class="mate">
+const foeRow = f => `<div class="mate" style="--tone:${esc(f.color)}">
   ${f.avatarId ? `<img class="avatar" src="${imgURL(f.avatarId)}" alt="" style="--tone:${esc(f.color)}">`
     : `<div class="avatar" style="--tone:${esc(f.color)}">${initials(f.name)}</div>`}
   <div class="info"><b>${esc(f.name)}</b><br>
@@ -483,8 +518,12 @@ function bindActions(root) {
     if (!c) return;
     const amountEl = $("[data-amount]", root);
     const amount = () => Math.max(0, +(amountEl && amountEl.value || 0));
+    /* Con el campo vacío, curar y daño van de uno en uno */
+    const hpStep = () => amountEl && amountEl.value === "" ? 1 : amount();
 
+    if (handleSheetAct(c, b.dataset.act, b, { spellCtx: spellCtx() })) return;
     switch (b.dataset.act) {
+      case "sheetTab": sheetTab = b.dataset.tabId; return render();
       case "edit": return openCharEditor(c, { isDM: false });
       case "hp": {
         const n = +b.dataset.n;
@@ -492,14 +531,14 @@ function bindActions(root) {
         return patchChar(c.id, { hp });
       }
       case "damage": {
-        const n = amount();
+        const n = hpStep();
         if (!n) return;
         op("hp.apply", { id: c.id, damage: n });
         amountEl.value = "";
         return;
       }
       case "heal": {
-        const n = amount();
+        const n = hpStep();
         if (!n) return;
         op("hp.apply", { id: c.id, heal: n });
         amountEl.value = "";
@@ -535,8 +574,7 @@ function bindActions(root) {
         if (r) patchChar(c.id, { initiative: r.total });
         return;
       }
-      case "saves": return rollList(c, "save");
-      case "skills": return rollList(c, "skill");
+      case "rollMod": return throwDice("1d20" + sign(+b.dataset.mod), { label: `${c.name} · ${b.dataset.label}` });
       case "slot": {
         const i = +b.dataset.level;
         const used = c.slotsUsed.slice();
@@ -565,22 +603,8 @@ function bindActions(root) {
   });
 
   document.addEventListener("keydown", e => {
-    if (e.key !== "Enter" || !e.target.matches("[data-amount]")) return;
+    if (e.key !== "Enter" || !e.target.matches("[data-amount]") || e.target.value === "") return;
     const btn = $('[data-act="damage"]');
     if (btn) btn.click();
-  });
-}
-
-function rollList(c, kind) {
-  const list = kind === "save"
-    ? ABILITIES.map(([k, l]) => ({ name: l, mod: modOf(c[k]) + (c.saves.includes(k) ? c.proficiency : 0) }))
-    : SKILLS.map(([id, name, ab]) => ({ name, mod: modOf(c[ab]) + (c.skills.includes(id) ? c.proficiency : 0) }));
-  const body = el(`<div class="cond-grid">${list.map((x, i) =>
-    `<button class="btn sm" data-i="${i}">${esc(x.name)} ${sign(x.mod)}</button>`).join("")}</div>`);
-  const m = modal({ title: kind === "save" ? "Salvaciones" : "Habilidades", body, wide: true, actions: [{ label: "Cerrar" }] });
-  on(body, "click", "[data-i]", (e, b) => {
-    const x = list[+b.dataset.i];
-    throwDice("1d20" + sign(x.mod), { label: `${c.name} · ${x.name}` });
-    m.close();
   });
 }

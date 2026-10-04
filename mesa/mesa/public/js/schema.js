@@ -60,7 +60,9 @@ const CHAR_DEFAULTS = {
   hitDice: "", hitDiceUsed: 0, deathOk: 0, deathFail: 0,
   slots: [0, 0, 0, 0, 0, 0, 0, 0, 0], slotsUsed: [0, 0, 0, 0, 0, 0, 0, 0, 0],
   resources: [],
-  weapons: "", spells: "", inventory: "", notes: "",
+  weapons: "", spells: "", inventory: "", notes: "",   // texto de antes: se pasa a las listas
+  items: [],            // equipo: { name, qty, weight, equipped, note }
+  features: [],         // rasgos y aptitudes: { name, source, text }
   monsterKey: "", size: "Mediano", sizeType: "", cr: "", xp: 0,
   senses: "", languages: "", resistances: "", traits: "", actions: "",
   hidden: false, discovered: false, lastSeen: null, mapId: "", mx: null, my: null,
@@ -140,6 +142,9 @@ export function normalizeChar(raw = {}) {
   c.reach = clamp(Math.trunc(num(c.reach, 1)), 1, 6);
   c.attacks = Array.isArray(c.attacks) ? c.attacks.map(normalizeAttack).filter(a => a.name) : [];
   c.spellbook = Array.isArray(c.spellbook) ? c.spellbook.map(normalizeSpell).slice(0, 80) : [];
+  c.items = Array.isArray(c.items) ? c.items.map(normalizeItem).filter(x => x.name).slice(0, 200) : [];
+  c.features = Array.isArray(c.features) ? c.features.map(normalizeFeature).filter(x => x.name).slice(0, 100) : [];
+  fromText(c);
   c.castAbility = ["int", "wis", "cha"].includes(c.castAbility) ? c.castAbility : "";
   c.spellDC = clamp(Math.trunc(num(c.spellDC)), 0, 30);
   c.spellAtk = clamp(Math.trunc(num(c.spellAtk)), 0, 20);
@@ -150,6 +155,125 @@ export function normalizeChar(raw = {}) {
   if (c.mx === null || c.my === null) { c.mx = null; c.my = null; c.mapId = ""; }
   return c;
 }
+
+/* ---------- Listas de la ficha ----------
+   Como en D&D Beyond: el equipo y los rasgos son listas, no párrafos. */
+export const FEATURE_SOURCES = ["Clase", "Especie", "Trasfondo", "Dote", "Otro"];
+
+export function normalizeItem(raw = {}) {
+  return {
+    name: String(raw.name || "").trim().slice(0, 60),
+    qty: clamp(Math.trunc(num(raw.qty, 1)), 0, 9999),
+    weight: clamp(num(raw.weight), 0, 9999),        // libras por unidad
+    equipped: !!raw.equipped,
+    note: String(raw.note || "").slice(0, 120)
+  };
+}
+
+export function normalizeFeature(raw = {}) {
+  return {
+    name: String(raw.name || "").trim().slice(0, 60),
+    source: FEATURE_SOURCES.includes(raw.source) ? raw.source : "Otro",
+    text: String(raw.text || "").slice(0, 600)
+  };
+}
+
+/* Las fichas de antes guardaban ataques, conjuros y equipo como texto. La
+   primera vez que se cargan se pasan a sus listas, línea a línea, y el texto
+   se vacía: así esto solo ocurre una vez y nada se pierde.
+   - Armas: lo que lleva tirada va a los ataques; lo demás, al equipo.
+   - Equipo: «2 antorchas» o «antorchas x2» se leen como cantidad.
+   - Conjuros: si el nombre está en la biblioteca, entra con su mecánica;
+     si no, entra como conjuro sin tirada, con el resto de la línea de nota. */
+const textLines = t => String(t || "").split("\n").map(x => x.trim()).filter(Boolean);
+const splitName = line => {
+  const m = line.match(/^(.{1,60}?)\s*(?:\s[—–-]\s|:|\.\s)\s*(.*)$/);
+  return m ? [m[1].trim(), m[2].trim()] : [line.slice(0, 60), ""];
+};
+const capFirst = t => t.charAt(0).toUpperCase() + t.slice(1);
+function itemFromLine(line) {
+  let m = line.match(/^(\d+)\s*[x×]?\s+(.+)$/i);
+  if (m) return normalizeItem({ name: capFirst(m[2]), qty: +m[1] });
+  m = line.match(/^(.+?)\s*[x×]\s*(\d+)$/i);
+  if (m) return normalizeItem({ name: capFirst(m[1]), qty: +m[2] });
+  const [name, note] = splitName(line);
+  return normalizeItem({ name: capFirst(name), note });
+}
+
+/* La biblioteca de conjuros vive en spells.js, que a su vez usa este módulo:
+   se apunta aquí cuando carga, en vez de importarla y crear un ciclo. */
+const SPELL_LIB = [];
+export function registerSpellLibrary(list) { SPELL_LIB.push(...list); }
+const fold = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+function fromText(c) {
+  if (c.weapons) {
+    const known = new Set(c.attacks.map(a => a.name.toLowerCase()));
+    for (const line of textLines(c.weapons)) {
+      const a = parseAttackLine(line);
+      if (a && a.name) { if (!known.has(a.name.toLowerCase())) { c.attacks.push(a); known.add(a.name.toLowerCase()); } }
+      else c.items.push(normalizeItem({ ...itemFromLine(line), equipped: true }));
+    }
+    c.weapons = "";
+  }
+  if (c.inventory) {
+    c.items.push(...textLines(c.inventory).map(itemFromLine).filter(x => x.name));
+    c.inventory = "";
+  }
+  if (c.spells) {
+    const have = new Set(c.spellbook.map(sp => fold(sp.name)));
+    for (const line of textLines(c.spells)) {
+      const [name, rest] = splitName(line);
+      if (have.has(fold(name))) continue;
+      const lib = SPELL_LIB.find(sp => fold(sp.name) === fold(name));
+      c.spellbook.push(lib ? normalizeSpell({ ...lib, id: uid() }) : normalizeSpell({ name, desc: rest }));
+      have.add(fold(name));
+    }
+    c.spells = "";
+  }
+}
+
+/* Una línea de texto -> un ataque, o null si ahí no hay ninguno. El
+   bestiario del manual escribe las acciones en prosa ("Cimitarra. Ataque con
+   arma cuerpo a cuerpo: +4 al ataque, alcance 5 pies. Impacto: 5 (1d6+2) de
+   daño cortante") y de ahí se saca el bonificador, el daño y el tipo. */
+const DAMAGE_WORDS = [
+  "contundente", "cortante", "perforante", "acido", "ácido", "frio", "frío", "fuego", "fuerza",
+  "relampago", "relámpago", "necrotico", "necrótico", "veneno", "psiquico", "psíquico",
+  "radiante", "trueno", "magico", "mágico"
+];
+const ABILITY_WORDS = {
+  fuerza: "str", destreza: "dex", constitucion: "con", constitución: "con",
+  inteligencia: "int", sabiduria: "wis", sabiduría: "wis", carisma: "cha"
+};
+
+export function parseAttackLine(line) {
+  const text = String(line || "").trim();
+  if (!text) return null;
+  const dice = text.match(/(\d*d\d+(?:\s*[+-]\s*\d+)?)/i);
+  const hit = text.match(/([+-]\s*\d+)\s*(?:al ataque|to hit)/i)
+    || text.match(/^[^.:]{2,40}[.:]\s*([+-]\s*\d+)/);
+  const save = text.match(/CD\s*(\d+)\s*(?:de\s+)?(fuerza|destreza|constituci[oó]n|inteligencia|sabidur[ií]a|carisma)/i);
+  if (!dice && !save) return null;
+  /* En el formato del bestiario («Tragar — … 3d6 de ácido por turno») una línea
+     sin bonificador ni CD describe un efecto, no un ataque que tirar. */
+  if (!hit && !save && /\s—\s/.test(text)) return null;
+
+  /* «Cimitarra. Ataque…» o, como escribe el bestiario, «Cimitarra — +4 al ataque — …» */
+  const name = (text.split(/\s[—–]\s|[.:]/)[0] || "Ataque").trim().slice(0, 48);
+  const type = DAMAGE_WORDS.find(w => new RegExp("\\b" + w + "\\b", "i").test(text)) || "";
+  const range = (text.match(/(alcance[^,.;]*|distancia[^,.;]*|reach[^,.;]*|range[^,.;]*)/i) || [""])[0].trim();
+
+  return normalizeAttack({
+    name,
+    atk: hit ? Number(hit[1].replace(/\s+/g, "")) : 0,
+    damage: dice ? dice[1].replace(/\s+/g, "") : "",
+    type,
+    range: range.slice(0, 40),
+    save: save ? `${ABILITY_WORDS[save[2].toLowerCase()] || "dex"} ${save[1]}` : ""
+  });
+}
+
 
 export const SHAPE_KINDS = ["circle", "cone", "line", "square"];
 

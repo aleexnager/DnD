@@ -11,12 +11,12 @@ import { initials, imgURL, pct, hpTone, reducedMotion } from "./util.js";
 import { drawGlyph } from "./icons.js";
 
 const COLORS = {
-  void: "#07080c",
-  grid: "rgba(236,228,212,.10)",
-  wall: "#e2d3ae",
-  door: "#c88a3a",
-  doorOpen: "rgba(200,138,58,.45)",
-  fog: "#05060a",
+  void: "#0a0c0e",
+  grid: "rgba(242,243,244,.09)",
+  wall: "#e4e1da",
+  door: "#e69a28",
+  doorOpen: "rgba(230,154,40,.45)",
+  fog: "#07080a",
   known: "rgba(5,6,10,.24)",     // lo ya explorado: se distingue, pero muy poco
   dark: "rgba(4,5,9,.55)",
   sight: "rgba(200,155,74,.10)",
@@ -25,8 +25,8 @@ const COLORS = {
   reach: "rgba(120,170,255,.16)",
   reachEdge: "rgba(140,185,255,.5)",
   measure: "#7fd0ff",
-  select: "#c89b4a",
-  target: "#b8383b"
+  select: "#f2f3f4",
+  target: "#d24040"
 };
 
 const images = new Map();
@@ -1189,7 +1189,7 @@ export class MapView {
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
       if (g.cell > 12) {
         ctx.fillStyle = "rgba(226,214,190,.6)";
-        ctx.font = `600 ${Math.round(g.cell * 0.46 * Math.min(n, 2))}px Georgia, serif`;
+        ctx.font = `600 ${Math.round(g.cell * 0.46 * Math.min(n, 2))}px Roboto, system-ui, sans-serif`;
         ctx.textAlign = "center"; ctx.textBaseline = "middle";
         ctx.fillText("?", cx, cy + 1);
       }
@@ -1284,7 +1284,7 @@ export class MapView {
         mark(ctx, bx, by, br * 0.62);
       } else {
         ctx.fillStyle = "#f0d9c8";
-        ctx.font = `700 ${Math.round(br * 1.05)}px system-ui, sans-serif`;
+        ctx.font = `700 ${Math.round(br * 1.05)}px Roboto, system-ui, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText("+" + extra, bx, by + 0.5);
@@ -1351,8 +1351,8 @@ export class MapView {
     ctx.stroke();
     ctx.setLineDash([]);
     if (s.label && g.cell > 14) {
-      ctx.fillStyle = "#ece4d4";
-      ctx.font = `600 ${Math.max(10, Math.round(g.cell * 0.24))}px system-ui, sans-serif`;
+      ctx.fillStyle = "#f2f3f4";
+      ctx.font = `600 ${Math.max(10, Math.round(g.cell * 0.24))}px Roboto, system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.fillText(s.label, ox, oy - 4);
     }
@@ -1376,7 +1376,7 @@ export class MapView {
     ctx.beginPath(); ctx.arc(bx, by, 4, 0, Math.PI * 2); ctx.fillStyle = COLORS.measure; ctx.fill();
 
     const text = `${feet} pies · ${cells} ${cells === 1 ? "casilla" : "casillas"}`;
-    ctx.font = "600 13px system-ui, sans-serif";
+    ctx.font = `600 13px Roboto, system-ui, sans-serif`;
     const w = ctx.measureText(text).width + 12;
     const lx = clamp((ax + bx) / 2 - w / 2, 2, g.W - w - 2);
     const ly = clamp((ay + by) / 2 - 26, 2, g.H - 26);
@@ -1441,9 +1441,9 @@ export class MapView {
 
     if (now) {
       ctx.save();
-      ctx.strokeStyle = "#d99a2b";
+      ctx.strokeStyle = "#e69a28";
       ctx.lineWidth = Math.max(2, g.cell * 0.08);
-      ctx.shadowColor = "#d99a2b"; ctx.shadowBlur = 12;
+      ctx.shadowColor = "#e69a28"; ctx.shadowBlur = 12;
       ctx.beginPath(); ctx.arc(cx, cy, r + Math.max(4, g.cell * 0.14), 0, Math.PI * 2); ctx.stroke();
       ctx.restore();
     }
@@ -1462,7 +1462,7 @@ export class MapView {
       ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
     } else if (span > 18) {
       ctx.fillStyle = "rgba(10,10,12,.82)";
-      ctx.font = `600 ${Math.round(r * 0.9)}px system-ui, sans-serif`;
+      ctx.font = `600 ${Math.round(r * 0.9)}px Roboto, system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(initials(c.name), cx, cy + 1);
@@ -1489,7 +1489,7 @@ export class MapView {
       ctx.beginPath();
       ctx.arc(cx, cy, r + Math.max(2, g.cell * 0.055), -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (p / 100));
       ctx.lineWidth = Math.max(2, g.cell * 0.09);
-      ctx.strokeStyle = { ok: "#4f9d5d", warn: "#d99a2b", bad: "#b8383b", out: "#555" }[hpTone(p)];
+      ctx.strokeStyle = { ok: "#48a84d", warn: "#e69a28", bad: "#d24040", out: "#555" }[hpTone(p)];
       ctx.stroke();
     }
     if (down) {
@@ -1530,13 +1530,13 @@ export class MapView {
     /* Nombre */
     if (g.cell > 26) {
       const label = c.name.length > 14 ? c.name.slice(0, 13) + "…" : c.name;
-      ctx.font = `600 ${Math.max(9, Math.round(g.cell * 0.2))}px system-ui, sans-serif`;
+      ctx.font = `600 ${Math.max(9, Math.round(g.cell * 0.2))}px Roboto, system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       const w = ctx.measureText(label).width + 8;
       ctx.fillStyle = "rgba(7,8,12,.72)";
       ctx.fillRect(cx - w / 2, cy + r + 2, w, g.cell * 0.24);
-      ctx.fillStyle = "#ece4d4";
+      ctx.fillStyle = "#f2f3f4";
       ctx.fillText(label, cx, cy + r + 4);
     }
     if (memory) ctx.restore();

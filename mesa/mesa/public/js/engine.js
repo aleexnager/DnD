@@ -16,6 +16,7 @@ import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost
 import { roll, detail } from "./dice.js";
 import { cutWalls, doorAt } from "./freewalls.js";
 import { critDamage } from "./attacks-core.js";
+import "./spells.js";   // la biblioteca, para pasar a la lista los conjuros escritos a mano
 
 export const ROLES = ["dm", "player", "screen"];
 
@@ -547,6 +548,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
   }
 
   /* ---------- Operaciones ---------- */
+  const LIST_FIELDS = ["attacks", "items", "features", "spellbook", "resources", "weapons", "inventory", "spells"];
   const PLAYER_LOCKED = new Set(["id", "kind", "hidden", "xp", "cr", "mapId", "mx", "my", "claimedBy"]);
   const findChar = id => doc.chars.find(c => c.id === id);
 
@@ -573,6 +575,12 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         for (const [k, v] of Object.entries(op.fields || {})) {
           if (!dm && PLAYER_LOCKED.has(k)) continue;
           c[k] = v;
+        }
+        /* Las listas de la ficha se guardan ya saneadas, y un texto de antes
+           que llegue de un aparato sin actualizar se pasa a ellas igual. */
+        if (Object.keys(op.fields || {}).some(k => LIST_FIELDS.includes(k))) {
+          const clean = normalizeChar(c);
+          for (const k of LIST_FIELDS) c[k] = clean[k];
         }
         break;
       }

@@ -4,7 +4,7 @@ import { afterMove } from "./portals.js";
 import { voiceWidget } from "./voice.js";
 import { $, el, on, esc, lines, sign, pct, hpTone, hpBar, tweenBars, initials, imgURL, toast, modal, confirmBox, shrinkImage, clamp } from "./util.js";
 import { CONDITIONS, conditionName, ABILITIES, SKILLS, PIN_KINDS, modOf, normalizeChar, normalizeBeast, bestiaryOf, isBaseBeast, normalizeMap, normalizePin, normalizePortal, uid, encounterDifficulty, MAX_COLS, MAX_ROWS } from "./schema.js";
-import { openAttacks, attacksOf } from "./attacks.js";
+import { openAttacks } from "./attacks.js";
 import { feetChars, nextRoomId } from "./los.js";
 import { store, onState, onPresence, onStatus, op, patchChar, patchSession, patchMap, uploadImage, leave, lobby } from "./net.js";
 import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret } from "./dice-panel.js";
@@ -16,10 +16,14 @@ import { langPicker } from "./i18n.js";
 import { icon, withIcon } from "./icons.js";
 import { rollHitPoints } from "./dice.js";
 import { TYPE_NAMES, typeOf, crValue, CATALOG_BY_ID } from "./catalog.js";
+import { statBlockHTML } from "./statblock.js";
+import { sheetTabsHTML, attackTableHTML, handleSheetAct } from "./sheet.js";
+import { listEditor, linesToEntries, entriesToLines } from "./list-editor.js";
 
 let tab = "mesa";
 let shownTab = null;
 let openCards = new Set();
+const cardTabs = new Map();    // la pestaña abierta en cada ficha desplegada
 let mapView = null;
 let mapTool = "token";
 let beastQuery = "";
@@ -204,7 +208,7 @@ function noticeStep() {
   modal({
     title: `${a.who} pisa: ${label}`,
     body: `<p class="prose" style="font-size:12px;margin:0 0 6px">${esc(a.mapName || "")}</p>
-      <p class="said" style="font-family:var(--serif);font-size:17px">${esc(a.text) || "(nota sin texto)"}</p>
+      <p class="said" style="font-size:17px">${esc(a.text) || "(nota sin texto)"}</p>
       <p class="prose" style="font-size:12px">${a.party ? "La party también la ve." : "Esta nota solo la ves tú."}</p>`,
     actions: [
       ...(a.party ? [] : [{ label: "Enseñársela ahora", run: () => {
@@ -386,15 +390,15 @@ function cardHTML(c) {
         <b class="tnum">${c.hp}</b><span>/ ${c.maxHp}</span>
         ${c.tempHp ? `<span class="temp">+${c.tempHp} temporales</span>` : ""}
         <span class="spacer"></span>
-        <span class="pill">CA <b>${c.ac}</b></span>
+        <span class="ac-shield" title="Clase de armadura"><small>CA</small><b class="tnum">${c.ac}</b></span>
       </div>
       ${hpBar(c.id, p)}
     </div>
 
     <div class="dealer">
-      <button class="btn sm hurt" data-act="damage" title="Restar vida" aria-label="Restar vida">${icon("minus")}</button>
+      <button class="btn sm hurt" data-act="damage" title="Restar vida (1 si no pones cantidad)" aria-label="Restar vida">${icon("minus")}</button>
       <input class="tnum" data-amount type="number" min="0" placeholder="0" inputmode="numeric" aria-label="Cantidad">
-      <button class="btn sm heal" data-act="heal" title="Curar" aria-label="Curar">${icon("plus")}</button>
+      <button class="btn sm heal" data-act="heal" title="Curar (1 si no pones cantidad)" aria-label="Curar">${icon("plus")}</button>
       <button class="btn sm" data-act="temp" title="Vida temporal">${withIcon("shieldPlus", "Temp", 16)}</button>
       <button class="btn sm" data-act="conditions" title="Estados">${withIcon("sparkle", "Estados", 16)}</button>
       <button class="btn sm" data-act="attack" title="Tirar un ataque">${withIcon("sword", "Atacar", 16)}</button>
@@ -422,10 +426,10 @@ function detailHTML(c) {
   const block = (title, text) => text ? `<div class="block"><h4>${title}</h4>${lines(text).map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
   return `
   <div class="detail">
-    <div class="abilities">
+    ${monster ? "" : `<div class="abilities">
       ${ABILITIES.map(([k, l]) => `<button class="abil" data-act="checkAbility" data-ability="${k}">
-        <span>${l}</span><b class="tnum">${c[k]}</b><small>${sign(modOf(c[k]))}</small></button>`).join("")}
-    </div>
+        <span>${l}</span><b class="tnum">${sign(modOf(c[k]))}</b><small class="tnum">${c[k]}</small></button>`).join("")}
+    </div>`}
     <div class="row">
       <button class="btn sm" data-act="rollInitOne">Iniciativa</button>
       <button class="btn sm" data-act="rollSave">Salvación…</button>
@@ -433,9 +437,7 @@ function detailHTML(c) {
       ${!monster ? '<button class="btn sm" data-act="inspire">Inspiración</button>' : ""}
       ${!monster && c.hitDice ? `<button class="btn sm" data-act="hitDie">Dado de golpe (${Math.max(0, c.level - c.hitDiceUsed)})</button>` : ""}
     </div>
-    ${attacksOf(c).length ? `<div class="atk-strip">
-      ${attacksOf(c).slice(0, 8).map(a => `<span class="chip">${esc(a.name)} <b>${a.atk >= 0 ? "+" : ""}${a.atk}</b> ${esc(a.damage)}</span>`).join("")}
-    </div>` : ""}
+    ${monster ? attackTableHTML(c) : ""}
     ${!monster && c.slots.some(n => n > 0) ? `<div class="slots">
       ${c.slots.map((n, i) => n ? `<span class="slot" data-act="slot" data-level="${i}">${i + 1}º
         ${Array.from({ length: n }, (_, j) => `<i class="${j < c.slotsUsed[i] ? "used" : ""}"></i>`).join("")}</span>` : "").join("")}
@@ -448,9 +450,8 @@ function detailHTML(c) {
       <span class="set bad">Fallos ${[0, 1, 2].map(i => `<button data-act="death" data-kind="fail" data-n="${i + 1}" class="${c.deathFail > i ? "on" : ""}"></button>`).join("")}</span>
       <button class="btn sm" data-act="deathRoll">${withIcon("skull", "Tirar salvación de muerte", 16)}</button>
     </div>` : ""}
-    ${block("Sentidos", c.senses)}${block("Idiomas", c.languages)}${block("Resistencias", c.resistances)}
-    ${block("Rasgos", c.traits)}${block("Acciones", c.actions)}
-    ${block("Ataques", c.weapons)}${block("Conjuros", c.spells)}${block("Equipo", c.inventory)}${block("Notas", c.notes)}
+    ${monster ? statBlockHTML(c, { hp: String(c.maxHp), act: "checkAbility" }) + block("Notas", c.notes)
+      : block("Sentidos", c.senses) + block("Idiomas", c.languages) + block("Resistencias", c.resistances) + sheetTabsHTML(c, cardTabs.get(c.id))}
   </div>`;
 }
 
@@ -460,6 +461,8 @@ function bindTable(root) {
     const card = btn.closest("[data-id]");
     const c = card ? byId(card.dataset.id) : null;
     const amount = () => Math.max(0, +(card.querySelector("[data-amount]").value || 0));
+    /* Con el campo vacío, − y + van de uno en uno */
+    const hpStep = () => card.querySelector("[data-amount]").value === "" ? 1 : amount();
     const act = btn.dataset.act;
 
     /* Hay acciones que son de la mesa (pasar turno, tirar iniciativa) y otras
@@ -467,8 +470,10 @@ function bindTable(root) {
        pasar en vez de reventar. */
     const sinFicha = ["add", "nextTurn", "prevTurn", "rollInit", "addToOrder", "delay", "attackNow", "clearFoes"];
     if (!c && !sinFicha.includes(act)) return;
+    if (c && handleSheetAct(c, act, btn, { mode: currentMode(), secret: isSecret(), spellCtx: dmSpellCtx() })) return;
 
     switch (act) {
+      case "sheetTab": cardTabs.set(c.id, btn.dataset.tabId); return render();
       case "add": return openCharEditor(null, {});
       case "fold":
         openCards.has(c.id) ? openCards.delete(c.id) : openCards.add(c.id);
@@ -478,8 +483,8 @@ function bindTable(root) {
       case "release": return releaseChar(c);
       case "clone": return cloneMonster(c);
       case "hide": return patchChar(c.id, { hidden: !c.hidden });
-      case "damage": return dealDamage(c, amount(), card);
-      case "heal": return dealHeal(c, amount(), card);
+      case "damage": return dealDamage(c, hpStep(), card);
+      case "heal": return dealHeal(c, hpStep(), card);
       case "temp": {
         const n = amount();
         if (!n) return;
@@ -963,7 +968,6 @@ function renderBestiary() {
     .filter(b => !beastType || typeOf(b.sizeType) === beastType)
     .filter(b => { const v = crValue(b.cr); return v >= lo && v <= hi; })
     .sort((a, b) => crValue(a.cr) - crValue(b.cr) || a.name.localeCompare(b.name, "es"));
-  const block = (title, text) => text ? `<div class="block"><h4>${title}</h4>${lines(text).map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
   const count = `<p class="beast-count">${list.length === 1 ? "1 criatura" : list.length + " criaturas"}</p>`;
   host.innerHTML = (list.length ? count : "") + list.map(b => {
     const draft = beastDraft.get(b.id) || { qty: 1, rollHp: true };
@@ -980,11 +984,7 @@ function renderBestiary() {
       </div>
       <details ${beastOpen.has(b.id) ? "open" : ""}>
         <summary>Ficha</summary>
-        <div class="detail">
-          <div class="abilities">${ABILITIES.map(([k, l]) => `<span class="abil"><span>${l}</span><b class="tnum">${b[k]}</b><small>${sign(modOf(b[k]))}</small></span>`).join("")}</div>
-          ${block("Velocidad", b.speed + " pies")}${block("Sentidos", b.senses)}${block("Idiomas", b.languages)}
-          ${block("Resistencias", b.resistances)}${block("Rasgos", b.traits)}${block("Acciones", b.actions)}
-        </div>
+        ${statBlockHTML(b)}
       </details>
       <div class="go">
         <input type="number" min="1" max="20" value="${esc(draft.qty)}" data-qty aria-label="Cantidad">
@@ -1055,10 +1055,20 @@ function openBeastEditor(beast) {
       <input name="${k}" type="number" value="${b[k]}"></label>`).join("")}</div>
     <div class="cols2">${f("Sentidos", "senses", b.senses)}${f("Idiomas", "languages", b.languages)}</div>
     <label class="field"><span>Resistencias e inmunidades</span><input name="resistances" value="${esc(b.resistances)}"></label>
-    <label class="field"><span>Rasgos (uno por línea)</span><textarea name="traits">${esc(b.traits)}</textarea></label>
-    <label class="field"><span>Acciones (una por línea)</span><textarea name="actions">${esc(b.actions)}</textarea></label>
+    <fieldset><legend>Rasgos</legend><div id="traitHost"></div></fieldset>
+    <fieldset><legend>Acciones</legend><div id="actionHost"></div>
+      <p class="prose small-note">Un ataque se escribe así para poder tirarlo: «+4 al ataque — 1d6+2 cortante».</p></fieldset>
     <label class="field"><span>Color</span><input name="color" type="color" value="${esc(b.color)}" style="height:38px"></label>
   </div>`);
+
+  const entryFields = (ph, phText) => [{ key: "name", label: "Nombre", grow: 1, basis: "140px", placeholder: ph },
+    { key: "text", label: "Qué hace", type: "area", grow: 3, basis: "220px", placeholder: phText }];
+  const traitEd = listEditor({ add: "Añadir rasgo", rows: linesToEntries(b.traits), blank: { name: "", text: "" },
+    fields: entryFields("Huida ágil", "Se desengancha o se esconde como acción adicional.") });
+  const actionEd = listEditor({ add: "Añadir acción", rows: linesToEntries(b.actions), blank: { name: "", text: "" },
+    fields: entryFields("Cimitarra", "+4 al ataque — 1d6+2 cortante") });
+  body.querySelector("#traitHost").appendChild(traitEd.node);
+  body.querySelector("#actionHost").appendChild(actionEd.node);
 
   const bfile = body.querySelector("#bavFile");
   body.querySelector("#bavPick").addEventListener("click", () => bfile.click());
@@ -1088,7 +1098,7 @@ function openBeastEditor(beast) {
           avatarId, size: v("size") || "Mediano",
           ac: +v("ac"), hpAvg: +v("hpAvg"), hpDice: v("hpDice"), speed: +v("speed"),
           senses: v("senses"), languages: v("languages"), resistances: v("resistances"),
-          traits: v("traits"), actions: v("actions"), color: v("color"),
+          traits: entriesToLines(traitEd.read()), actions: entriesToLines(actionEd.read()), color: v("color"),
           ...Object.fromEntries(ABILITIES.map(([k]) => [k, +v(k)]))
         });
         /* Retocar una de serie la guarda en la partida con su mismo id */

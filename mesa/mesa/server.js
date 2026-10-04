@@ -27,6 +27,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { migrate } from "./public/js/schema.js";
+import "./public/js/spells.js";   // antes de migrar: los conjuros escritos a mano se buscan ahí
 import { createEngine } from "./public/js/engine.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
