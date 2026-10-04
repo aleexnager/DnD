@@ -630,7 +630,9 @@ button .ico { pointer-events: none; }
 @media (max-width: 700px) {
   /* La barra del mapa tiene muchas herramientas: que ruede de lado en vez de
      apilarse y comerse el tablero. */
-  .map-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .map-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-right: 28px;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); }
   .map-bar::-webkit-scrollbar { display: none; }
   .map-bar > * { flex: 0 0 auto; }
   /* Cada grupo, tan ancho como sus botones: con el tope del 100 % el primer
