@@ -216,6 +216,33 @@ eso y no solo adaptada:
   haga zoom solo al escribir, y se respeta la franja inferior del iPhone.
 - La barra de herramientas del mapa rueda de lado en vez de comerse el tablero.
 
+## Tutorial guiado
+
+Cada pantalla trae su **recorrido guiado**, al que se llega desde el botón
+**?** de la cabecera (el DM también desde **⋯ → Tutorial**, y en la entrada
+desde **Tutorial**). La primera vez se ofrece solo, con un aviso pequeño junto
+a ese botón que desaparece en cuanto empiezas a usar la pantalla.
+
+El recorrido **señala el control de verdad**: oscurece el resto, lo rodea y lo
+explica en una tarjeta al lado. Si hace falta, cambia de pestaña, despliega
+una ficha o abre la ventana que toca para enseñarla, y la vuelve a cerrar al
+pasar de paso; nunca cambia la partida. Mientras se lee, el control se puede
+probar.
+
+Va **por secciones**: el del DM tiene quince (la cabecera, crear personajes,
+las tarjetas, la ficha desplegada, el bestiario, el combate, dados y charla,
+tres del mapa, sus ajustes, descansos, gestionar la mesa, la biblioteca y los
+atajos de teclado); el del jugador, ocho; y hay otro para la tele y otro para
+la entrada. Desde el **índice** se salta a cualquier sección, se ve cuáles has
+terminado, se sigue donde lo dejaste y se **busca un control por su nombre**
+(«niebla», «susurrar», «iniciativa») para ir directo a su explicación.
+**Siguiente**, **Atrás** o las flechas `←` `→` avanzan; «Saltar a la siguiente
+sección» se salta lo que ya sabes; `Esc` lo cierra. Los recorridos de otras
+pantallas también se pueden leer (el DM puede ver qué tiene el jugador): sin
+nada que señalar, la tarjeta sale en el centro.
+
+Está en español y en inglés, según el idioma elegido.
+
 ## Las tres vistas
 
 | | DM | Jugador | Pantalla |
@@ -964,6 +991,8 @@ public/
     catalog.js         criaturas de partida
     library.js         la biblioteca del DM: estantería, libro abierto y documentos
     library-core.js    trocear Markdown y PDF en secciones y buscar en los libros
+    tour.js            el tutorial guiado: foco, tarjeta, índice y buscador
+    tour-content.js    los recorridos de cada pantalla, por secciones (español e inglés)
     libros/            los cuatro libros de serie (reglas, jugador, conjuros, bestiario)
   vendor/pdfjs/        pdf.js de Mozilla, para leer los PDF de la biblioteca
 data/                  la partida y las imágenes (se crea al arrancar)

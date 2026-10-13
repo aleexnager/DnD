@@ -23,6 +23,7 @@ import { listEditor, linesToEntries, entriesToLines } from "./list-editor.js";
 import { ambientToggle, previewSound, stopPreview } from "./ambient.js";
 import { SOUND_LIBRARY, SOUND_CATS, libSound } from "./sound-library.js";
 import { mountLibrary } from "./library.js";
+import { tourButton, inviteTour, openTourIndex } from "./tour.js";
 
 let tab = "mesa";
 let shownTab = null;
@@ -93,6 +94,7 @@ export function mountDM(root) {
           <button class="btn sm" id="bestiaryBtn" title="Bestiario">${withIcon("book", "Bestiario")}</button>
           <button class="btn sm" id="combatBtn" title="Combate">${withIcon("swords", "Iniciar combate")}</button>
           <button class="btn sm" id="restBtn" title="Descansar">${withIcon("moon", "Descansar")}</button>
+          <span id="tourSlot"></span>
           <button class="icon-btn" id="undoBtn" title="Deshacer el último cambio" aria-label="Deshacer el último cambio">${icon("undo")}</button>
           <button class="icon-btn" id="moreBtn" aria-label="Más opciones" title="Más opciones">${icon("more")}</button>
           <button class="btn primary sm" id="addBtn" title="Añadir personaje">${withIcon("userPlus", "Añadir personaje")}</button>
@@ -130,6 +132,9 @@ export function mountDM(root) {
   $("#moreBtn", root).addEventListener("click", openMenu);
   $("#presence", root).addEventListener("click", openPresence);
   $("#voiceSlot", root).replaceWith(voiceWidget());
+  const help = tourButton("dm");
+  $("#tourSlot", root).replaceWith(help);
+  setTimeout(() => inviteTour("dm", help), 1500);
 
   onStatus(ok => $("#offline", root).classList.toggle("hidden", ok));
   onPresence(list => { renderPresence(list); if (tab === "mesa" && doc()) renderTable(); });
@@ -1902,6 +1907,7 @@ function openMenu() {
     ${item("link", "wifi", "Cómo entran mis jugadores", "La dirección y el código para unirse")}
     ${item("handout", "image", "Enseñar una imagen", "Un mapa del tesoro, una carta, un retrato")}
     ${item("ask", "dice", "Pedir una tirada", "A quién, qué y con qué dificultad")}
+    ${item("tour", "help", "Tutorial", "Un recorrido guiado por cada pantalla, por secciones")}
     <h4 class="menu-sec">Partida</h4>
     ${item("export", "download", "Guardar copia", "Descarga un archivo con toda la partida")}
     ${item("import", "upload", "Cargar una copia", "Sustituye la partida por la de un archivo")}
@@ -1954,6 +1960,7 @@ function openMenu() {
       } else hand.click();
     }
     if (what === "ask") { m.close(); askForRoll(); }
+    if (what === "tour") { m.close(); setTimeout(() => openTourIndex(), 160); }
     if (what === "screen") { m.close(); openScreenPanel(); }
     if (what === "link") {
       m.close();

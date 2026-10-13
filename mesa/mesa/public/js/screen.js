@@ -9,6 +9,7 @@ import { conditionName } from "./schema.js";
 import { MapView } from "./map.js";
 import { icon } from "./icons.js";
 import { langPicker } from "./i18n.js";
+import { tourButton } from "./tour.js";
 
 let mapView = null;
 let lastRollId = null;
@@ -29,6 +30,7 @@ export function mountScreen(root) {
         <span class="spacer"></span>
         <span id="slang"></span>
         <span id="ambientSlot"></span>
+        <span id="stour"></span>
         <button class="icon-btn" id="sfull" title="Pantalla completa">${icon("screen")}</button>
         <button class="icon-btn" id="sout" title="Salir de la pantalla">${icon("exit")}</button>
       </div>
@@ -45,6 +47,7 @@ export function mountScreen(root) {
   onState(render);
   onStatus(ok => $("#sdot", root).classList.toggle("off", !ok));
   $("#slang", root).appendChild(langPicker());
+  $("#stour", root).replaceWith(tourButton("screen"));
   $("#sout", root).addEventListener("click", leave);
   $("#sfull", root).addEventListener("click", fullscreen);
   $("#ambientSlot", root).replaceWith(ambientToggle("screen"));

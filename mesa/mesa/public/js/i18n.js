@@ -978,6 +978,7 @@ const EN = {
   "Por desafío": "By challenge", "Aberraciones": "Aberrations", "Bestias": "Beasts", "Celestiales": "Celestials", "Cienos": "Oozes",
   "Constructos": "Constructs", "Dragones": "Dragons", "Elementales": "Elementals", "Gigantes": "Giants", "Hadas": "Fey", "Humanoides": "Humanoids",
   "Infernales": "Fiends", "Monstruosidades": "Monstrosities", "Muertos vivientes": "Undead", "Plantas": "Plants",
+  "Un recorrido guiado por cada pantalla, por secciones": "A guided tour of every screen, in sections",
   "Comienzo": "Beginning", "Formato de archivo no admitido": "File format not supported", "Página": "Page", "Páginas": "Pages"
 };
 
