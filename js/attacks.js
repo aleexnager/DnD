@@ -1,0 +1,152 @@
+/* Ataques: leer los que vienen escritos en la ficha y resolverlos en la mesa.
+
+   El bestiario del manual escribe las acciones en prosa ("Cimitarra. Ataque con
+   arma cuerpo a cuerpo: +4 al ataque, alcance 5 pies. Impacto: 5 (1d6+2) de
+   daño cortante"). De ahi se saca el bonificador, el daño y el tipo, para poder
+   tirar de un clic en vez de leer y hacer cuentas. */
+
+import { el, on, esc, toast, modal } from "./util.js";
+import { store, op } from "./net.js";
+import { normalizeAttack, modOf, parseAttackLine, canSneak, canSmite, sneakDice, buffsFor } from "./schema.js";
+import { critDamage } from "./attacks-core.js";
+import { keyMods } from "./dice-panel.js";
+import { icon } from "./icons.js";
+
+/* Todo lo que una ficha sabe hacer: lo que tenga guardado más lo que se pueda
+   leer de sus acciones y de su lista de armas. */
+export function attacksOf(c) {
+  const saved = (c.attacks || []).map(normalizeAttack);
+  const seen = new Set(saved.map(a => a.name.toLowerCase()));
+  const found = [];
+  for (const text of [c.actions, c.weapons]) {
+    for (const line of String(text || "").split("\n")) {
+      const a = parseAttackLine(line);
+      if (a && a.name && !seen.has(a.name.toLowerCase())) { seen.add(a.name.toLowerCase()); found.push(a); }
+    }
+  }
+  return [...saved, ...found];
+}
+
+export const attackLabel = a => [
+  a.save ? "CD " + a.save.split(" ")[1] : (a.atk >= 0 ? "+" : "") + a.atk,
+  a.damage, a.type,
+  a.level ? "nivel " + a.level : "",
+  a.shape ? shapeLabel(a) : ""
+].filter(Boolean).join(" · ");
+
+export const shapeLabel = a => ({
+  circle: `esfera de ${a.size} pies`, cone: `cono de ${a.size} pies`,
+  line: `línea de ${a.size} pies`, square: `cubo de ${a.size} pies`
+}[a.shape] || "");
+
+/* Los que pintan un área sobre el tablero */
+export const areaAttacks = c => attacksOf(c).filter(x => x.shape);
+
+/* Espacios de conjuro. Devuelve cuántos quedan de ese nivel, o null si el
+   ataque no gasta ninguno. */
+export function slotsLeft(c, attack) {
+  if (!attack.level) return null;
+  const i = attack.level - 1;
+  return Math.max(0, (c.slots[i] || 0) - (c.slotsUsed[i] || 0));
+}
+
+/* Se gasta al lanzarlo. Si no queda ninguno, no se lanza. */
+function spendSlot(c, attack) {
+  const left = slotsLeft(c, attack);
+  if (left === null) return true;
+  if (left <= 0) {
+    toast(`No te quedan espacios de nivel ${attack.level}`, "bad");
+    return false;
+  }
+  const used = [...c.slotsUsed];
+  used[attack.level - 1] = (used[attack.level - 1] || 0) + 1;
+  op("char.patch", { id: c.id, fields: { slotsUsed: used } });
+  return true;
+}
+
+/* ---------- Resolución ---------- */
+/* La tirada la hace el servidor: es el único que conoce la clase de armadura
+   del enemigo y los puntos de vida de verdad. Aquí solo se pide. */
+export function resolveAttack({ attacker, attack, target, mode = "normal", secret = false, extras = {} }) {
+  if (!spendSlot(attacker, normalizeAttack(attack))) return false;
+  const keys = keyMods();
+  op("attack.resolve", {
+    attackerId: attacker.id,
+    attack: normalizeAttack(attack),
+    targetId: target ? target.id : "",
+    mode: keys.mode || mode, secret: secret || (keys.secret && store.session && store.session.role === "dm"),
+    extras
+  });
+  return true;
+}
+
+/* ---------- Ventana de ataque ---------- */
+export function openAttacks(attacker, { targets = [], preselect = null, secret = false } = {}) {
+  const list = attacksOf(attacker);
+  if (!list.length) {
+    toast(`${attacker.name} no tiene ningún ataque apuntado. Añádelo en su ficha.`, "bad");
+    return;
+  }
+  let targetId = preselect || (targets[0] && targets[0].id) || "";
+  let mode = "normal";
+  /* Lo que se suma al daño si entra. El castigo ofrece los niveles de los
+     que le quedan espacios; sin ninguno, la casilla no sale. */
+  const sneak = canSneak(attacker);
+  const smiteLevels = canSmite(attacker) && attacker.kind === "pc"
+    ? attacker.slots.map((n, i) => n - (attacker.slotsUsed[i] || 0) > 0 ? i + 1 : 0).filter(Boolean).slice(0, 5) : [];
+  const active = [...new Set([...buffsFor(attacker, "attack").names, ...buffsFor(attacker, "damage").names])];
+
+  const body = el(`<div>
+    <div class="field">
+      <span>Objetivo</span>
+      <select id="atkTarget">
+        <option value="">Sin objetivo (solo tirar)</option>
+        ${targets.map(t => `<option value="${t.id}" ${t.id === targetId ? "selected" : ""}>${esc(t.name)}${t.ac ? " · CA " + t.ac : ""}</option>`).join("")}
+      </select>
+    </div>
+    <div class="adv" style="margin:10px 0 14px">
+      <button type="button" data-m="dis" aria-pressed="false">Desventaja</button>
+      <button type="button" data-m="normal" aria-pressed="true">Normal</button>
+      <button type="button" data-m="adv" aria-pressed="false">Ventaja</button>
+    </div>
+    ${active.length ? `<p class="atk-buffs">${icon("sparkle", 14)}<span>Se suma:</span> ${active.map(n => `<b>${esc(n)}</b>`).join(" ")}</p>` : ""}
+    <div class="atk-extras">
+      ${sneak ? `<label class="check"><input type="checkbox" id="atkSneak"><span>Ataque furtivo</span> <small class="tnum">+${sneakDice(attacker)}</small></label>` : ""}
+      ${smiteLevels.length ? `<label class="check"><input type="checkbox" id="atkSmite"><span>Castigo divino</span></label>
+        <select id="atkSmiteLv" aria-label="Espacio para el castigo">${smiteLevels.map(l => `<option value="${l}">${l}</option>`).join("")}</select>` : ""}
+      <label class="atk-extra"><span>Daño extra</span><input id="atkExtra" placeholder="1d6" maxlength="20" autocomplete="off" inputmode="text"></label>
+    </div>
+    <p class="atk-keys hint-keys"><kbd>Mayús</kbd> <span>ventaja</span> · <kbd>Ctrl</kbd> <span>desventaja</span></p>
+    <div class="atk-list">
+      ${list.map((a, i) => {
+        const left = slotsLeft(attacker, a);
+        const dry = left === 0;
+        return `<button class="atk ${dry ? "dry" : ""}" data-i="${i}" ${dry ? "disabled" : ""}>
+          <b>${esc(a.name)}</b>
+          <small>${esc(attackLabel(a))}${a.range ? " · " + esc(a.range) : ""}</small>
+          ${left !== null ? `<span class="slots-left">${dry ? "sin espacios" : left + " de nivel " + a.level}</span>` : ""}
+        </button>`;
+      }).join("")}
+    </div>
+  </div>`);
+
+  const m = modal({ title: "Ataques de " + attacker.name, body, wide: true, actions: [{ label: "Cerrar" }] });
+  body.querySelector("#atkTarget").addEventListener("change", e => { targetId = e.target.value; });
+  on(body, "click", "[data-m]", (e, b) => {
+    mode = b.dataset.m;
+    body.querySelectorAll("[data-m]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  });
+  on(body, "click", "[data-i]", (e, b) => {
+    const target = targets.find(t => t.id === targetId) || null;
+    const extras = {
+      sneak: !!(body.querySelector("#atkSneak") || {}).checked,
+      smite: (body.querySelector("#atkSmite") || {}).checked ? Number(body.querySelector("#atkSmiteLv").value) : 0,
+      extra: (body.querySelector("#atkExtra").value || "").trim()
+    };
+    if (resolveAttack({ attacker, attack: list[+b.dataset.i], target, mode, secret, extras })) m.close();
+  });
+}
+
+/* Modificador de ataque sugerido al crear un ataque a mano */
+export const suggestedAtk = (c, ability = "str") => modOf(c[ability]) + (c.proficiency || 2);
+export { critDamage, store, parseAttackLine };

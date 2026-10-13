@@ -1,0 +1,35 @@
+Arte del creador de personajes
+==============================
+
+Las siluetas de esta carpeta son iconos de game-icons.net (https://game-icons.net),
+publicados bajo licencia Creative Commons Attribution 3.0
+(https://creativecommons.org/licenses/by/3.0/). Mesa las usa como máscara de
+color, animada, en las tarjetas de clase y especie.
+
+  barbaro      «barbarian»       Delapouite
+  bardo        «lyre»            Lorc
+  clerigo      «sun-priest»      Delapouite
+  druida       «oak»             Lorc
+  guerrero     «visored-helm»    Lorc
+  monje        «monk-face»       Delapouite
+  paladin      «templar-shield»  Delapouite
+  explorador   «archer»          Delapouite
+  picaro       «hooded-assassin» DarkZaitzev
+  hechicero    «magic-swirl»     Lorc
+  brujo        «warlock-hood»    Delapouite
+  mago         «wizard-face»     Delapouite
+  humano       «person»          Delapouite
+  elfo         «woman-elf-face»  Delapouite
+  enano        «dwarf-face»      Delapouite
+  mediano      «hobbit-door»     Delapouite
+  draconido    «dragon-head»     Lorc
+  gnomo        «pointy-hat»      Lorc
+  semielfo     «elf-ear»         Delapouite
+  semiorco     «orc-head»        Delapouite
+  tiefling     «devil-mask»      Delapouite
+
+Las reglas que usa el creador (clases, especies, trasfondos, rasgos de nivel 1)
+salen del System Reference Document 5.1 y 5.2 de Wizards of the Coast LLC,
+publicados bajo la licencia Creative Commons Attribution 4.0 International
+(https://creativecommons.org/licenses/by/4.0/legalcode). Los textos están
+redactados para Mesa; no se incluye material de los libros que no esté en el SRD.
