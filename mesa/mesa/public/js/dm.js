@@ -1134,8 +1134,9 @@ function renderMap() {
   if (!pane.dataset.ready || !mapView) {
     pane.dataset.ready = "1";
     pane.innerHTML = `
-      <div class="map-wrap">
+      <div class="map-wrap ${barHidden() ? "bar-hidden" : ""}">
         <div class="map-bar">
+          <button class="icon-btn bar-fold" data-map="hideBar" title="Ocultar las herramientas del mapa" aria-label="Ocultar las herramientas del mapa">${icon("up")}</button>
           <select id="mapPick" aria-label="Mapa activo" style="max-width:200px"></select>
           <div class="tool-set" id="tools">
             <button data-tool="token" aria-pressed="true" title="Mover y seleccionar fichas">${icon("move", 15)}Fichas</button>
@@ -1187,7 +1188,8 @@ function renderMap() {
           <span class="pill" id="mapHint"></span>
           <button class="btn sm" data-map="settings">Ajustes del mapa</button>
         </div>
-        <div class="board" id="board"><canvas id="canvas"></canvas><div class="coords" id="coords"></div></div>
+        <div class="board" id="board"><canvas id="canvas"></canvas><div class="coords" id="coords"></div>
+          <button class="btn sm bar-show" data-map="showBar" title="Enseñar las herramientas del mapa">${withIcon("down", "Herramientas", 15)}</button></div>
       </div>`;
 
     mapView = new MapView($("#canvas", pane), {
@@ -1676,7 +1678,19 @@ function paintEdge(key, tool) {
   op("map.edges", { mapId: map.id, patch: { [key]: value } });
 }
 
+/* La barra de herramientas del mapa se pliega para dejar la vista limpia;
+   cada aparato recuerda cómo la dejó */
+const BAR_KEY = "mesa.mapbar.hidden";
+function barHidden() { try { return localStorage.getItem(BAR_KEY) === "1"; } catch { return false; } }
+function setBarHidden(on) {
+  try { localStorage.setItem(BAR_KEY, on ? "1" : "0"); } catch {}
+  const wrap = document.querySelector("#mapPane .map-wrap");
+  if (wrap) wrap.classList.toggle("bar-hidden", on);
+}
+
 function mapAction(what) {
+  if (what === "hideBar") return setBarHidden(true);
+  if (what === "showBar") return setBarHidden(false);
   const map = activeMap();
   if (what === "zoomIn") return mapView.setZoom(mapView.zoom * 1.25);
   if (what === "zoomOut") return mapView.setZoom(mapView.zoom / 1.25);

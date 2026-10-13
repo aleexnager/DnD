@@ -187,9 +187,37 @@ export function dicePanel({ isDM = false } = {}) {
   addEventListener("keyup", hold);
   addEventListener("blur", () => { node.dataset.hold = ""; node.dataset.secretHold = ""; });
 
-  node.querySelector("[data-toggle]").addEventListener("click", () => node.classList.toggle("open"));
+  /* Plegar el panel: en el teléfono baja como una hoja; en el ordenador se
+     queda en una tira estrecha a la derecha y el resto de la mesa gana el
+     sitio. Cada aparato recuerda cómo lo dejó. */
+  const foldKey = "mesa.dock." + (isDM ? "dm" : "player");
+  const toggleBtn = node.querySelector("[data-toggle]");
+  const paintFold = () => {
+    const folded = node.classList.contains("collapsed");
+    toggleBtn.innerHTML = icon(window.innerWidth > 1080 ? (folded ? "prev" : "next") : "up");
+    toggleBtn.title = folded ? "Abrir los dados y la mesa" : "Plegar los dados y la mesa";
+    toggleBtn.setAttribute("aria-label", toggleBtn.title);
+    toggleBtn.setAttribute("aria-expanded", String(!folded));
+  };
+  const fold = on => {
+    node.classList.toggle("collapsed", on);
+    if (node.parentElement) node.parentElement.classList.toggle("dock-hidden", on);
+    if (!on) delete node.dataset.unread;
+    try { localStorage.setItem(foldKey, on ? "1" : "0"); } catch {}
+    paintFold();
+  };
+  toggleBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    if (window.innerWidth <= 1080) return node.classList.toggle("open");
+    fold(!node.classList.contains("collapsed"));
+  });
+  try { if (localStorage.getItem(foldKey) === "1") requestAnimationFrame(() => fold(true)); } catch {}
+  addEventListener("resize", paintFold);
+  paintFold();
   node.querySelector("header").addEventListener("click", e => {
-    if (window.innerWidth <= 1080 && !e.target.closest("button")) node.classList.toggle("open");
+    if (e.target.closest("button")) return;
+    if (window.innerWidth <= 1080) node.classList.toggle("open");
+    else if (node.classList.contains("collapsed")) fold(false);
   });
   const clear = node.querySelector("[data-clear]");
   if (clear) clear.addEventListener("click", () => op("log.clear"));
@@ -298,4 +326,6 @@ export function renderLog(host, { toEnd = false } = {}) {
     host.scrollTop = host.scrollHeight;
     if (pill) pill.classList.add("hidden");
   } else if (grew && pill) pill.classList.remove("hidden");
+  const dock = host.closest(".dock");
+  if (grew && dock && dock.classList.contains("collapsed")) dock.dataset.unread = "1";
 }

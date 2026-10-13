@@ -2279,3 +2279,26 @@ button.st-pill:hover { background: var(--accent-wash); border-color: var(--accen
 .lib-name b { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
 .lib-name small { color: var(--dim); font-size: 12px; flex: none; }
 .lib-item [data-lplay][aria-pressed=true] { color: var(--accent-ink); background: var(--accent); border-radius: 50%; }
+
+/* ---------- Plegar el panel de dados y la barra del mapa ---------- */
+@media (min-width: 1081px) {
+  .layout { transition: grid-template-columns .25s var(--ease-out, ease); }
+  .layout.dock-hidden { grid-template-columns: minmax(0, 1fr) 48px; }
+  .dock.collapsed > :not(header) { display: none; }
+  .dock.collapsed header { flex-direction: column; align-items: center; padding: 10px 0; gap: 14px; border-bottom: 0; height: 100%; cursor: pointer; }
+  .dock.collapsed header .spacer, .dock.collapsed header [data-clear] { display: none; }
+  .dock.collapsed header h2 { writing-mode: vertical-rl; font-size: 13px; letter-spacing: .12em; order: 2; white-space: nowrap; }
+  .dock.collapsed header h2 .ico { transform: rotate(90deg); }
+  .dock.collapsed header [data-toggle] { order: 1; }
+  .dock.collapsed header:hover { background: var(--stone); }
+  .dock.collapsed[data-unread="1"] header [data-toggle] { position: relative; }
+  .dock.collapsed[data-unread="1"] header [data-toggle]::after {
+    content: ""; position: absolute; top: 4px; right: 4px; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 0 2px var(--well);
+  }
+}
+.map-wrap.bar-hidden { grid-template-rows: 1fr; gap: 0; }
+.map-wrap.bar-hidden > .map-bar { display: none; }
+.bar-show { display: none; position: absolute; top: 10px; left: 10px; z-index: 4; background: rgba(16, 19, 22, .92); }
+.map-wrap.bar-hidden .bar-show { display: inline-flex; }
+.bar-fold { flex: 0 0 auto; }
