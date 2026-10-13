@@ -63,7 +63,10 @@ const IMG_TYPES = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp
 /* Sonido ambiente: se guarda y se sirve igual que las imágenes */
 const AUDIO_TYPES = { "audio/mpeg": "mp3", "audio/mp3": "mp3", "audio/ogg": "ogg", "audio/wav": "wav", "audio/x-wav": "wav",
   "audio/wave": "wav", "audio/webm": "webm", "audio/mp4": "m4a", "audio/x-m4a": "m4a", "audio/aac": "aac", "audio/flac": "flac" };
-const UPLOAD_TYPES = { ...IMG_TYPES, ...AUDIO_TYPES };
+/* Documentos de la biblioteca del DM: un manual en PDF pesa mucho más que un plano */
+const DOC_TYPES = { "application/pdf": "pdf", "text/plain": "txt", "text/markdown": "md", "application/json": "json" };
+const MAX_DOC = 160 * 1024 * 1024;
+const UPLOAD_TYPES = { ...IMG_TYPES, ...AUDIO_TYPES, ...DOC_TYPES };
 
 async function boot() {
   await mkdir(IMAGES, { recursive: true });
@@ -140,7 +143,8 @@ const MIME = {
   ".css": "text/css; charset=utf-8", ".json": "application/json; charset=utf-8",
   ".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp",
   ".svg": "image/svg+xml", ".ico": "image/x-icon", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json",
-  ".mp3": "audio/mpeg", ".ogg": "audio/ogg", ".wav": "audio/wav", ".webm": "audio/webm", ".m4a": "audio/mp4", ".aac": "audio/aac", ".flac": "audio/flac"
+  ".mjs": "text/javascript; charset=utf-8", ".pdf": "application/pdf", ".txt": "text/plain; charset=utf-8", ".md": "text/markdown; charset=utf-8",
+  ".gif": "image/gif", ".mp3": "audio/mpeg", ".ogg": "audio/ogg", ".wav": "audio/wav", ".webm": "audio/webm", ".m4a": "audio/mp4", ".aac": "audio/aac", ".flac": "audio/flac"
 };
 
 const json = (res, code, obj) => {
@@ -169,7 +173,7 @@ function readBody(req, limit = MAX_BODY) {
    quedan en menos de 100). Se guarda comprimido en memoria mientras el
    archivo no cambie. */
 const gzCache = new Map();   // ruta -> { mtime, size, etag, gz }
-const COMPRESSIBLE = new Set([".html", ".js", ".css", ".json", ".svg", ".webmanifest"]);
+const COMPRESSIBLE = new Set([".html", ".js", ".mjs", ".css", ".json", ".svg", ".webmanifest", ".txt", ".md"]);
 
 function serveStatic(req, res, file) {
   const st = statSync(file);
@@ -337,8 +341,9 @@ const handler = async (req, res) => {
       if (!client) return json(res, 401, { error: "sesión caducada" });
       const mime = String(req.headers["content-type"] || "").split(";")[0];
       const ext = UPLOAD_TYPES[mime];
-      if (!ext) return json(res, 415, { error: AUDIO_TYPES[mime] === undefined && mime.startsWith("audio/") ? "Formato de audio no admitido: usa MP3, OGG, WAV o M4A" : "Formato de imagen no admitido" });
-      const buf = await readBody(req);
+      if (!ext) return json(res, 415, { error: AUDIO_TYPES[mime] === undefined && mime.startsWith("audio/") ? "Formato de audio no admitido: usa MP3, OGG, WAV o M4A" : "Formato de archivo no admitido" });
+      if (DOC_TYPES[mime] && client.role !== "dm") return json(res, 403, { error: "Solo el DM sube documentos" });
+      const buf = await readBody(req, DOC_TYPES[mime] ? MAX_DOC : MAX_BODY);
       const id = randomBytes(8).toString("hex") + "." + ext;
       await writeFile(path.join(IMAGES, id), buf);
       return json(res, 200, { imageId: id, bytes: buf.length });

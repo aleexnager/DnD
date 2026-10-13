@@ -22,6 +22,7 @@ import { sheetTabsHTML, attackTableHTML, handleSheetAct } from "./sheet.js";
 import { listEditor, linesToEntries, entriesToLines } from "./list-editor.js";
 import { ambientToggle, previewSound, stopPreview } from "./ambient.js";
 import { SOUND_LIBRARY, SOUND_CATS, libSound } from "./sound-library.js";
+import { mountLibrary } from "./library.js";
 
 let tab = "mesa";
 let shownTab = null;
@@ -110,6 +111,7 @@ export function mountDM(root) {
 
   const layout = root.querySelector(".layout");
   layout.appendChild(dicePanel({ isDM: true }));
+  mountLibrary();
 
   /* Cabecera */
   const campaign = $("#campaign", root);

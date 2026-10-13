@@ -5,7 +5,7 @@
    - La aplicación (HTML, CSS, JS, iconos) se pide primero a la red y, si no
      hay, se saca de la copia guardada. Así una versión nueva del servidor
      llega en cuanto se recarga, y sin red el menú de entrada sigue abriendo.
-   - Planos y retratos (/img/) no cambian nunca: se guardan la primera vez y
+   - Planos, retratos y documentos de la biblioteca (/img/) no cambian nunca: se guardan la primera vez y
      no se vuelven a descargar. En un móvil, un plano de 2 MB por recarga se
      nota.
    - La partida en sí (/api/) no se toca jamás: el estado vivo, las tiradas y
@@ -14,7 +14,7 @@
    Todas las rutas son relativas al sitio donde vive Mesa: en GitHub Pages es
    una subcarpeta (/DnD/), no la raíz. */
 
-const VERSION = "mesa-2.13.0";
+const VERSION = "mesa-2.14.0";
 const SHELL_CACHE = VERSION + "-app";
 const IMG_CACHE = "mesa-img";
 const IMG_LIMIT = 80;
@@ -36,6 +36,7 @@ const SHELL = [
   "js/dm.js", "js/player.js", "js/screen.js",
   "js/engine.js", "js/local.js", "js/local-host.js", "js/local-worker.js",
   "js/spells.js", "js/spellbook.js", "js/statblock.js", "js/sheet.js", "js/list-editor.js", "js/rollable.js", "js/sound-core.js", "js/ambient.js", "js/sound-library.js", "js/creador.js", "js/creador-datos.js", "js/voice.js", "js/portals.js",
+  "js/library.js", "js/library-core.js", "js/libros/reglas.js", "js/libros/jugador.js", "js/libros/conjuros.js", "js/libros/bestiario.js",
   "js/gridfind.js", "js/gridfit.js", "js/wallfind.js", "js/wallmodel.js", "js/freewalls.js",
   /* Siluetas del creador de personajes */
   ...["barbaro", "bardo", "clerigo", "druida", "guerrero", "monje", "paladin", "explorador", "picaro", "hechicero", "brujo", "mago",
@@ -110,10 +111,8 @@ async function imageFirst(req) {
   if (hit) return hit;
   const cache = await caches.open(IMG_CACHE);
   const res = await fetch(req);
-  if (res.ok) {
-    await cache.put(req, res.clone());
-    trim(cache);
-  }
+  /* Un PDF grande puede no caber: se sirve igual aunque no se guarde */
+  if (res.ok) cache.put(req, res.clone()).then(() => trim(cache)).catch(() => {});
   return res;
 }
 
