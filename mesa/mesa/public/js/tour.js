@@ -161,7 +161,8 @@ function finish() {
   const id = run.tour.id;
   stopTour(true);
   const body = el(`<div class="tour-end" data-keep>${icon("check", 34)}
-    <p>${esc(L(["Has terminado el recorrido. Lo tienes siempre en el botón de ayuda", "You have finished the tour. It is always one click away on the help button"]))} (${icon("help", 14)}).</p>
+    <p>${esc(L(["Has terminado el recorrido. Puedes volver a él cuando quieras con el botón de ayuda", "You have finished the tour. Come back to it any time with the help button"]))}
+      <span class="tour-chip" aria-hidden="true">?</span> ${esc(L(["de la cabecera.", "in the header."]))}</p>
     <p class="prose">${esc(L(["Desde el índice puedes volver a cualquier sección o buscar un control.", "From the index you can go back to any section or search for a control."]))}</p></div>`);
   modal({ title: L(["¡Listo!", "All done!"]), body, actions: [{ label: L(["Ver el índice", "See the index"]), run: () => setTimeout(() => openTourIndex(id), 150) }, { label: L(["Cerrar", "Close"]), tone: "primary" }] });
 }

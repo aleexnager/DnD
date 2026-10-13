@@ -81,3 +81,44 @@ test("los atajos de teclado del DM salen en el tutorial", () => {
   const keys = byRole("dm").sections.find(s => s.id === "atajos").steps.map(s => s.es[1]).join("\n");
   for (const k of ["[[K]]", "[[B]]", "[[N]]", "[[Z]]", "[[Espacio]]", "[[Alt]]", "[[Mayús]]"]) assert.ok(keys.includes(k), `falta el atajo ${k}`);
 });
+
+test("las fichas de ejemplo traen de todo para enseñar y se reconocen", async () => {
+  const { exampleChars, exampleCombat, isExample, EXAMPLE_MARK } = await import("../public/js/tour-example.js");
+  for (const en of [false, true]) {
+    const ex = exampleChars(en);
+    assert.ok(ex.list.every(c => isExample(c.id) && EXAMPLE_MARK.test(c.name)), "id y nombre marcados");
+    const pc = ex.pc;
+    assert.ok(pc.tempHp > 0 && pc.hp < pc.maxHp, "vida temporal y herida");
+    assert.deepEqual(pc.conditions, ["envenenado"]);
+    assert.equal(pc.condMeta.envenenado, 2);
+    assert.ok(pc.concentration && pc.inspiration && pc.deathOk === 1 && pc.deathFail === 1);
+    assert.ok(pc.slots[0] === 4 && pc.slotsUsed[0] === 1 && pc.resources.length && pc.buffs.some(b => b.on));
+    assert.ok(pc.attacks.length >= 2 && pc.spellbook.length >= 3, "ataques y conjuros");
+    assert.equal(ex.foe.kind, "monster");
+    assert.ok(ex.foe.actions && ex.foe.hp < ex.foe.maxHp);
+    const fight = exampleCombat(ex, 1);
+    assert.deepEqual(fight.order, ex.list.map(c => c.id));
+    assert.equal(fight.index, 1);
+  }
+  assert.ok(!isExample("abc") && isExample("tour-ex-pc"));
+});
+
+test("las secciones de fichas y combate se explican con el ejemplo, no con lo que haya en la mesa", () => {
+  const dm = TOURS.find(t => t.role === "dm");
+  const steps = dm.sections.flatMap(s => s.steps.map(st => ({ ...st, scene: "scene" in st ? st.scene : s.scene, sec: s.id })));
+  for (const st of steps.filter(x => ["tarjetas", "ficha"].includes(x.sec) && x.t !== "#tableView .band"))
+    assert.ok(String(st.scene).startsWith("dm.ex"), `«${st.es[0]}» sin ejemplo`);
+  const by = title => steps.find(st => st.es[0] === title);
+  for (const t of ["Editar una ficha", "Dentro de la ficha", "Los enemigos en la mesa", "Quién entra", "La barra de turnos", "Al pasar turno", "La ventana de ataque", "Lanzar conjuros"])
+    assert.ok(/^dm\.(ex|roster)/.test(by(t).scene), `«${t}» sin ejemplo`);
+  assert.equal(by("Cómo ve la party").scene, "dm.preview");
+  /* Nada señala «la primera tarjeta que haya»: siempre la de ejemplo */
+  assert.ok(!steps.some(st => /^#tableView \.card \[|^#tableView \.card$/.test(String(st.t))));
+});
+
+test("las iniciales ignoran lo que va entre paréntesis", async () => {
+  const { initials } = await import("../public/js/util.js");
+  assert.equal(initials("Brisa (ejemplo)"), "B");
+  assert.equal(initials("Goblin 2"), "G2");
+  assert.equal(initials("Ana María"), "AM");
+});

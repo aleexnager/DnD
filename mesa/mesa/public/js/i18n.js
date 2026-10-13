@@ -979,6 +979,9 @@ const EN = {
   "Constructos": "Constructs", "Dragones": "Dragons", "Elementales": "Elementals", "Gigantes": "Giants", "Hadas": "Fey", "Humanoides": "Humanoids",
   "Infernales": "Fiends", "Monstruosidades": "Monstrosities", "Muertos vivientes": "Undead", "Plantas": "Plants",
   "Un recorrido guiado por cada pantalla, por secciones": "A guided tour of every screen, in sections",
+  "Ejemplo del tutorial · solo lo ves tú": "Tutorial example · only you can see it",
+  "Combate de ejemplo del tutorial · solo lo ves tú": "Tutorial example combat · only you can see it",
+  "Es un ejemplo del tutorial: no cambia la partida": "This is a tutorial example: it does not change the game",
   "Comienzo": "Beginning", "Formato de archivo no admitido": "File format not supported", "Página": "Page", "Páginas": "Pages"
 };
 

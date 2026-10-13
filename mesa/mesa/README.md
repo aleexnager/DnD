@@ -229,6 +229,17 @@ una ficha o abre la ventana que toca para enseñarla, y la vuelve a cerrar al
 pasar de paso; nunca cambia la partida. Mientras se lee, el control se puede
 probar.
 
+Para que se entienda aunque la partida esté vacía, el tutorial del DM trae
+**ejemplos**: pone en tu mesa a Brisa, una clériga de ejemplo con vida
+temporal, un veneno de dos rondas, concentración, espacios de conjuro gastados
+y Bendecir encendido, y a un goblin herido; con ellos explica cada parte de la
+tarjeta y de la ficha, la ventana de estados, la de ataque y la de conjuros,
+y enseña un **combate de ejemplo** en el que se ve pasar el turno. En el mapa,
+un paso te enseña el plano **tal como lo ve la party**. Los ejemplos solo
+existen en tu pantalla, llevan una etiqueta que lo dice, desaparecen al
+cerrar el tutorial y nada de lo que se haga con ellos llega a la partida (sus
+tiradas quedan como secretas, solo para ti).
+
 Va **por secciones**: el del DM tiene quince (la cabecera, crear personajes,
 las tarjetas, la ficha desplegada, el bestiario, el combate, dados y charla,
 tres del mapa, sus ajustes, descansos, gestionar la mesa, la biblioteca y los
@@ -993,6 +1004,7 @@ public/
     library-core.js    trocear Markdown y PDF en secciones y buscar en los libros
     tour.js            el tutorial guiado: foco, tarjeta, índice y buscador
     tour-content.js    los recorridos de cada pantalla, por secciones (español e inglés)
+    tour-example.js    las fichas de ejemplo del tutorial (solo en la pantalla del DM)
     libros/            los cuatro libros de serie (reglas, jugador, conjuros, bestiario)
   vendor/pdfjs/        pdf.js de Mozilla, para leer los PDF de la biblioteca
 data/                  la partida y las imágenes (se crea al arrancar)

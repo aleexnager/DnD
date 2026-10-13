@@ -2757,3 +2757,14 @@ button.st-pill:hover { background: var(--accent-wash); border-color: var(--accen
 .tour-then { margin: 2px 0 0; font-size: 12.5px; color: var(--dim); }
 .tour-then b { color: var(--accent-soft); }
 .tour-count { white-space: nowrap; }
+.tour-chip { display: inline-grid; place-items: center; width: 20px; height: 20px; margin: 0 2px; border-radius: 50%; vertical-align: -4px;
+  border: 1.5px solid var(--accent-soft); color: var(--accent-soft); font-size: 12px; font-weight: 700; line-height: 1; }
+
+/* Las fichas y el combate de ejemplo del tutorial: se distinguen a la vista */
+.card.tour-example { border-style: dashed; border-color: var(--arcane-line); border-top-style: solid; }
+.ex-ribbon { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 0 0 6px 6px; margin: 0 0 0 12px;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .02em; color: var(--arcane-text); background: var(--arcane-wash); border: 1px solid var(--arcane-line); border-top: 0; }
+.ex-ribbon .ico { flex: none; }
+.rail.tour-example { padding-top: 26px; }
+.rail.tour-example .ex-ribbon { position: absolute; top: 0; left: max(14px, 2.2vw); margin: 0; }
+.rail.tour-example .rail-main, .rail.tour-example .rail-sub { pointer-events: none; }
