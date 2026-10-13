@@ -9,7 +9,7 @@ import { feetChars, nextRoomId } from "./los.js";
 import { store, onState, onPresence, onStatus, op, patchChar, patchSession, patchMap, uploadImage, leave, lobby } from "./net.js";
 import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret } from "./dice-panel.js";
 import { openCharEditor, openConditions } from "./char-editor.js";
-import { openBuilder } from "./creador.js";
+import { openBuilder, quickRandom } from "./creador.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
 import { openGridFit, openWallFit, teachFromMap, forgetLearned, learnedCount, exportLearned, importLearned } from "./gridfit.js";
@@ -95,6 +95,7 @@ export function mountDM(root) {
           <button class="icon-btn" id="undoBtn" title="Deshacer el último cambio" aria-label="Deshacer el último cambio">${icon("undo")}</button>
           <button class="icon-btn" id="moreBtn" aria-label="Más opciones" title="Más opciones">${icon("more")}</button>
           <button class="btn primary sm" id="addBtn" title="Añadir personaje">${withIcon("userPlus", "Añadir personaje")}</button>
+          <button class="btn sm" id="randomBtn" title="Personaje al azar, directo a la mesa y al mapa">${withIcon("dice", "Al azar")}</button>
         </div>
       </header>
       <div class="rail hidden" id="rail"></div>
@@ -119,6 +120,7 @@ export function mountDM(root) {
     render();
   });
   $("#addBtn", root).addEventListener("click", newCharacter);
+  $("#randomBtn", root).addEventListener("click", () => quickRandom({ place: true }));
   $("#bestiaryBtn", root).addEventListener("click", () => toggleDrawer());
   $("#combatBtn", root).addEventListener("click", toggleCombat);
   $("#restBtn", root).addEventListener("click", openRest);
@@ -136,7 +138,7 @@ export function mountDM(root) {
 }
 
 /* Personaje nuevo: el creador paso a paso, o la ficha a mano para un PNJ rápido */
-function newCharacter() { openBuilder({ onManual: () => openCharEditor(null, {}) }); }
+function newCharacter() { openBuilder({ onManual: () => openCharEditor(null, {}), place: true }); }
 
 /* ---------- Presencia ---------- */
 function renderPresence(list = store.presence) {
