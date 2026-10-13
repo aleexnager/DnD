@@ -299,19 +299,22 @@ class Resonator {
 const VOW = { a: [730, 1250, 2550], e: [470, 1850, 2550], i: [300, 2250, 2950], o: [500, 900, 2450], u: [330, 760, 2350], "@": [520, 1450, 2500] };
 const BW = [80, 100, 140, 220];
 /* Una cadena de sonidos en segmentos: { k: "v"|"n"|"x"|"s", d, f?, a, noise? } */
-function syllables(R, count, { stressEvery = 2 } = {}) {
+/* consonants: false deja solo lo sonoro (vocales, nasales, líquidas): de
+   lejos, en una sala llena, es lo único que llega y lo que suena a gente;
+   las explosiones y los siseos sintéticos son lo que delata a la máquina */
+function syllables(R, count, { stressEvery = 2, consonants = true } = {}) {
   const segs = [];
   const vowels = Object.keys(VOW);
   for (let k = 0; k < count; k++) {
     const stress = k % stressEvery === 0 ? U(R, 0.06, 0.14) : 0;
-    const c = R();
+    const c = consonants ? R() : 0.42 + R() * 0.58;
     if (c < 0.22) segs.push({ k: "s", d: U(R, 0.03, 0.06) }, { k: "x", d: U(R, 0.012, 0.025), f: pick(R, [1200, 2200, 3800]), q: 1.2, a: 0.5 });
     else if (c < 0.42) segs.push({ k: "x", d: U(R, 0.06, 0.11), f: pick(R, [5800, 2600, 1800]), q: 1.6, a: 0.28 });
     else if (c < 0.6) segs.push({ k: "v", d: U(R, 0.04, 0.07), f: [260, pick(R, [1100, 1700]), 2500], a: 0.35 });
     else if (c < 0.75) segs.push({ k: "v", d: U(R, 0.03, 0.05), f: [360, pick(R, [1100, 1350]), 2400], a: 0.55 });
     const v = VOW[pick(R, vowels)];
     segs.push({ k: "v", d: U(R, 0.08, 0.16) * (stress ? 1.3 : 1), f: v, a: 1, acc: stress });
-    if (R() < 0.18) segs.push({ k: "x", d: U(R, 0.05, 0.09), f: 5800, q: 1.6, a: 0.25 });
+    if (consonants && R() < 0.18) segs.push({ k: "x", d: U(R, 0.05, 0.09), f: 5800, q: 1.6, a: 0.25 });
   }
   return segs;
 }
@@ -355,12 +358,12 @@ export function speak(R, segs, { f0 = 120, female = false, breath = 0.06, oq = 0
   return out;
 }
 /* Alguien hablando un rato: frases y silencios */
-export function talker(R, sec, { f0 = 120, female = false, talk = 0.55 } = {}) {
+export function talker(R, sec, { f0 = 120, female = false, talk = 0.55, consonants = true } = {}) {
   const out = new Float32Array(Math.ceil(sec * SR));
   let t = R() * 2;
   while (t < sec - 0.5) {
     if (R() < talk) {
-      const phrase = speak(R, syllables(R, 3 + Math.floor(R() * 11)), { f0: f0 * U(R, 0.95, 1.06), female, fall: U(R, 0.12, 0.3), rise: R() < 0.2 ? 0.25 : 0 });
+      const phrase = speak(R, syllables(R, 3 + Math.floor(R() * 11), { consonants }), { f0: f0 * U(R, 0.95, 1.06), female, fall: U(R, 0.12, 0.3), rise: R() < 0.2 ? 0.25 : 0, breath: 0.1 });
       const i0 = Math.round(t * SR);
       for (let i = 0; i < phrase.length && i0 + i < out.length; i++) out[i0 + i] += phrase[i];
       t += phrase.length / SR;
@@ -368,20 +371,6 @@ export function talker(R, sec, { f0 = 120, female = false, talk = 0.55 } = {}) {
     t += U(R, 0.25, 1.8);
   }
   return out;
-}
-/* Una carcajada: «ja» aspirados que bajan de tono y de fuerza */
-export function laughter(R, { female = R() < 0.4 } = {}) {
-  const segs = [], k = 4 + Math.floor(R() * 5);
-  for (let j = 0; j < k; j++) {
-    segs.push({ k: "x", d: U(R, 0.04, 0.07), f: 1500, q: 0.7, a: 0.35 });
-    segs.push({ k: "v", d: U(R, 0.07, 0.11), f: VOW.a, a: 1 - j / (k + 2) });
-  }
-  return speak(R, segs, { f0: female ? U(R, 230, 300) : U(R, 150, 200), female, breath: 0.25, oq: 0.75, fall: 0.35 });
-}
-/* Susurros: los mismos sonidos sin voz, solo aliento */
-export function whisper(R, count) {
-  const segs = syllables(R, count).map(s => s.k === "v" ? { k: "x", d: s.d, f: s.f[1], q: 2.5, a: 0.35 * s.a } : s);
-  return speak(R, segs, { breath: 0 });
 }
 /* El rumor de fondo de mucha gente: ruido con el espectro del habla,
    modulado por las sílabas de muchas voces a la vez */
@@ -466,36 +455,21 @@ export function brass(R, f, dur, { cut = 900, open = 2400, att = 0.07, rel = 0.2
   }
   return out;
 }
-/* Coro: varias voces «aah» con fuente glotal, cada una con su vibrato,
-   su pequeño desafinado, su entrada y su aliento: así suena a gente
-   cantando y no a un órgano */
-export function choir(R, f, dur, { att = 1.2, rel = 2, vowel = [700, 1150, 2800], voices = 3 } = {}) {
-  const n = Math.ceil((dur + rel * 4) * SR), out = new Float32Array(n);
-  const female = f > 260, fs = female ? 1.14 : 1;
-  const vs = Array.from({ length: voices }, () => ({
-    ph: R(), per: 1 / f, det: 1 + U(R, -0.005, 0.005), vr: U(R, 4.8, 5.9), vp: R() * TAU, vd: U(R, 0.005, 0.01),
-    on: U(R, 0, 0.35), prev: 0, shim: 1, drift: wander(R, 1.5, -0.003, 0.003)
-  }));
-  const rs = [0, 1, 2, 3].map(() => new Resonator());
-  rs[0].set(vowel[0] * fs, 90); rs[1].set(vowel[1] * fs, 110); rs[2].set(vowel[2] * fs, 170); rs[3].set(3300 * fs, 260);
-  const hp = new Biquad("hp", 120, 0.7);
+/* Órgano de tubos: varios registros (8', 4', 2 2/3', 2') con el soplo del
+   ataque de cada tubo, dos filas un pelo desafinadas y su crecida lenta */
+export function organ(R, f, dur, { att = 0.08, rel = 0.6, ranks = [[1, 1], [2, 0.55], [3, 0.22], [4, 0.3], [6, 0.1], [8, 0.12]] } = {}) {
+  const n = Math.ceil((dur + rel * 5) * SR), out = new Float32Array(n);
+  const det = 1 + U(R, 0.0008, 0.0016), ph = ranks.map(() => [R() * TAU, R() * TAU]);
+  const chiff = new Biquad("bp", Math.min(f * 4, 9000), 3);
   for (let i = 0; i < n; i++) {
     const t = i / SR;
-    let sum = 0;
-    for (const v of vs) {
-      const tt = t - v.on;
-      if (tt < 0) continue;
-      const env = Math.min(1, tt / att) * (t > dur ? Math.exp(-(t - dur) / rel) : 1);
-      const fr = f * v.det * (1 + v.drift(t)) * (1 + v.vd * Math.min(1, tt / 0.8) * Math.sin(TAU * v.vr * t + v.vp));
-      v.ph += 1 / (v.per * SR);
-      if (v.ph >= 1) { v.ph -= 1; v.per = 1 / (fr * (1 + (R() - 0.5) * 0.012)); v.shim = 1 + (R() - 0.5) * 0.06; }
-      const g = v.ph < 0.4 ? 0.5 * (1 - Math.cos(Math.PI * v.ph / 0.4)) : v.ph < 0.6 ? Math.cos(Math.PI * (v.ph - 0.4) / 0.4) : 0;
-      sum += ((g - v.prev) * 18 * v.shim + (R() * 2 - 1) * 0.05 * (0.3 + g)) * env;
-      v.prev = g;
-    }
-    let x = sum / voices;
-    for (const r of rs) x = r.tick(x);
-    out[i] = hp.tick(x);
+    const env = Math.min(1, t / att) * (t > dur ? Math.exp(-(t - dur) / rel) : 1);
+    let s = 0;
+    ranks.forEach(([h, a], k) => {
+      if (f * h > SR * 0.45) return;
+      s += (Math.sin(ph[k][0] + TAU * f * h * t) + Math.sin(ph[k][1] + TAU * f * h * det * t)) * a;
+    });
+    out[i] = s * 0.5 * env + chiff.tick(R() * 2 - 1) * Math.exp(-t / 0.05) * 0.4;
   }
   return out;
 }

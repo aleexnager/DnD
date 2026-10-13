@@ -6,10 +6,10 @@ import { $, el, on, esc, lines, sign, pct, hpTone, hpBar, tweenBars, initials, i
 import { CONDITIONS, conditionName, ABILITIES, SKILLS, PIN_KINDS, normalizeSound, modOf, normalizeChar, normalizeBeast, bestiaryOf, isBaseBeast, normalizeMap, normalizePin, normalizePortal, uid, encounterDifficulty, MAX_COLS, MAX_ROWS } from "./schema.js";
 import { openAttacks } from "./attacks.js";
 import { feetChars, nextRoomId } from "./los.js";
-import { store, onState, onPresence, onStatus, op, patchChar, patchSession, patchMap, uploadImage, leave, lobby } from "./net.js";
+import { store, onState, onPresence, onStatus, op, patchChar, patchSession, patchMap, uploadImage, leave, lobby, setOpGuard } from "./net.js";
 import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret } from "./dice-panel.js";
 import { openCharEditor, openConditions } from "./char-editor.js";
-import { openBuilder } from "./creador.js";
+import { openBuilder, quickRandom } from "./creador.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
 import { openGridFit, openWallFit, teachFromMap, forgetLearned, learnedCount, exportLearned, importLearned } from "./gridfit.js";
@@ -22,6 +22,10 @@ import { sheetTabsHTML, attackTableHTML, handleSheetAct } from "./sheet.js";
 import { listEditor, linesToEntries, entriesToLines } from "./list-editor.js";
 import { ambientToggle, previewSound, stopPreview } from "./ambient.js";
 import { SOUND_LIBRARY, SOUND_CATS, libSound } from "./sound-library.js";
+import { mountLibrary } from "./library.js";
+import { tourButton, inviteTour, openTourIndex } from "./tour.js";
+import { exampleChars, exampleCombat, isExample, EXAMPLE_MARK } from "./tour-example.js";
+import { currentLang } from "./i18n.js";
 
 let tab = "mesa";
 let shownTab = null;
@@ -68,7 +72,60 @@ const doc = () => store.doc;
 const chars = () => doc().chars;
 const pcs = () => chars().filter(c => c.kind === "pc");
 const foes = () => chars().filter(c => c.kind === "monster");
-const byId = id => chars().find(c => c.id === id);
+const byId = id => chars().find(c => c.id === id) || (example ? example.list.find(c => c.id === id) : undefined);
+
+/* ---------- Las fichas de ejemplo del tutorial ----------
+   Solo en esta pantalla: se pintan junto a las de verdad, pero lo que se
+   intente hacer con ellas no sale hacia la partida (las tiradas se quedan
+   como secretas, solo para el DM). Apagar se retrasa un instante para que
+   pasar de un paso a otro del tutorial no las haga parpadear. */
+let example = null, exampleOff = null, exampleWarned = 0;
+const exampleGuard = o => {
+  const s = JSON.stringify(o);
+  if (!s.includes("tour-ex") && !EXAMPLE_MARK.test(s)) return o;
+  if (o.type === "log.add" && o.entry && o.entry.kind === "roll") return { ...o, entry: { ...o.entry, secret: true } };
+  if (Date.now() - exampleWarned > 2500) { exampleWarned = Date.now(); toast("Es un ejemplo del tutorial: no cambia la partida"); }
+  return null;
+};
+export function tourExample(on, { open = null, turn = null } = {}) {
+  clearTimeout(exampleOff);
+  if (!on) {
+    exampleOff = setTimeout(() => {
+      if (!example) return;
+      example.list.forEach(c => openCards.delete(c.id));
+      example = null;
+      setOpGuard(null);
+      if (doc()) render();
+    }, 80);
+    return;
+  }
+  if (!example) {
+    const ex = exampleChars(currentLang() === "en");
+    example = { ...ex, combat: exampleCombat(ex, 0) };
+    setOpGuard(exampleGuard);
+  }
+  if (open !== null) {
+    example.list.forEach(c => openCards.delete(c.id));
+    if (open) openCards.add(example[open].id);
+  }
+  /* El combate de ejemplo solo sale cuando el tutorial lo explica */
+  example.showCombat = turn !== null;
+  if (turn !== null) {
+    example.combat = exampleCombat(example, turn);
+    /* Al pasar turno se devuelven acción y movimiento a quien empieza */
+    example.list.forEach((c, i) => { c.used = i === turn ? { action: false, bonus: false, reaction: false, move: 0 } : c.used; });
+    if (turn === 0) example.pc.used = { action: true, bonus: false, reaction: false, move: 10 };
+    /* Y al acabar su turno, el veneno de Brisa baja una ronda */
+    example.pc.condMeta = { envenenado: turn === 0 ? 2 : 1 };
+  }
+  if (doc()) render();
+}
+/* El mapa como lo ve la party, para el tutorial */
+export function tourPartyPreview(on) {
+  if (!mapView) return;
+  mapView.partyPreview = !!on;
+  mapView.draw();
+}
 const session = () => doc().session;
 const activeMap = () => doc().maps.find(m => m.id === session().activeMapId) || doc().maps[0];
 
@@ -92,9 +149,11 @@ export function mountDM(root) {
           <button class="btn sm" id="bestiaryBtn" title="Bestiario">${withIcon("book", "Bestiario")}</button>
           <button class="btn sm" id="combatBtn" title="Combate">${withIcon("swords", "Iniciar combate")}</button>
           <button class="btn sm" id="restBtn" title="Descansar">${withIcon("moon", "Descansar")}</button>
+          <span id="tourSlot"></span>
           <button class="icon-btn" id="undoBtn" title="Deshacer el último cambio" aria-label="Deshacer el último cambio">${icon("undo")}</button>
           <button class="icon-btn" id="moreBtn" aria-label="Más opciones" title="Más opciones">${icon("more")}</button>
           <button class="btn primary sm" id="addBtn" title="Añadir personaje">${withIcon("userPlus", "Añadir personaje")}</button>
+          <button class="btn sm" id="randomBtn" title="Personaje al azar, directo a la mesa y al mapa">${withIcon("dice", "Al azar")}</button>
         </div>
       </header>
       <div class="rail hidden" id="rail"></div>
@@ -109,6 +168,7 @@ export function mountDM(root) {
 
   const layout = root.querySelector(".layout");
   layout.appendChild(dicePanel({ isDM: true }));
+  mountLibrary();
 
   /* Cabecera */
   const campaign = $("#campaign", root);
@@ -119,6 +179,7 @@ export function mountDM(root) {
     render();
   });
   $("#addBtn", root).addEventListener("click", newCharacter);
+  $("#randomBtn", root).addEventListener("click", () => quickRandom({ place: true }));
   $("#bestiaryBtn", root).addEventListener("click", () => toggleDrawer());
   $("#combatBtn", root).addEventListener("click", toggleCombat);
   $("#restBtn", root).addEventListener("click", openRest);
@@ -126,6 +187,9 @@ export function mountDM(root) {
   $("#moreBtn", root).addEventListener("click", openMenu);
   $("#presence", root).addEventListener("click", openPresence);
   $("#voiceSlot", root).replaceWith(voiceWidget());
+  const help = tourButton("dm");
+  $("#tourSlot", root).replaceWith(help);
+  setTimeout(() => inviteTour("dm", help), 1500);
 
   onStatus(ok => $("#offline", root).classList.toggle("hidden", ok));
   onPresence(list => { renderPresence(list); if (tab === "mesa" && doc()) renderTable(); });
@@ -136,7 +200,7 @@ export function mountDM(root) {
 }
 
 /* Personaje nuevo: el creador paso a paso, o la ficha a mano para un PNJ rápido */
-function newCharacter() { openBuilder({ onManual: () => openCharEditor(null, {}) }); }
+function newCharacter() { openBuilder({ onManual: () => openCharEditor(null, {}), place: true }); }
 
 /* ---------- Presencia ---------- */
 function renderPresence(list = store.presence) {
@@ -269,7 +333,9 @@ function render() {
 
 function renderRail() {
   const rail = $("#rail");
-  const c = session().combat;
+  const sample = !session().combat.on && example && example.showCombat;
+  const c = sample ? example.combat : session().combat;
+  rail.classList.toggle("tour-example", !!sample);
   rail.classList.toggle("hidden", !c.on);
   if (!c.on) return;
   const order = c.order.map(byId).filter(Boolean);
@@ -277,7 +343,7 @@ function renderRail() {
   const used = (now && now.used) || {};
   const left = now ? Math.max(0, (now.speed || 30) - (used.move || 0)) : 0;
 
-  rail.innerHTML = `
+  rail.innerHTML = `${sample ? `<span class="ex-ribbon">${icon("help", 12)}<span>Combate de ejemplo del tutorial · solo lo ves tú</span></span>` : ""}
     <div class="rail-main">
       <div class="round"><b class="tnum">${c.round}</b><span>ronda</span></div>
       <div class="strip">
@@ -335,6 +401,8 @@ function renderRail() {
 function renderTable() {
   const view = $("#tableView");
   const monsters = foes();
+  const shownPcs = example ? [example.pc, ...pcs()] : pcs();
+  const shownFoes = example ? [example.foe, ...monsters] : monsters;
   const enc = encounterDifficulty(pcs(), monsters);
   const upright = pcs().filter(c => c.hp > 0);
 
@@ -346,16 +414,16 @@ function renderTable() {
       ${monsters.length ? `<div class="stat"><b class="tnum">${monsters.filter(m => m.hp > 0).length}</b>
         <span>enemigos · ${enc ? enc.adjusted + " PX ajustados, dificultad " + enc.label : ""}</span></div>` : ""}
     </div>
-    ${pcs().length ? `<div class="grid">${pcs().map(cardHTML).join("")}</div>` : `
+    ${shownPcs.length ? `<div class="grid">${shownPcs.map(cardHTML).join("")}</div>` : `
       <div class="empty">
         <h3>Aún no hay nadie en la mesa</h3>
         <p>Crea las fichas tú, o dile a cada jugador que entre desde su móvil y se haga la suya.</p>
         <button class="btn primary" data-act="add" style="margin-top:12px">Añadir personaje</button>
       </div>`}
-    ${monsters.length ? `
+    ${shownFoes.length ? `
       <div class="section-title"><h2>Enemigos</h2><span class="line"></span>
-        <button class="btn sm" data-act="clearFoes">Retirar monstruos</button></div>
-      <div class="grid">${monsters.map(cardHTML).join("")}</div>` : ""}`;
+        ${monsters.length ? '<button class="btn sm" data-act="clearFoes">Retirar monstruos</button>' : ""}</div>
+      <div class="grid">${shownFoes.map(cardHTML).join("")}</div>` : ""}`;
 }
 
 /* Quién lleva este personaje y si está conectado ahora mismo */
@@ -373,7 +441,8 @@ function cardHTML(c) {
     : `<div class="avatar" style="--tone:${esc(c.color)}">${initials(c.name)}</div>`;
 
   return `
-  <article class="card ${c.hp <= 0 ? "down" : ""}" data-id="${c.id}" data-flash style="--tone:${esc(c.color)}">
+  <article class="card ${c.hp <= 0 ? "down" : ""} ${isExample(c.id) ? "tour-example" : ""}" data-id="${c.id}" data-flash style="--tone:${esc(c.color)}">
+    ${isExample(c.id) ? `<span class="ex-ribbon">${icon("help", 12)}<span>Ejemplo del tutorial · solo lo ves tú</span></span>` : ""}
     <div class="head">
       ${avatar}
       <div class="id">
@@ -608,7 +677,7 @@ function dealHeal(c, n, card) {
 /* ---------- Ataques ---------- */
 function targetsFor(c) {
   const map = activeMap();
-  const rivals = chars().filter(x => x.id !== c.id && x.hp > 0);
+  const rivals = [...chars(), ...(example ? example.list : [])].filter(x => x.id !== c.id && x.hp > 0);
   return rivals.map(x => {
     const near = map && x.mx !== null && c.mx !== null && x.mapId === c.mapId ? feetChars(map, c, x) : null;
     return { ...x, name: x.name + (near !== null ? ` (a ${near} pies)` : "") };
@@ -732,7 +801,10 @@ const buildOrder = () => sortByInitiative(combatCandidates());
 
 /* Antes de empezar, se enseña quién va a entrar y se puede quitar a cualquiera. */
 function openCombatRoster() {
-  const inside = new Set(combatCandidates().map(c => c.id));
+  /* Con el tutorial delante entran también las fichas de ejemplo (lo que se
+     haga con ellas no sale de esta pantalla) */
+  const extra = example ? example.list : [];
+  const inside = new Set([...combatCandidates(), ...extra].map(c => c.id));
   const rest = chars().filter(c => !inside.has(c.id));
   const row = c => `<label class="pick-row init">
     <input type="checkbox" value="${c.id}" ${inside.has(c.id) ? "checked" : ""}>
@@ -748,7 +820,7 @@ function openCombatRoster() {
       <button type="button" class="btn sm" id="rollAllInit">Tirar por todos</button>
       <button type="button" class="btn sm" id="rollFoesInit">Tirar solo por las criaturas</button>
     </div>
-    <div class="pick-list">${[...combatCandidates(), ...rest].map(row).join("")}</div>
+    <div class="pick-list">${[...extra, ...combatCandidates(), ...rest].map(row).join("")}</div>
   </div>`);
 
   /* Tirar aquí mismo y que el número caiga en su casilla */
@@ -1132,8 +1204,9 @@ function renderMap() {
   if (!pane.dataset.ready || !mapView) {
     pane.dataset.ready = "1";
     pane.innerHTML = `
-      <div class="map-wrap">
+      <div class="map-wrap ${barHidden() ? "bar-hidden" : ""}">
         <div class="map-bar">
+          <button class="icon-btn bar-fold" data-map="hideBar" title="Ocultar las herramientas del mapa" aria-label="Ocultar las herramientas del mapa">${icon("up")}</button>
           <select id="mapPick" aria-label="Mapa activo" style="max-width:200px"></select>
           <div class="tool-set" id="tools">
             <button data-tool="token" aria-pressed="true" title="Mover y seleccionar fichas">${icon("move", 15)}Fichas</button>
@@ -1185,7 +1258,8 @@ function renderMap() {
           <span class="pill" id="mapHint"></span>
           <button class="btn sm" data-map="settings">Ajustes del mapa</button>
         </div>
-        <div class="board" id="board"><canvas id="canvas"></canvas><div class="coords" id="coords"></div></div>
+        <div class="board" id="board"><canvas id="canvas"></canvas><div class="coords" id="coords"></div>
+          <button class="btn sm bar-show" data-map="showBar" title="Enseñar las herramientas del mapa">${withIcon("down", "Herramientas", 15)}</button></div>
       </div>`;
 
     mapView = new MapView($("#canvas", pane), {
@@ -1674,7 +1748,19 @@ function paintEdge(key, tool) {
   op("map.edges", { mapId: map.id, patch: { [key]: value } });
 }
 
+/* La barra de herramientas del mapa se pliega para dejar la vista limpia;
+   cada aparato recuerda cómo la dejó */
+const BAR_KEY = "mesa.mapbar.hidden";
+function barHidden() { try { return localStorage.getItem(BAR_KEY) === "1"; } catch { return false; } }
+function setBarHidden(on) {
+  try { localStorage.setItem(BAR_KEY, on ? "1" : "0"); } catch {}
+  const wrap = document.querySelector("#mapPane .map-wrap");
+  if (wrap) wrap.classList.toggle("bar-hidden", on);
+}
+
 function mapAction(what) {
+  if (what === "hideBar") return setBarHidden(true);
+  if (what === "showBar") return setBarHidden(false);
   const map = activeMap();
   if (what === "zoomIn") return mapView.setZoom(mapView.zoom * 1.25);
   if (what === "zoomOut") return mapView.setZoom(mapView.zoom / 1.25);
@@ -1884,6 +1970,7 @@ function openMenu() {
     ${item("link", "wifi", "Cómo entran mis jugadores", "La dirección y el código para unirse")}
     ${item("handout", "image", "Enseñar una imagen", "Un mapa del tesoro, una carta, un retrato")}
     ${item("ask", "dice", "Pedir una tirada", "A quién, qué y con qué dificultad")}
+    ${item("tour", "help", "Tutorial", "Un recorrido guiado por cada pantalla, por secciones")}
     <h4 class="menu-sec">Partida</h4>
     ${item("export", "download", "Guardar copia", "Descarga un archivo con toda la partida")}
     ${item("import", "upload", "Cargar una copia", "Sustituye la partida por la de un archivo")}
@@ -1936,6 +2023,7 @@ function openMenu() {
       } else hand.click();
     }
     if (what === "ask") { m.close(); askForRoll(); }
+    if (what === "tour") { m.close(); setTimeout(() => openTourIndex(), 160); }
     if (what === "screen") { m.close(); openScreenPanel(); }
     if (what === "link") {
       m.close();

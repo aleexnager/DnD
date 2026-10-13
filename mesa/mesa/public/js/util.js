@@ -15,7 +15,9 @@ export const pct = c => clamp(Math.round((c.hp / Math.max(1, c.maxHp)) * 100), 0
 /* «Goblin 10» es G10, no G1: con muchas criaturas iguales, el número es lo
    que las distingue en el mapa. */
 export const initials = n => {
-  const words = (n || "?").trim().split(/\s+/);
+  /* Solo las palabras que empiezan por letra o cifra: «Brisa (ejemplo)» es «B» */
+  const words = (n || "?").trim().split(/\s+/).filter(w => /^[\p{L}\d]/u.test(w));
+  if (!words.length) return "?";
   const last = words[words.length - 1];
   if (words.length > 1 && /^\d+$/.test(last)) return ((words[0][0] || "") + last).toUpperCase();
   return words.slice(0, 2).map(w => w[0] || "").join("").toUpperCase() || "?";

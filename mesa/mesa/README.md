@@ -216,6 +216,44 @@ eso y no solo adaptada:
   haga zoom solo al escribir, y se respeta la franja inferior del iPhone.
 - La barra de herramientas del mapa rueda de lado en vez de comerse el tablero.
 
+## Tutorial guiado
+
+Cada pantalla trae su **recorrido guiado**, al que se llega desde el botón
+**?** de la cabecera (el DM también desde **⋯ → Tutorial**, y en la entrada
+desde **Tutorial**). La primera vez se ofrece solo, con un aviso pequeño junto
+a ese botón que desaparece en cuanto empiezas a usar la pantalla.
+
+El recorrido **señala el control de verdad**: oscurece el resto, lo rodea y lo
+explica en una tarjeta al lado. Si hace falta, cambia de pestaña, despliega
+una ficha o abre la ventana que toca para enseñarla, y la vuelve a cerrar al
+pasar de paso; nunca cambia la partida. Mientras se lee, el control se puede
+probar.
+
+Para que se entienda aunque la partida esté vacía, el tutorial del DM trae
+**ejemplos**: pone en tu mesa a Brisa, una clériga de ejemplo con vida
+temporal, un veneno de dos rondas, concentración, espacios de conjuro gastados
+y Bendecir encendido, y a un goblin herido; con ellos explica cada parte de la
+tarjeta y de la ficha, la ventana de estados, la de ataque y la de conjuros,
+y enseña un **combate de ejemplo** en el que se ve pasar el turno. En el mapa,
+un paso te enseña el plano **tal como lo ve la party**. Los ejemplos solo
+existen en tu pantalla, llevan una etiqueta que lo dice, desaparecen al
+cerrar el tutorial y nada de lo que se haga con ellos llega a la partida (sus
+tiradas quedan como secretas, solo para ti).
+
+Va **por secciones**: el del DM tiene quince (la cabecera, crear personajes,
+las tarjetas, la ficha desplegada, el bestiario, el combate, dados y charla,
+tres del mapa, sus ajustes, descansos, gestionar la mesa, la biblioteca y los
+atajos de teclado); el del jugador, ocho; y hay otro para la tele y otro para
+la entrada. Desde el **índice** se salta a cualquier sección, se ve cuáles has
+terminado, se sigue donde lo dejaste y se **busca un control por su nombre**
+(«niebla», «susurrar», «iniciativa») para ir directo a su explicación.
+**Siguiente**, **Atrás** o las flechas `←` `→` avanzan; «Saltar a la siguiente
+sección» se salta lo que ya sabes; `Esc` lo cierra. Los recorridos de otras
+pantallas también se pueden leer (el DM puede ver qué tiene el jugador): sin
+nada que señalar, la tarjeta sale en el centro.
+
+Está en español y en inglés, según el idioma elegido.
+
 ## Las tres vistas
 
 | | DM | Jugador | Pantalla |
@@ -262,7 +300,16 @@ el dado, suma Constitución y se cura). A los monstruos no les afecta ninguno.
 
 El botón **↶** (o `Ctrl/Cmd + Z`) deshace el último cambio. Se guardan los
 veinte últimos, así que un daño mal apuntado o un borrado por error se arreglan
-en un segundo.
+en un segundo. La biblioteca no entra en el deshacer: lo que escribas en un
+cuaderno no se pierde al deshacer un golpe.
+
+**Al azar** (arriba, junto a «Añadir personaje») crea un personaje entero de
+nivel 1 con un clic y lo sienta directamente en la mesa y en el mapa, en la
+primera casilla libre junto a la party: especie, clase, trasfondo,
+características repartidas según la clase, habilidades, conjuros, equipo y un
+nombre a juego con su especie. Dentro del creador paso a paso, el mismo botón
+rellena todo y te deja en el resumen para cambiar lo que quieras antes de
+crearlo.
 
 ## Combate
 
@@ -395,6 +442,10 @@ probar «casilla al doble» y «a la mitad». Después **propone los muros y las
 puertas** sobre el plano, con un control de sensibilidad, para revisarlos
 antes de ponerlos. Es una propuesta: se corrige con las herramientas de
 siempre. Las dos ventanas están también en los ajustes del mapa.
+
+La flecha a la izquierda del selector de mapa **oculta la barra de
+herramientas** y el tablero ocupa todo el alto; un botón pequeño en la esquina
+del plano la vuelve a sacar.
 
 ### La propuesta de muros aprende de tus planos
 
@@ -630,11 +681,72 @@ uno se propone cómo colocarlo; todo se puede cambiar.
 Están **sintetizados para Mesa** con `tools/sonidos/generar.mjs` (hace falta
 ffmpeg): no hay grabaciones ni música de nadie, así que se pueden usar y
 compartir sin pedir permiso. Van en estéreo y se apoyan en modelos físicos:
-las gotas son golpes y burbujas que resuenan como en el agua de verdad, y la
-gente habla con una voz humana sintetizada (pulso glotal, formantes,
-consonantes y entonación) a la distancia justa para no entenderse. Cada
+las gotas son golpes y burbujas que resuenan como en el agua de verdad. La
+gente no habla en primer plano (una voz sintética de cerca suena a robot):
+la taberna y la plaza son un rumor lejano de decenas de voces, con la sala
+alrededor, y lo que se oye de cerca son jarras, pasos, cascos, campanas y un
+laúd al fondo; el templo es un órgano y la cripta, piedra y viento. Cada
 aparato guarda los que ha sonado y no los vuelve a descargar, y suelta de la
 memoria los que llevan un rato sin sonar.
+
+## La biblioteca del DM
+
+Abajo a la izquierda, solo en la vista del DM, hay una **estantería** con los
+libros de la partida. Un toque en un lomo lo saca de la balda y lo abre en
+doble página: a la izquierda el índice y el buscador, a la derecha el texto
+en pergamino, con letra capitular, filigranas y las runas de la tapa
+encendidas. Las flechas del pie (o `←` `→`) pasan de sección con su paso de
+página, `Esc` lo cierra y cada libro recuerda por dónde ibas. La flecha de la
+estantería la guarda y deja solo un botón «Biblioteca» para la vista limpia.
+
+Vienen **cuatro libros de serie**, que no se pueden quitar:
+
+- **Reglas de D&D**: la historia de las ediciones (de la caja blanca de 1974 a
+  la revisión de 2024), lo esencial de la quinta edición, una sección para las
+  reglas de 2014 (SRD 5.1) y otra para las de 2024 (SRD 5.2), y luego combate,
+  magia, aventura y exploración, estados, equipo, reglas opcionales y
+  herramientas para el DM.
+- **Manual del jugador**: una sección por clase (rasgos básicos, progresión de
+  los 20 niveles, rasgos, la subclase del SRD, el resto de subclases y qué
+  cambia en 2024), más especies y trasfondos.
+- **Compendio de conjuros**: los 316 conjuros del SRD 5.1, por nivel (trucos y
+  niveles 1 a 9) con su ficha completa, más índices por clase y por escuela.
+  Las fórmulas se tiran con un clic, como en el resto de Mesa.
+- **Bestiario**: las criaturas de Mesa y las tuyas, por tipo (aberraciones,
+  bestias, dragones…) con la ficha completa, y un índice por desafío.
+
+**Buscar** no distingue mayúsculas ni tildes («bola de fuego», «dragon rojo»),
+marca lo encontrado y lleva a la sección; se puede buscar en todo el libro o
+solo en la sección abierta. La lupa de la estantería busca en **todos los
+libros a la vez**.
+
+Con el **+** añades tus documentos:
+
+- **PDF** (hasta 150 MB): al subirlo se saca su texto en tu navegador, con
+  pdf.js, para poder buscar; su índice se convierte en secciones (y, si no
+  tiene, va por bloques de diez páginas). «Ver original» enseña la página tal
+  cual.
+- **Texto o Markdown**: los títulos se convierten en secciones.
+- **Imagen**: un mapa, una carta o un retrato, con un botón para enseñarla a
+  la mesa.
+- **Cuaderno**: tu documentación, escrita en la propia página y por
+  secciones; se guarda sola mientras escribes.
+
+Dentro de cada libro tuyo puedes buscar, descargarlo, renombrarlo, cambiar el
+color de la tapa o **quitarlo de la biblioteca**. La biblioteca **solo la ve el
+DM**: ni los jugadores ni la tele la reciben, y solo el DM puede subir
+documentos.
+
+### Créditos de los libros
+
+Las reglas, las clases y los conjuros están resumidos y redactados para Mesa a
+partir del *System Reference Document* 5.1 y 5.2 de Wizards of the Coast,
+publicados bajo [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/legalcode);
+cada libro lo recuerda en su sección de créditos. No se copia el texto de los
+manuales oficiales, que no tienen licencia libre: si los tienes en PDF, súbelos
+a tu biblioteca y se quedan en tu partida. Los PDF se leen con
+[pdf.js](https://mozilla.github.io/pdf.js/) de Mozilla (Apache 2.0, en
+`public/vendor/pdfjs/`).
 
 ## Ver un área antes de lanzarla
 
@@ -740,6 +852,11 @@ quien recibe un conjuro. Se apagan con un toque sin borrarlos.
 
 El registro se filtra por **Todo**, **Tiradas** o **Charla**, y en el móvil sale
 un punto en la pestaña cuando hay algo sin leer.
+
+En el ordenador, la flecha de la cabecera **pliega el panel** en una tira
+estrecha a la derecha y la mesa o el mapa ganan ese ancho; si llega algo nuevo
+al registro, la tira lo marca con un punto. Se despliega con la misma flecha o
+tocando la tira, y cada aparato recuerda cómo lo dejaste.
 
 Desde **⋯ → Pedir una tirada a la party** eliges qué pides, a quién y con qué
 CD; a cada jugador le sale un botón grande en su móvil y, al pulsarlo, tira y se
@@ -883,6 +1000,13 @@ public/
     dice-panel.js      panel de dados y registro
     char-editor.js     editor de fichas
     catalog.js         criaturas de partida
+    library.js         la biblioteca del DM: estantería, libro abierto y documentos
+    library-core.js    trocear Markdown y PDF en secciones y buscar en los libros
+    tour.js            el tutorial guiado: foco, tarjeta, índice y buscador
+    tour-content.js    los recorridos de cada pantalla, por secciones (español e inglés)
+    tour-example.js    las fichas de ejemplo del tutorial (solo en la pantalla del DM)
+    libros/            los cuatro libros de serie (reglas, jugador, conjuros, bestiario)
+  vendor/pdfjs/        pdf.js de Mozilla, para leer los PDF de la biblioteca
 data/                  la partida y las imágenes (se crea al arrancar)
 ```
 
@@ -893,7 +1017,7 @@ data/                  la partida y las imágenes (se crea al arrancar)
   casillas que su party ve; el servidor lo comprueba, no el navegador.
 - Lo que un jugador no debe saber no se le manda: ni la CA de un monstruo, ni
   sus PV exactos, ni tus notas del mapa, ni las plantillas que no compartas, ni
-  los susurros de otro.
+  los susurros de otro, ni tu biblioteca.
 - Las tiradas de ataque y el reparto de puntos de vida se resuelven en el
   servidor. Nadie puede decidir desde su navegador que ha impactado.
 - La voz va de aparato a aparato. El servidor solo reenvía los mensajes para
@@ -908,6 +1032,12 @@ data/                  la partida y las imágenes (se crea al arrancar)
   wifi, va sin cifrar salvo que arranques con `--cert`.
 
 ## Lo que aún no hace
+
+- Los libros de serie son resúmenes del SRD, no los manuales oficiales
+  completos, y están en español (la interfaz sí se traduce). De las subclases
+  que no son del SRD solo va el nombre y la idea.
+- Un PDF escaneado (páginas que son fotos) no tiene texto que buscar: se lee
+  con «Ver original», pero el buscador no lo encuentra.
 
 - Los conjuros de la biblioteca son los del SRD hasta nivel 5. Los que no
   hacen daño ni ponen un estado (Escudo de fe, Bendecir, Revivificar…) se

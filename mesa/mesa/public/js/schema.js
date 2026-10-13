@@ -660,7 +660,38 @@ export function emptyDoc() {
     bestiary: [],
     maps: [map],
     session: { ...SESSION_DEFAULTS, combat: { ...SESSION_DEFAULTS.combat, order: [] }, activeMapId: map.id },
-    log: []
+    log: [],
+    library: []
+  };
+}
+
+/* ---------- Biblioteca del DM ----------
+   Lo que el DM sube o escribe: un PDF (con su texto aparte, para buscar), un
+   texto o Markdown, una imagen o un cuaderno que escribe él mismo. Los
+   archivos viven en la carpeta de imágenes; aquí solo va la ficha del libro
+   y, en los cuadernos, sus secciones. Solo lo ve el DM. */
+export const LIBRARY_KINDS = ["pdf", "text", "image", "notebook"];
+export const MAX_LIBRARY = 60;
+const fileRef = v => /^[\w.-]{1,80}$/.test(String(v || "")) ? String(v) : "";
+export function normalizeLibraryItem(raw = {}) {
+  const kind = LIBRARY_KINDS.includes(raw.kind) ? raw.kind : "notebook";
+  return {
+    id: /^[\w-]{1,40}$/.test(String(raw.id || "")) ? String(raw.id) : uid(),
+    title: String(raw.title || "Sin título").trim().slice(0, 80) || "Sin título",
+    kind,
+    fileId: fileRef(raw.fileId),
+    textId: fileRef(raw.textId),
+    fileName: String(raw.fileName || "").slice(0, 120),
+    pages: clamp(Math.trunc(num(raw.pages)), 0, 5000),
+    color: /^#[0-9a-f]{6}$/i.test(String(raw.color || "")) ? raw.color : "#6b3a2a",
+    addedAt: num(raw.addedAt, Date.now()),
+    sections: kind === "notebook" && Array.isArray(raw.sections)
+      ? raw.sections.slice(0, 80).map(x => ({
+          id: /^[\w-]{1,40}$/.test(String(x && x.id || "")) ? String(x.id) : uid(),
+          title: String((x && x.title) || "Sección").slice(0, 80),
+          text: String((x && x.text) || "").slice(0, 20000)
+        }))
+      : []
   };
 }
 
@@ -706,7 +737,8 @@ export function migrate(raw) {
     bestiary: ownBeasts(src.bestiary),
     maps,
     session,
-    log: Array.isArray(src.log) ? src.log.slice(-150) : []
+    log: Array.isArray(src.log) ? src.log.slice(-150) : [],
+    library: Array.isArray(src.library) ? src.library.slice(0, MAX_LIBRARY).map(normalizeLibraryItem) : []
   };
 }
 

@@ -49,7 +49,7 @@ function apply() { syncAmbient(ambientOn(myRole) ? heard : []); }
 export function ambientToggle(role, withLabel = false) {
   const b = document.createElement("button");
   b.type = "button";
-  b.className = withLabel ? "btn sm" : "icon-btn";
+  b.className = (withLabel ? "btn sm" : "icon-btn") + " ambient-btn";
   const paint = () => {
     const on = ambientOn(role);
     b.setAttribute("aria-pressed", String(on));

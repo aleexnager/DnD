@@ -184,8 +184,17 @@ let queue = [];
 let flushing = false;
 
 /* Las operaciones se agrupan: cien clics de daño no son cien peticiones. */
+/* Un filtro para las operaciones antes de salir: el tutorial lo pone
+   mientras enseña sus fichas de ejemplo, para que nada de lo que se haga con
+   ellas llegue a la partida. Devuelve la operación (quizá cambiada) o null
+   para no mandarla. */
+let guard = null;
+export function setOpGuard(fn) { guard = fn || null; }
+
 export function op(type, extra = {}) {
-  queue.push({ type, ...extra });
+  let o = { type, ...extra };
+  if (guard) { o = guard(o); if (!o) return false; }
+  queue.push(o);
   if (!flushing) {
     flushing = true;
     queueMicrotask(flush);

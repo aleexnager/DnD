@@ -28,7 +28,7 @@ export const SOUND_LIBRARY = [
   {"id":"lava","name":"Lava y volcán","cat":"fuego","file":"sonidos/lava.mp3","len":30,"mode":"point","radius":8,"volume":0.8},
   {"id":"taberna","name":"Taberna llena","cat":"lugares","file":"sonidos/taberna.mp3","len":36,"mode":"room","radius":6,"volume":0.7},
   {"id":"ciudad","name":"Plaza de la ciudad","cat":"lugares","file":"sonidos/ciudad.mp3","len":40,"mode":"map","radius":6,"volume":0.7},
-  {"id":"templo","name":"Templo y coro","cat":"lugares","file":"sonidos/templo.mp3","len":40,"mode":"room","radius":6,"volume":0.7},
+  {"id":"templo","name":"Templo y órgano","cat":"lugares","file":"sonidos/templo.mp3","len":40,"mode":"room","radius":6,"volume":0.7},
   {"id":"biblioteca","name":"Biblioteca","cat":"lugares","file":"sonidos/biblioteca.mp3","len":30,"mode":"room","radius":6,"volume":0.7},
   {"id":"barco","name":"Barco en alta mar","cat":"lugares","file":"sonidos/barco.mp3","len":36,"mode":"map","radius":6,"volume":0.7},
   {"id":"cueva","name":"Cueva con goteo","cat":"subterraneo","file":"sonidos/cueva.mp3","len":30,"mode":"map","radius":6,"volume":0.7},

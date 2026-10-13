@@ -6,12 +6,13 @@
 
 import { esc, toast, shrinkImage, imgURL, initials, confirmBox, el } from "./util.js";
 import { SKILLS, normalizeChar, modOf, uid } from "./schema.js";
-import { op, uploadImage } from "./net.js";
+import { op, uploadImage, store } from "./net.js";
+import { reachableCells, fits } from "./los.js";
 import { icon, withIcon } from "./icons.js";
 import { spellTags } from "./spellbook.js";
 import { SPELL_LIBRARY } from "./spells.js";
 import { CLASSES, SPECIES, BACKGROUNDS, STANDARD_ARRAY, POINT_COST, POINTS, ALIGNMENTS, ARMOR, WEAPONS,
-  ABIL_KEYS, finalScores, armorClass, buildCharacter } from "./creador-datos.js";
+  ABIL_KEYS, finalScores, armorClass, buildCharacter, randomChoice } from "./creador-datos.js";
 
 const ABIL = { str: "Fuerza", dex: "Destreza", con: "Constitución", int: "Inteligencia", wis: "Sabiduría", cha: "Carisma" };
 const ABBR = { str: "FUE", dex: "DES", con: "CON", int: "INT", wis: "SAB", cha: "CAR" };
@@ -24,7 +25,32 @@ const METHODS = [["estandar", "Serie estándar"], ["puntos", "Compra de puntos"]
    variable CSS, una relativa se resolvería desde la hoja de estilos */
 const glyph = id => `<span class="bd-art"><span class="bd-glyph" style="--glyph:url('${new URL(`art/creador/${id}.svg`, location.href).href}')"></span></span>`;
 
-export function openBuilder({ onManual } = {}) {
+/* Un hueco libre junto a la party en el mapa activo, para que el DM vea al
+   personaje nuevo en la mesa nada más crearlo */
+export function spotFor(c) {
+  const doc = store.doc;
+  const map = doc && doc.maps.find(m => m.id === doc.session.activeMapId);
+  if (!map) return null;
+  const party = doc.chars.filter(x => x.mapId === map.id && x.mx !== null && x.kind === "pc" && x.hp > 0);
+  const start = party.length ? { x: party[0].mx, y: party[0].my } : { x: Math.floor(map.cols / 2), y: Math.floor(map.rows / 2) };
+  const cells = [...reachableCells(map, start, 0, { budgetSquares: 14 }).entries()].sort((a, b) => a[1] - b[1]);
+  for (const [k] of cells) {
+    const [x, y] = k.split(",").map(Number);
+    if (!fits(map, doc.chars, c, x, y)) return { mapId: map.id, mx: x, my: y };
+  }
+  return null;
+}
+
+/* Al azar y directo a la mesa (el DM, con su ficha ya en el mapa) */
+export function quickRandom({ place = false } = {}) {
+  const fresh = normalizeChar({ ...buildCharacter(randomChoice().choice), id: uid() });
+  const spot = place && spotFor(fresh);
+  op("char.add", { char: spot ? { ...fresh, ...spot } : fresh });
+  toast(`${fresh.name} se sienta a la mesa`, "good");
+  return fresh;
+}
+
+export function openBuilder({ onManual, place = false } = {}) {
   const st = {
     step: "clase", seen: new Set(["clase"]),
     classId: "", classSkills: [], speciesId: "", free: [], extraSkills: [],
@@ -266,6 +292,7 @@ export function openBuilder({ onManual } = {}) {
   /* ---------- La ventana ---------- */
   const back = el(`<div class="builder-back"><div class="builder" role="dialog" aria-modal="true" aria-label="Crear personaje">
     <header class="bd-head"><h2>${icon("userPlus", 20)}<span>Crear personaje</span></h2><nav class="bd-steps" aria-label="Pasos"></nav>
+      <button type="button" class="btn sm bd-random" data-random title="Un personaje entero al azar: luego puedes cambiar lo que quieras">${withIcon("dice", "Al azar", 15)}</button>
       <button type="button" class="icon-btn" data-close aria-label="Cerrar" title="Cerrar">${icon("close")}</button></header>
     <div class="bd-body"></div>
     <footer class="bd-foot"><button type="button" class="btn" data-prev>${withIcon("prev", "Atrás", 15)}</button>
@@ -313,6 +340,12 @@ export function openBuilder({ onManual } = {}) {
     if (!t || t.disabled) return;
     const d = t.dataset;
     if ("close" in d) return askClose();
+    if ("random" in d) {
+      /* Todo elegido de golpe; se va al resumen, que se puede retocar paso a paso */
+      Object.assign(st, randomChoice().state, { avatarId: st.avatarId, player: st.player });
+      for (const k of steps()) st.seen.add(k);
+      return go("ficha");
+    }
     if (d.go) return go(d.go);
     if ("prev" in d) { const l = steps(); return go(l[Math.max(0, l.indexOf(st.step) - 1)]); }
     if ("manual" in d) { close(); return onManual(); }
@@ -379,7 +412,8 @@ export function openBuilder({ onManual } = {}) {
 
   function create() {
     const fresh = normalizeChar({ ...buildCharacter(choice()), id: uid() });
-    op("char.add", { char: fresh });
+    const spot = place && spotFor(fresh);
+    op("char.add", { char: spot ? { ...fresh, ...spot } : fresh });
     toast(fresh.name + " se sienta a la mesa", "good");
     close();
   }

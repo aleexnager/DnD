@@ -828,6 +828,10 @@ export class MapView {
     const X = c => g.originX + c * g.cell;
     const Y = c => g.originY + c * g.cell;
     const dm = this.mode === "dm";
+    /* El DM viendo el mapa como la party (lo usa el tutorial): lo que no ven,
+       a oscuras, y sin lo que solo ve el DM */
+    const preview = dm && !!this.partyPreview;
+    const asParty = !dm || preview;
 
     /* Plano y cuadrícula: lo más caro de pintar (una imagen grande escalada)
        y lo que menos cambia. Se pinta una vez en un lienzo aparte y se copia
@@ -846,7 +850,14 @@ export class MapView {
       seen = map.visible ? new Set(map.visible) : null;
     }
 
-    if (seen) {
+    if (seen && preview) {
+      for (let y = 0; y < map.rows; y++) for (let x = 0; x < map.cols; x++) {
+        const k = cellKey(x, y);
+        if (seen.has(k)) continue;
+        ctx.fillStyle = known.has(k) ? "rgba(4,5,9,.55)" : "rgba(4,5,9,.94)";
+        ctx.fillRect(X(x), Y(y), g.cell + 0.5, g.cell + 0.5);
+      }
+    } else if (seen) {
       if (dm) {
         ctx.fillStyle = COLORS.sight;
         seen.forEach(k => {
@@ -861,7 +872,7 @@ export class MapView {
     /* Terreno pintado: niebla, oscuridad y luces fijas */
     for (const [k, kind] of Object.entries(map.cells || {})) {
       const [x, y] = k.split(",").map(Number);
-      if (!dm && seen && !seen.has(k) && !known.has(k)) continue;
+      if (asParty && seen && !seen.has(k) && !known.has(k)) continue;
       const px = X(x), py = Y(y);
       if (kind === "fog") {
         ctx.fillStyle = "rgba(168,178,196,.30)";
@@ -887,7 +898,7 @@ export class MapView {
 
     /* Lo que solo ve el DM: salas que se revelan al entrar, y lo que ha
        decidido enseñar u ocultar a mano */
-    if (dm) this.dmLayers(ctx, g, map, X, Y);
+    if (dm && !preview) this.dmLayers(ctx, g, map, X, Y);
 
     /* Alcance de movimiento mientras se arrastra */
     if (this.drag && this.drag.range) {
@@ -911,7 +922,7 @@ export class MapView {
     for (const [key, type] of Object.entries(map.edges || {})) {
       const [x, y, dir] = key.split(",");
       const cx = Number(x), cy = Number(y);
-      if (!dm && seen && !seen.has(cellKey(cx, cy)) && !known.has(cellKey(cx, cy))
+      if (asParty && seen && !seen.has(cellKey(cx, cy)) && !known.has(cellKey(cx, cy))
         && !seen.has(cellKey(cx - (dir === "v" ? 1 : 0), cy - (dir === "h" ? 1 : 0)))) continue;
       let x1, y1, x2, y2;
       if (dir === "v") { x1 = X(cx); y1 = Y(cy); x2 = X(cx); y2 = Y(cy + 1); }
@@ -972,7 +983,7 @@ export class MapView {
 
     /* Accesos a otros mapas */
     for (const p of map.portals || []) {
-      if (!dm && seen && !seen.has(cellKey(p.x, p.y)) && !known.has(cellKey(p.x, p.y))) continue;
+      if (asParty && seen && !seen.has(cellKey(p.x, p.y)) && !known.has(cellKey(p.x, p.y))) continue;
       const cx = X(p.x) + g.cell / 2, cy = Y(p.y) + g.cell / 2;
       ctx.save();
       /* El DM ve adónde lleva un pasadizo dentro del mismo mapa */
@@ -999,10 +1010,10 @@ export class MapView {
        y con el borde a rayas, pero igual de sólidas: antes se quedaban en un
        emoji translúcido que casi no se veía sobre un plano oscuro. */
     for (const pin of map.pins || []) {
-      if (!dm && !pin.party) continue;
+      if (asParty && !pin.party) continue;
       this.pinBadge(ctx, g, pin, X, Y);
     }
-    if (dm) for (const s of map.sounds || []) this.soundBadge(ctx, g, s, X, Y, this.tool === "sound");
+    if (dm && !preview) for (const s of map.sounds || []) this.soundBadge(ctx, g, s, X, Y, this.tool === "sound");
 
     /* Dibujos a mano alzada, y el que se está haciendo ahora */
     for (const d of map.drawings || []) this.stroke2d(ctx, g, d.points, d.color, d.width, X, Y, dm && !d.party);
@@ -1034,7 +1045,8 @@ export class MapView {
         else this._held.delete(c.id);
       }
       /* Lo recordado se pinta aunque ahora mismo no se vea: para eso se recuerda. */
-      if (!dm && !c.memory && seen && !occupied({ ...c, mx: x, my: y }).some(([ox, oy]) => seen.has(cellKey(ox, oy)))) continue;
+      if (preview && c.hidden) continue;
+      if (asParty && !c.memory && seen && !occupied({ ...c, mx: x, my: y }).some(([ox, oy]) => seen.has(cellKey(ox, oy)))) continue;
       let pos;
       if (direct) {
         this._glide.set(c.id, { fx: x, fy: y, tx: x, ty: y, t0: t, mapId: c.mapId, frame: this._frame });

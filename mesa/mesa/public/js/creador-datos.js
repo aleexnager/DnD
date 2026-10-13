@@ -255,3 +255,76 @@ export function buildCharacter(choice) {
     castAbility: cls.caster || "", slots: [cls.slots || 0, 0, 0, 0, 0, 0, 0, 0, 0]
   };
 }
+
+/* ---------- Al azar ----------
+   Un personaje entero en un clic: clase, especie, trasfondo, características
+   repartidas con cabeza (lo que más necesita su clase primero, luego la
+   Constitución), habilidades sin repetir, conjuros y un nombre que suena a
+   su especie. Las sílabas son nuestras: ningún nombre sale de un libro. */
+const SYLLABLES = {
+  humano: { m: [["Al", "Ber", "Ro", "Gon", "Ma", "Se", "Lo", "Fer", "Tris", "Ed", "Os"], ["dric", "nal", "drigo", "zalo", "rtín", "bas", "renzo", "nando", "tán", "mund", "valdo"]],
+    f: [["El", "Ji", "Ur", "Bea", "Ma", "Al", "Le", "Ro", "Ca", "Is", "Ma"], ["vira", "mena", "raca", "triz", "falda", "dara", "onor", "sana", "talina", "olda", "tilde"]],
+    s: ["de Valdorn", "Pedrafría", "Hojarasca", "del Molino", "Altozano", "Cuervoalto", "Manoabierta", "Robledo"] },
+  elfo: { m: [["Ae", "Thal", "Syl", "Lae", "Ery", "Fae", "Ilm", "Var"], ["lar", "ion", "van", "ris", "dan", "lith", "aril", "endor"]],
+    f: [["Ae", "Lia", "Syl", "Nae", "Ili", "Eli", "Shan", "Thia"], ["lyn", "rel", "via", "riel", "wen", "lara", "dra", "nis"]],
+    s: ["Hojaluna", "Brisaplata", "Rocío Estelar", "Ramaserena", "Velasombra"] },
+  enano: { m: [["Thor", "Bar", "Dur", "Grim", "Bal", "Ror", "Kil", "Dain"], ["in", "rik", "gan", "nar", "dur", "gar", "bek", "ok"]],
+    f: [["Hil", "Dis", "Bru", "Gun", "Ama", "Vis", "Tor", "Eld"], ["da", "ra", "nhild", "loda", "ber", "tra", "gret", "ja"]],
+    s: ["Yunquehondo", "Barbadehierro", "Martillogrís", "Piedraforja", "Hachaferrea"] },
+  mediano: { m: [["Mi", "Pe", "Ro", "Wel", "Cor", "Mer", "Fin", "Os"], ["lo", "rrin", "sco", "by", "rin", "ric", "nan", "bert"]],
+    f: [["Ro", "Li", "Ver", "Ca", "Ma", "Pe", "Bel", "Ki"], ["sie", "dda", "na", "llie", "rigold", "onia", "la", "ra"]],
+    s: ["Buenbarril", "Colinaverde", "Pieligero", "Tejadilla", "Altosauce"] },
+  draconido: { m: [["Ar", "Kri", "Ba", "Ghe", "Med", "Na", "Tor", "Dor"], ["jhan", "v", "lasar", "sh", "rash", "dar", "inn", "nax"]],
+    f: [["Ak", "Bi", "Da", "Far", "Ha", "Kava", "Sora", "Thav"], ["ra", "ri", "ar", "ideh", "vilar", "rith", "na", "a"]],
+    s: ["del Clan Escamarroja", "Alarrota", "Hijo del Volcán", "Garra de Bronce"] },
+  gnomo: { m: [["Fiz", "Bim", "Nim", "Tock", "Wiz", "Gim", "Bod", "Zook"], ["ble", "wick", "pip", "ket", "zel", "ble", "dyn", "o"]],
+    f: [["Bree", "Nis", "Ella", "Lilli", "Roy", "Tana", "Zan", "Ori"], ["na", "sa", "wyn", "pip", "ana", "bel", "na", "ka"]],
+    s: ["Engranaje", "Chispatuerca", "Muelleloco", "Relojerillo"] },
+  semiorco: { m: [["Grul", "Dench", "Hen", "Kru", "Shum", "Thok", "Ush", "Mok"], ["sh", "", "k", "sk", "p", "ar", "dra", "gar"]],
+    f: [["Baga", "Emen", "Engo", "Myev", "Ovak", "Sutha", "Volen", "Yev"], ["", "", "ng", "", "", "", "", "elda"]],
+    s: ["Rompehuesos", "Colmillo Roto", "el Paciente", "Puñohondo"] },
+  tiefling: { m: [["Ak", "Dam", "Ek", "Kai", "Le", "Mor", "Ska", "Za"], ["menos", "akos", "emon", "ron", "ucis", "thos", "mos", "ruel"]],
+    f: [["Ak", "Bry", "Kal", "Ne", "Or", "Ri", "Ma", "Ve"], ["ta", "seis", "lista", "mia", "ianna", "eta", "kara", "xa"]],
+    s: ["Esperanza", "Ruina", "Ceniza", "Canción", "Penitencia", "Promesa"] }
+};
+SYLLABLES.semielfo = { m: [SYLLABLES.humano.m[0], SYLLABLES.elfo.m[1]], f: [SYLLABLES.elfo.f[0], SYLLABLES.humano.f[1]], s: [...SYLLABLES.humano.s, ...SYLLABLES.elfo.s] };
+
+const pickOne = (R, list) => list[Math.floor(R() * list.length)];
+function sample(R, list, n) {
+  const pool = [...list], out = [];
+  while (out.length < n && pool.length) out.push(pool.splice(Math.floor(R() * pool.length), 1)[0]);
+  return out;
+}
+
+export function randomName(speciesId, R = Math.random) {
+  const t = SYLLABLES[speciesId] || SYLLABLES.humano;
+  const g = R() < 0.5 ? t.m : t.f;
+  const first = pickOne(R, g[0]) + pickOne(R, g[1]);
+  return R() < 0.6 ? `${first} ${pickOne(R, t.s)}` : first;
+}
+
+/* Devuelve lo mismo que elegiría alguien en el creador, paso por paso */
+export function randomChoice(R = Math.random) {
+  const cls = pickOne(R, CLASSES), sp = pickOne(R, SPECIES);
+  const spSkills = sp.skills || [];
+  const classSkills = sample(R, cls.from.filter(k => !spSkills.includes(k)), cls.choose);
+  const extraSkills = sp.extraSkills ? sample(R, ALL_SKILLS.filter(k => !classSkills.includes(k) && !spSkills.includes(k)), sp.extraSkills) : [];
+  /* Primero lo que pide la clase, luego aguantar, luego el resto al azar */
+  const order = [...new Set([...cls.primary, "con", ...sample(R, ABIL_KEYS, ABIL_KEYS.length)])];
+  const assign = Object.fromEntries(order.map((k, i) => [k, i]));
+  const base = Object.fromEntries(ABIL_KEYS.map(k => [k, STANDARD_ARRAY[assign[k]]]));
+  const free = sp.freeBonus ? order.filter(k => !(sp.bonus || {})[k]).slice(0, sp.freeBonus) : [];
+  const bg = R() < 0.85 ? pickOne(R, BACKGROUNDS.filter(b => !b.free)) : BACKGROUNDS.find(b => b.free);
+  const owned = [...classSkills, ...extraSkills, ...spSkills];
+  const repeats = bg.skills.filter(k => owned.includes(k)).length;
+  const bgSkills = sample(R, ALL_SKILLS.filter(k => !owned.includes(k) && !bg.skills.includes(k)), (bg.free || 0) + repeats);
+  const spells = cls.spells ? sample(R, cls.spells, cls.pick) : [];
+  const name = randomName(sp.id, R);
+  const alignment = pickOne(R, ALIGNMENTS);
+  return {
+    choice: { name, classId: cls.id, speciesId: sp.id, bgId: bg.id, base, free, skills: [...classSkills, ...bgSkills, ...extraSkills],
+      spells, alignment, color: cls.tone, avatarId: "", player: "" },
+    state: { classId: cls.id, classSkills, speciesId: sp.id, free, extraSkills, method: "estandar", assign, bgId: bg.id, bgSkills,
+      spells, spellsFor: cls.id, name, alignment, color: cls.tone }
+  };
+}

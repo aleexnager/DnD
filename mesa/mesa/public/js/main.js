@@ -4,6 +4,7 @@ import { $, el, esc, toast, initials, imgURL } from "./util.js";
 import { icon, withIcon } from "./icons.js";
 import { store, savedSession, forgetSession, join, lobby, ping, connect, onState, DEMO } from "./net.js";
 import { startI18n, langPicker } from "./i18n.js";
+import { tourButton } from "./tour.js";
 
 const SHARED = typeof SharedWorker === "function";
 
@@ -91,10 +92,11 @@ async function gate(wanted) {
       <button class="btn primary go" id="go">${withIcon("next", "Entrar a la partida")}</button>
       <p class="prose hint" id="hint"></p>
       <div class="install hidden" id="install"></div>
-      <div class="gate-lang" id="gateLang"></div>
+      <div class="gate-foot"><span id="gateTour"></span><div class="gate-lang" id="gateLang"></div></div>
     </div>`;
 
   $("#gateLang").appendChild(langPicker());
+  $("#gateTour").replaceWith(tourButton("gate", { label: true }));
   /* Por qué se ha vuelto a la entrada, si no ha sido por gusto */
   try {
     const why = sessionStorage.getItem("mesa.notice");

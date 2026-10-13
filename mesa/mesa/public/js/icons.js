@@ -21,6 +21,8 @@ const P = {
   shield: '<path d="M12 3.2 4.8 6v6c0 4.3 3 7.4 7.2 8.8 4.2-1.4 7.2-4.5 7.2-8.8V6L12 3.2Z"/>',
   whisper: '<path d="M20 12.5A6.5 6.5 0 0 1 13.5 19H9l-4.5 2.5.9-3.4A6.5 6.5 0 0 1 9 6h4.5a6.5 6.5 0 0 1 6.5 6.5Z"/><path d="M9 12.5h6"/>',
   undo: '<path d="M4 9h9.5A5.5 5.5 0 0 1 13.5 20H8"/><path d="M7.5 5 4 9l3.5 4"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.9.6c0 1.7-2.5 2.2-2.5 3.8"/><circle cx="12" cy="16.9" r=".9" fill="currentColor" stroke="none"/>',
+  search: '<circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5.5 5.5"/>',
   target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/>',
   ruler: '<rect x="2.6" y="8.2" width="18.8" height="7.6" rx="1.6" transform="rotate(-20 12 12)"/><path d="M7.2 8.4l1 2.4M11 6.9l1.4 3.2M14.8 5.4l1 2.4"/>',
   wall: '<path d="M3 6h18M3 12h18M3 18h18"/><path d="M9 6v6M15 12v6M6 12V6M18 6v6"/>',

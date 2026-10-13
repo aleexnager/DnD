@@ -16,6 +16,7 @@ import { sheetTabsHTML, handleSheetAct } from "./sheet.js";
 import { ambientToggle } from "./ambient.js";
 import { langPicker } from "./i18n.js";
 import { icon, withIcon } from "./icons.js";
+import { tourButton, inviteTour } from "./tour.js";
 
 let tab = "ficha";
 let lastArea = null;      // la última área de conjuro colocada en el mapa
@@ -65,6 +66,7 @@ export function mountPlayer(root) {
         <span id="voiceSlot"></span>
         <span id="ambientSlot"></span>
         <span id="plang"></span>
+        <span id="tourSlot"></span>
         <button class="icon-btn" id="leaveBtn" title="Salir de la partida" aria-label="Salir de la partida">${icon("exit")}</button>
       </header>
       <div class="turn-flash hidden" id="turnFlash"></div>
@@ -86,6 +88,9 @@ export function mountPlayer(root) {
   $("#plang", root).appendChild(langPicker());
   $("#voiceSlot", root).replaceWith(voiceWidget());
   $("#leaveBtn", root).addEventListener("click", () => leave());
+  const help = tourButton("player");
+  $("#tourSlot", root).replaceWith(help);
+  setTimeout(() => inviteTour("player", help), 1500);
   $("#ambientSlot", root).replaceWith(ambientToggle("player"));
   onStatus(ok => {
     $("#offline", root).classList.toggle("hidden", ok);

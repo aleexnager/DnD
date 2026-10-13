@@ -9,7 +9,7 @@
 import { esc } from "./util.js";
 import { t } from "./i18n.js";
 
-const DICE = String.raw`\b\d{0,2}d(?:4|6|8|10|12|20|100)\b(?:\s*[+\-−]\s*\d{1,3}\b(?!\s*d))?`;
+const DICE = String.raw`\b\d{0,2}d(?:4|6|8|10|12|20|100)\b(?:\s*[+\-−]\s*\d{1,3}\b(?!\s*d\d))?`;
 const TO_HIT = String.raw`[+\-−]\d{1,2}(?=\s+(?:al ataque|to hit))`;
 const FIND = new RegExp(`(${DICE})|(${TO_HIT})`, "gi");
 

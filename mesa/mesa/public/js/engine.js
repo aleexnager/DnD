@@ -11,7 +11,7 @@
      absorbImages(d) saca las imágenes incrustadas de una copia antigua
      onPresence()    avisa de que ha cambiado quién está conectado */
 
-import { emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier, withBuffs, canSneak, canSmite, sneakDice, smiteDice, smiteFoe } from "./schema.js";
+import { normalizeLibraryItem, MAX_LIBRARY, emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier, withBuffs, canSneak, canSmite, sneakDice, smiteDice, smiteFoe } from "./schema.js";
 import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells, partyRoomFrame } from "./los.js";
 import { roll, detail } from "./dice.js";
 import { cutWalls, doorAt } from "./freewalls.js";
@@ -1058,10 +1058,28 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         if (!dm) return "Solo el DM";
         const prev = history.pop();
         if (!prev) return "No queda nada que deshacer";
+        /* La biblioteca no se deshace: escribir en un cuaderno no debe
+           comerse el «deshacer» de la partida, ni deshacer la partida
+           borrar lo escrito después */
+        const library = doc.library;
         doc = JSON.parse(prev);
+        doc.library = library;
         return "SKIP_HISTORY";
       }
 
+      case "library.set": {
+        if (!dm) return "Solo el DM";
+        const item = normalizeLibraryItem(op.item || {});
+        const list = doc.library || [];
+        const at = list.findIndex(x => x.id === item.id);
+        if (at < 0 && list.length >= MAX_LIBRARY) return `La biblioteca ya tiene ${MAX_LIBRARY} libros`;
+        doc.library = at < 0 ? [...list, item] : list.map(x => x.id === item.id ? item : x);
+        break;
+      }
+      case "library.remove":
+        if (!dm) return "Solo el DM";
+        doc.library = (doc.library || []).filter(x => x.id !== op.id);
+        break;
       case "doc.replace":
         if (!dm) return "Solo el DM";
         doc = await absorbImages(migrate(op.doc));
@@ -1170,7 +1188,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
   /* Aplica un lote. Si una operación falla, las anteriores ya se aplicaron y
      hay que repartirlas igual: por eso se devuelve cuántas entraron. */
   async function run(client, ops) {
-    const worthRemembering = ops.some(o => o && !["ping", "chat", "log.add", "request.done", "undo", "voice.set"].includes(o.type));
+    const worthRemembering = ops.some(o => o && !["ping", "chat", "log.add", "request.done", "undo", "voice.set", "library.set", "library.remove"].includes(o.type));
     if (worthRemembering) remember();
     let applied = 0;
     for (const op of ops) {
