@@ -9,7 +9,7 @@
 
 import {
   SR, TAU, U, pick, buf, sbuf, Biquad, filt, add, mixInto, every, reverb, mtof,
-  pluck, flute, pad, brass, choir, celesta, bell, drum, snare, shaker, swell, partials, click
+  pluck, flute, pad, brass, celesta, bell, drum, snare, shaker, swell, partials, click
 } from "./dsp.mjs";
 
 /* Pistas: cada una se pinta aparte (para ecualizarla) y luego se mezclan */
@@ -182,7 +182,7 @@ export const PIECES = {
     };
   })(),
 
-  /* Batalla épica: coro, tambores enormes y una fanfarria */
+  /* Batalla épica: cuerdas altas, tambores enormes y una fanfarria */
   "musica-epica": (() => {
     const beat = 60 / 90, bar = beat * 4, bars = 16;
     return {
@@ -193,7 +193,7 @@ export const PIECES = {
         const all = [...prog, ...prog].map(([r, q]) => chordOf(r, q));
         all.forEach((ch, k) => {
           const t = k * bar;
-          ch.forEach(m => S.put("coro", t, choir(R, mtof(m + 12), bar, { att: 0.6, rel: 1.2 }), 0.13));
+          ch.forEach(m => S.put("coro", t, pad(R, mtof(m + 12), bar, { cut: 2600, att: 0.5, rel: 1.2, det: 0.006, vib: 0.004 }), 0.11));
           for (let j = 0; j < 8; j++) S.put("cuerdas", t + j * beat / 2, pad(R, mtof((j % 2 ? ch[2] : ch[0]) - 12), beat * 0.4, { cut: 2000, att: 0.01, rel: 0.08 }), 0.17);
           S.put("bajo", t, pad(R, mtof(ch[0] - 24), bar, { cut: 450, att: 0.1, rel: 0.6 }), 0.24);
           [0, 2].forEach(b => S.put("taiko", t + b * beat, drum(R, { f: 46, drop: 1.6, dec: 0.9, noise: 0.5, ncut: 600 }), 1));

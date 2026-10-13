@@ -6,7 +6,7 @@
 
 import {
   SR, TAU, U, pick, buf, sbuf, wide, setSpread, white, pink, brown, Biquad, filt, wander, add, mixInto, scale, every, times,
-  reverb, bubble, bubbles, grain, drip, rainGrains, click, partials, fadeOut, sawOsc, talker, laughter, whisper, murmur, bell, choir, mtof
+  reverb, bubble, bubbles, grain, drip, rainGrains, click, partials, fadeOut, sawOsc, talker, murmur, bell, organ, pluck, mtof
 } from "./dsp.mjs";
 
 /* ---------- Piezas que comparten varias escenas ---------- */
@@ -192,16 +192,16 @@ function chains(R) {
   }
   return x;
 }
-/* Gente: muchas voces a distintas distancias, cada una en su sitio. Las
-   lejanas pierden agudos y fuerza; ninguna está tan cerca como para
-   entenderse. */
-function crowd(R, T, n, { men = 0.55, near = 0.3, talk = 0.55 } = {}) {
+/* Gente: el rumor de una sala llena. Muchas voces, todas lejos, solo con lo
+   sonoro del habla y sin los agudos: es lo que llega de una conversación a
+   la otra punta de la taberna y lo que no suena a máquina. */
+function crowd(R, T, n, { men = 0.55, near = 0.55, talk = 0.6, cut = [900, 2100] } = {}) {
   const x = sbuf(T);
   for (let k = 0; k < n; k++) {
     const female = R() > men, f0 = female ? U(R, 165, 235) : U(R, 88, 140);
     const dist = U(R, near, 1);
-    const v = filt(talker(R, T, { f0, female, talk }), "lp", 5200 - 3600 * dist, 0.7);
-    add(x, v, 0, 0.95 - 0.7 * dist);
+    const v = filt(talker(R, T, { f0, female, talk, consonants: false }), "lp", cut[1] - (cut[1] - cut[0]) * dist, 0.6);
+    add(x, v, 0, 1 - 0.6 * dist);
   }
   return x;
 }
@@ -235,6 +235,23 @@ function steps(R) {         // pasos sobre tablas
   for (let j = 0; j < k; j++) add(x, click(R, U(R, 140, 260), 1.5, U(R, 0.03, 0.06), U(R, 0.6, 1)), j * U(R, 0.48, 0.6));
   if (R() < 0.4) add(x, creak(R, { lo: 20, hi: 50, f: U(R, 500, 900), d: 0.3 }), U(R, 0, k * 0.5), 0.3);
   return filt(x, "lp", 2500, 0.7);
+}
+/* Una melodía de laúd sencilla que se repite en el bucle (dórico en re) */
+function luteTune(R, L, T, ev) {
+  const scale = [50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69], beat = 0.32;
+  const bars = Math.floor(L / (beat * 6));
+  const phrase = Array.from({ length: 12 }, () => Math.floor(R() * 7) + 3);
+  for (let b = 0; b < bars; b++) {
+    const root = [50, 48, 55, 50][b % 4];
+    const nb = pluck(R, mtof(root - 12), 2, { bright: 0.35, decay: 0.996 }); nb.pan = 0.55;
+    every(L, T, b * beat * 6, tt => add(ev, nb, tt, 0.7));
+    for (let j = 0; j < 6; j++) {
+      if (R() < 0.15) continue;
+      const m = scale[Math.min(scale.length - 1, phrase[(b * 6 + j) % phrase.length] + (b % 2))];
+      const s = pluck(R, mtof(m), 1.4, { bright: 0.45, decay: 0.995 }); s.pan = 0.55;
+      every(L, T, b * beat * 6 + j * beat, tt => add(ev, s, tt, j % 3 === 0 ? 0.6 : 0.42));
+    }
+  }
 }
 /* Cuervo: un graznido áspero, con ruido y aspereza, que cae de tono */
 function caw(R, f0) {
@@ -510,48 +527,70 @@ export const SCENES = {
   },
   taberna(R, T, L) {
     setSpread(0.9);
-    const people = mixInto(crowd(R, T, 22), wide(R, 1, r => murmur(r, T, { voices: 14 })), 0.5);
-    const bed = reverb(people, { room: 0.5, damp: 0.6, wet: 0.3, pre: 0.012 });
-    mixInto(bed, wide(R, 0.4, r => fireBed(r, T, { rumble: 0.5, hiss: 0.05, roar: 0.1 })), 0.06);
+    const people = mixInto(crowd(R, T, 40), wide(R, 1, r => murmur(r, T, { voices: 18, cut: 1400 })), 0.7);
+    const bed = reverb(people, { room: 0.62, damp: 0.6, wet: 0.45, dry: 0.7, pre: 0.015 });
+    mixInto(bed, wide(R, 0.4, r => fireBed(r, T, { rumble: 0.5, hiss: 0.05, roar: 0.1 })), 0.07);
     const ev = sbuf(T);
     for (const t of times(R, L, 0.9)) { const s = mug(R); every(L, T, t, tt => add(ev, s, tt, U(R, 0.15, 0.5))); }
     for (const t of times(R, L, 0.25)) { const s = clink(R); every(L, T, t, tt => add(ev, s, tt, U(R, 0.1, 0.3))); }
     for (const t of times(R, L, 0.08)) { const s = scrape(R); every(L, T, t, tt => add(ev, s, tt, U(R, 0.15, 0.35))); }
     for (const t of times(R, L, 0.07)) { const s = steps(R); every(L, T, t, tt => add(ev, s, tt, U(R, 0.25, 0.5))); }
-    for (let t = U(R, 3, 9); t < L - 3; t += U(R, 8, 14)) { const s = filt(laughter(R), "lp", U(R, 2500, 4500), 0.7); every(L, T, t, tt => add(ev, s, tt, U(R, 0.25, 0.5))); }
-    return { bed, ev: reverb(ev, { room: 0.5, damp: 0.55, wet: 0.3 }) };
+    /* Alguien toca el laúd en un rincón */
+    const lute = sbuf(T);
+    luteTune(R, L, T, lute);
+    mixInto(ev, filt(lute, "lp", 3200, 0.7), 0.5);
+    return { bed, ev: reverb(ev, { room: 0.55, damp: 0.55, wet: 0.32 }) };
   },
+
   ciudad(R, T, L) {
     setSpread(1);
-    const people = mixInto(crowd(R, T, 26, { near: 0.45, talk: 0.65 }), wide(R, 1, r => murmur(r, T, { voices: 20, cut: 1500 })), 0.7);
-    const bed = reverb(people, { room: 0.3, wet: 0.1 });
+    const people = mixInto(crowd(R, T, 44, { near: 0.6, talk: 0.65, cut: [800, 1800] }), wide(R, 1, r => murmur(r, T, { voices: 22, cut: 1300 })), 0.8);
+    const bed = reverb(people, { room: 0.3, wet: 0.14 });
     mixInto(bed, wide(R, 1, r => wind(r, T, { lo: 300, hi: 700, gust: 8, whistle: 0, rumble: 0.2 })), 0.12);
     const ev = sbuf(T);
     let t = U(R, 1, 6);
     while (t < L - 8) { const h = horsePass(R); every(L, T, t, tt => add(ev, h, tt, U(R, 0.35, 0.6))); t += U(R, 9, 15); }
+    /* Pasos sobre la piedra que cruzan cerca */
+    for (const t2 of times(R, L, 0.2)) {
+      const k = 6 + Math.floor(R() * 8), x = buf(k * 0.5 + 0.2), g = U(R, 0.2, 0.45);
+      for (let j = 0; j < k; j++) add(x, click(R, U(R, 900, 1600), 2, U(R, 0.01, 0.02), Math.sin(Math.PI * (j + 0.5) / k)), j * U(R, 0.45, 0.55));
+      every(L, T, t2, tt => add(ev, x, tt, g));
+    }
     const b = filt(bell(U(R, 200, 260)), "lp", 3000, 0.7);
     b.pan = U(R, -0.5, 0.5);
     const bt = U(R, 2, L * 0.5);
     for (let k = 0; k < 3; k++) every(L, T, bt + k * 2.2, tt => add(ev, b, tt, 0.18));
-    for (let t2 = U(R, 4, 10); t2 < L - 3; t2 += U(R, 10, 18)) { const s = filt(laughter(R), "lp", 3000, 0.7); every(L, T, t2, tt => add(ev, s, tt, 0.2)); }
+    /* Gorriones en los tejados */
+    birds(R, L, T, ev, 3, { busy: 0.6 });
     return { bed, ev: reverb(ev, { room: 0.45, wet: 0.2 }) };
   },
+
   templo(R, T, L) {
-    /* Coro sin palabras sobre acordes lentos, en una nave enorme */
+    /* Un órgano que sostiene acordes lentos en una nave enorme, una campana
+       y, de vez en cuando, pasos que resuenan en la piedra */
     setSpread(0.8);
     const ev = sbuf(T), chords = [[50, 57, 62, 65, 69], [46, 53, 58, 62, 65], [48, 55, 60, 64, 67], [45, 52, 57, 60, 64]];
     const step = L / chords.length;
     chords.forEach((ch, k) => {
       ch.forEach((m, j) => {
-        const v = choirNote(R, m, step + 1.5);
-        v.pan = (j / (ch.length - 1)) * 1.4 - 0.7;
-        every(L, T, k * step, tt => add(ev, v, tt, 0.22));
+        const v = organ(R, mtof(m), step - 0.2, { att: 0.25, rel: 1.2 });
+        v.pan = (j / (ch.length - 1)) * 1.2 - 0.6;
+        every(L, T, k * step, tt => add(ev, v, tt, 0.16));
       });
+      const ped = organ(R, mtof(ch[0] - 12), step - 0.2, { att: 0.4, rel: 1.5, ranks: [[1, 1], [2, 0.4], [4, 0.1]] });
+      ped.pan = 0;
+      every(L, T, k * step, tt => add(ev, ped, tt, 0.22));
     });
     const b = bell(U(R, 180, 220));
     every(L, T, U(R, 2, L - 8), tt => add(ev, b, tt, 0.25));
-    return { ev: reverb(ev, { room: 0.95, damp: 0.25, wet: 0.75, dry: 0.45, pre: 0.03 }) };
+    for (const t of times(R, L, 0.05)) {
+      const k = 5 + Math.floor(R() * 5), x = buf(k * 0.6 + 0.2);
+      for (let j = 0; j < k; j++) add(x, click(R, U(R, 500, 900), 1.5, 0.02, 0.8), j * 0.6);
+      every(L, T, t, tt => add(ev, x, tt, 0.15));
+    }
+    return { ev: reverb(ev, { room: 0.95, damp: 0.25, wet: 0.7, dry: 0.5, pre: 0.035 }) };
   },
+
   barco(R, T, L) {
     setSpread(1);
     const bed = wide(R, 1, r => {
@@ -620,11 +659,26 @@ export const SCENES = {
       return x;
     });
     const ev = sbuf(T);
-    for (let t = U(R, 1, 4); t < L - 3; t += U(R, 5, 9)) { const w = whisper(R, 3 + Math.floor(R() * 7)); every(L, T, t, tt => add(ev, w, tt, U(R, 0.25, 0.5))); }
+    /* Gemidos del aire por las rendijas: una resonancia estrecha que sube y baja */
+    for (let t = U(R, 1, 4); t < L - 4; t += U(R, 6, 11)) {
+      const d = U(R, 2, 4), x = buf(d), pn = pink(R), bp = new Biquad(), f0 = U(R, 180, 320), up = U(R, 1.2, 1.6);
+      for (let i = 0; i < x.length; i++) {
+        const u = i / x.length;
+        if ((i & 31) === 0) bp.set("bp", f0 * (1 + (up - 1) * Math.sin(Math.PI * u)), 18);
+        x[i] = bp.tick(pn()) * Math.pow(Math.sin(Math.PI * u), 1.5) * 6;
+      }
+      every(L, T, t, tt => add(ev, x, tt, U(R, 0.3, 0.6)));
+    }
+    /* Una losa que se arrastra, lejos */
+    const g = buf(2.5), bn = brown(R), bp = new Biquad("bp", 260, 2);
+    for (let i = 0; i < g.length; i++) { const u = i / g.length; g[i] = bp.tick(bn()) * Math.sin(Math.PI * u) * (0.6 + 0.4 * Math.sin(TAU * 13 * i / SR)) * 3; }
+    every(L, T, U(R, L * 0.2, L * 0.6), tt => add(ev, g, tt, 0.4));
+    for (let t = U(R, 0, 2); t < L; t += U(R, 3, 7)) { const s = filt(drip(R), "lp", 5000, 0.7); every(L, T, t, tt => add(ev, s, tt, U(R, 0.15, 0.4))); }
     const b = filt(bell(U(R, 95, 120), 9), "lp", 1800, 0.7);
     every(L, T, U(R, 3, L - 9), tt => add(ev, b, tt, 0.2));
     return { bed: reverb(bed, { room: 0.85, wet: 0.35 }), ev: reverb(ev, { room: 0.95, damp: 0.3, wet: 0.7, dry: 0.4 }) };
   },
+
   biblioteca(R, T, L) {
     setSpread(0.6);
     const bed = wide(R, 0.6, r => {
@@ -671,5 +725,3 @@ export const SCENES = {
   }
 };
 
-/* Una nota del coro del templo: tres voces «aah» */
-function choirNote(R, m, dur) { return choir(R, mtof(m), dur, { att: 2, rel: 2.5 }); }

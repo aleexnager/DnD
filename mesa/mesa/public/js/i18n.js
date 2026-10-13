@@ -701,7 +701,7 @@ const EN = {
   "Ventisca": "Blizzard", "Bosque de día": "Forest by day", "Bosque oscuro": "Dark forest", "Noche en el campo": "Night in the countryside",
   "Arroyo": "Stream", "Cascada": "Waterfall", "Olas en la costa": "Waves on the shore", "Pantano": "Swamp", "Hoguera": "Campfire",
   "Antorchas y braseros": "Torches and braziers", "Campamento de noche": "Camp at night", "Forja": "Forge", "Lava y volcán": "Lava and volcano",
-  "Taberna llena": "Busy tavern", "Plaza de la ciudad": "Town square", "Templo y coro": "Temple and choir", "Biblioteca": "Library",
+  "Taberna llena": "Busy tavern", "Plaza de la ciudad": "Town square", "Templo y órgano": "Temple and organ", "Biblioteca": "Library",
   "Barco en alta mar": "Ship at sea", "Cueva con goteo": "Dripping cave", "Mazmorra": "Dungeon", "Cripta": "Crypt", "Alcantarillas": "Sewers",
   "Energía arcana": "Arcane energy", "Giga de taberna": "Tavern jig", "Viaje y exploración": "Travel and exploration",
   "Descanso junto al fuego": "Rest by the fire", "Bosque feérico": "Fey forest", "Misterio": "Mystery", "Lamento": "Lament",

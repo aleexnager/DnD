@@ -39,7 +39,7 @@ const LIST = [
   ["lava", "Lava y volcán", "fuego", 30, -20, "point", 8],
   ["taberna", "Taberna llena", "lugares", 36, -21, "room"],
   ["ciudad", "Plaza de la ciudad", "lugares", 40, -22, "map"],
-  ["templo", "Templo y coro", "lugares", 40, -22, "room"],
+  ["templo", "Templo y órgano", "lugares", 40, -22, "room"],
   ["biblioteca", "Biblioteca", "lugares", 30, -27, "room"],
   ["barco", "Barco en alta mar", "lugares", 36, -21, "map"],
   ["cueva", "Cueva con goteo", "subterraneo", 30, -24, "map"],
