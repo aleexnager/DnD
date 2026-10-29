@@ -66,7 +66,7 @@ export const REGLAS = { sections: [
 { id: "magia", title: "Magia", intro: "<p>Cómo se lanzan los conjuros y qué los limita.</p>", entries: [
   E("ma-esp", "Espacios de conjuro", "<p>Lanzar un conjuro de nivel 1 o más gasta un espacio de ese nivel o mayor; se recuperan con un descanso largo (los brujos, con uno corto). Con un espacio superior, muchos conjuros mejoran. Los <b>trucos</b> no gastan espacio y crecen con el nivel del personaje.</p>"),
   E("ma-cd", "CD y ataque de conjuro", "<p><b>CD de salvación</b> = 8 + competencia + modificador de la característica de lanzamiento. <b>Ataque de conjuro</b> = competencia + ese mismo modificador. La característica es Inteligencia para magos, Sabiduría para clérigos, druidas y exploradores, y Carisma para bardos, brujos, hechiceros y paladines.</p>"),
-  E("ma-conc", "Concentración", "<p>Muchos conjuros piden concentración: solo uno a la vez. Se pierde al lanzar otro con concentración, al quedar incapacitado o al fallar una salvación de Constitución tras recibir daño (CD 10 o la mitad del daño, lo que sea mayor).</p>"),
+  E("ma-conc", "Concentración", "<p>Muchos conjuros piden concentración: solo uno a la vez. Se pierde al lanzar otro con concentración, al quedar incapacitado o al fallar una salvación de Constitución tras recibir daño (CD 10 o la mitad del daño, lo que sea mayor; en 2024, como mucho 30).</p>"),
   E("ma-comp", "Componentes", "<p><b>V</b> (verbal): hay que hablar, así que no se puede bajo Silencio. <b>S</b> (somático): una mano libre para gesticular. <b>M</b> (material): los objetos indicados, o un canalizador o bolsa de componentes; los que tienen precio hay que tenerlos, y los que se gastan desaparecen.</p>"),
   E("ma-tiempo", "Tiempo de lanzamiento", "<p>La mayoría cuesta una acción. Si en un turno lanzas un conjuro como acción adicional, el otro solo puede ser un truco de una acción (en 2014). Los <b>rituales</b> se lanzan sin gastar espacio si tardas 10 minutos más.</p>"),
   E("ma-areas", "Áreas", "<p>Cono, cubo, cilindro, línea y esfera. El punto de origen no queda incluido en un cono; en el resto, sí. Los muros y la cobertura total bloquean el área.</p>"),
@@ -78,7 +78,7 @@ export const REGLAS = { sections: [
   E("av-caida", "Caídas, asfixia y viaje forzado", "<p>Caer hace 1d6 de daño contundente por cada 10 pies, hasta 20d6, y deja derribado. Se aguanta la respiración 1 + modificador de Constitución minutos (mínimo 30 segundos). Viajar más de 8 horas pide una salvación de Constitución por hora o se gana agotamiento.</p>"),
   E("av-comida", "Comida y agua", "<p>Una libra de comida y un galón de agua al día (dos con calor). Sin comida se aguantan 3 + modificador de Constitución días; después, agotamiento cada día.</p>"),
   E("av-salto", "Saltar, trepar y nadar", "<p>Salto largo: tantos pies como tu Fuerza con carrerilla de 10 pies (la mitad sin ella). Salto alto: 3 + modificador de Fuerza. Trepar y nadar cuestan el doble de movimiento salvo que tengas esa velocidad.</p>"),
-  E("av-desc", "Descansos", "<p><b>Descanso corto</b> (1 hora): gastas dados de golpe para curarte (cada uno, su dado + modificador de Constitución). <b>Descanso largo</b> (8 horas, como mucho 2 de vigilia): recuperas todos los puntos de golpe, la mitad de los dados de golpe y los espacios de conjuro. Solo uno largo cada 24 horas.</p>"),
+  E("av-desc", "Descansos", "<p><b>Descanso corto</b> (1 hora): gastas dados de golpe para curarte (cada uno, su dado + modificador de Constitución). <b>Descanso largo</b> (8 horas, como mucho 2 de vigilia): recuperas todos los puntos de golpe y los espacios de conjuro, y los dados de golpe gastados (en 2014, solo la mitad; en 2024, todos, que es lo que hace Mesa). Solo uno largo cada 24 horas.</p>"),
   E("av-entre", "Entre aventuras", "<p>Tiempo libre para fabricar objetos, trabajar, investigar, entrenar idiomas o herramientas, recuperarse de heridas largas o llevar un negocio. Cada actividad tiene su coste en días y en monedas.</p>")
 ]},
 { id: "estados", title: "Estados", intro: "<p>Lo que le pasa a una criatura afectada por un estado. Mesa los pone en la ficha con su marca en el mapa.</p>", entries: [
@@ -94,7 +94,7 @@ export const REGLAS = { sections: [
   E("st-env", "Envenenado", "<p>Desventaja en las tiradas de ataque y en las pruebas de característica.</p>"),
   E("st-derr", "Derribado", "<p>Solo se arrastra; levantarse cuesta la mitad de la velocidad. Desventaja en sus ataques; los ataques contra él tienen ventaja a 5 pies y desventaja más lejos.</p>"),
   E("st-apre", "Apresado", "<p>Velocidad 0; desventaja en sus ataques y en las salvaciones de Destreza, y los ataques contra él tienen ventaja.</p>"),
-  E("st-atur", "Aturdido", "<p>Incapacitado, apenas puede moverse ni hablar, falla las salvaciones de Fuerza y Destreza y los ataques contra él tienen ventaja.</p>"),
+  E("st-atur", "Aturdido", "<p>Incapacitado, falla las salvaciones de Fuerza y Destreza y los ataques contra él tienen ventaja. En 2014, además, apenas puede moverse ni hablar.</p>"),
   E("st-inco", "Inconsciente", "<p>Incapacitado, suelta lo que lleva y cae derribado; falla las salvaciones de Fuerza y Destreza, y los ataques contra él tienen ventaja y son críticos a 5 pies.</p>"),
   E("st-agot", "Agotamiento", "<p>Por niveles; mira las reglas de 2014 o de 2024 según tu mesa.</p>")
 ]},

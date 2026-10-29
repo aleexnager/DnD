@@ -277,22 +277,26 @@ export function renderLog(host, { toEnd = false } = {}) {
     }, { passive: true });
     pill.addEventListener("click", () => { host.scrollTo({ top: host.scrollHeight, behavior: "smooth" }); pill.classList.add("hidden"); });
   }
+  /* Las que acaban de llegar entran con su animación (la tirada cae y se
+     asienta); al repintar por otra cosa, las de antes no se vuelven a mover */
+  const before = host.dataset.newest;
+  const from = grew ? list.findIndex(e => String(e.id || e.ts) === before) + 1 || list.length - 1 : list.length;
   host.dataset.newest = newest;
   if (!grew && !first && !toEnd) return;   // nada nuevo: no se repinta ni se mueve
 
-  host.innerHTML = list.map(e => {
-    const cls = [e.kind, e.crit ? "crit" : "", e.fumble ? "fumble" : "", e.secret || e.private ? "secret" : ""].join(" ");
+  host.innerHTML = list.map((e, i) => {
+    const cls = [e.kind, e.crit ? "crit" : "", e.fumble ? "fumble" : "", e.secret || e.private ? "secret" : "", i >= from ? "fresh" : ""].join(" ");
     if (e.kind === "chat") {
       const mine = store.session && e.actor === store.session.name;
       const who = (e.names || []).join(", ");
-      return `<div class="entry chat ${e.private ? "secret" : ""}">
+      return `<div class="entry chat ${e.private ? "secret" : ""} ${i >= from ? "fresh" : ""}">
         <div class="top"><span class="who">${esc(e.actor || "")}</span>
           ${e.private ? `<span class="detail">${mine ? "solo a " + esc(who) : "en privado"}</span>` : ""}
           <span class="time">${hhmm(e.ts)}</span></div>
         <p class="said">${esc(e.text)}</p></div>`;
     }
     if (e.kind === "note") {
-      return `<div class="entry event">
+      return `<div class="entry event ${i >= from ? "fresh" : ""}">
         <div class="top"><span class="who">${esc(e.actor || "")}</span><span class="time">${hhmm(e.ts)}</span></div>
         <p>${esc(e.text)}</p></div>`;
     }

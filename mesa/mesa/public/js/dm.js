@@ -4,7 +4,7 @@ import { openExportChars, importChars } from "./chars-io.js";
 import { afterMove } from "./portals.js";
 import { voiceWidget } from "./voice.js";
 import { $, el, on, esc, lines, sign, pct, hpTone, hpBar, tweenBars, initials, imgURL, toast, modal, confirmBox, shrinkImage, clamp } from "./util.js";
-import { acOf, cellKey, CONDITIONS, conditionName, ABILITIES, SKILLS, PIN_KINDS, normalizeSound, modOf, normalizeChar, normalizeBeast, bestiaryOf, isBaseBeast, normalizeMap, normalizePin, normalizePortal, uid, encounterDifficulty, MAX_COLS, MAX_ROWS } from "./schema.js";
+import { acOf, initBonus, pbForCR, cellKey, CONDITIONS, conditionName, ABILITIES, SKILLS, PIN_KINDS, normalizeSound, modOf, normalizeChar, normalizeBeast, bestiaryOf, isBaseBeast, normalizeMap, normalizePin, normalizePortal, uid, encounterDifficulty, MAX_COLS, MAX_ROWS } from "./schema.js";
 import { openAttacks } from "./attacks.js";
 import { feetChars, nextRoomId, visibleCells, roomsOf, hasSight, occupied } from "./los.js";
 import { store, onState, onPresence, onStatus, op, patchChar, patchSession, patchMap, uploadImage, leave, lobby, setOpGuard } from "./net.js";
@@ -583,7 +583,7 @@ function bindTable(root) {
       case "rollSave": return pickAndRoll(c, "save");
       case "rollSkill": return pickAndRoll(c, "skill");
       case "rollInitOne": {
-        const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", char: c, kind: "check" });
+        const r = throwDice("1d20" + sign(initBonus(c)), { label: c.name + " · iniciativa", char: c, kind: "check" });
         if (r) patchChar(c.id, { initiative: r.total });
         return;
       }
@@ -848,7 +848,7 @@ function openCombatRoster() {
 
   /* Tirar aquí mismo y que el número caiga en su casilla */
   const rollOne = (c, secret) => {
-    const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", secret, char: c, kind: "check" });
+    const r = throwDice("1d20" + sign(initBonus(c)), { label: c.name + " · iniciativa", secret, char: c, kind: "check" });
     if (!r) return;
     const box = body.querySelector(`[data-init="${c.id}"]`);
     if (box) box.value = r.total;
@@ -906,7 +906,7 @@ function rollInitiative() {
   const c0 = session().combat;
   const list = c0.on && c0.order.length ? c0.order.map(byId).filter(Boolean) : combatCandidates();
   list.forEach(c => {
-    const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", secret: c.kind === "monster", char: c, kind: "check" });
+    const r = throwDice("1d20" + sign(initBonus(c)), { label: c.name + " · iniciativa", secret: c.kind === "monster", char: c, kind: "check" });
     if (r) rolled.set(c.id, r.total);
   });
   rolled.forEach((total, id) => patchChar(id, { initiative: total }));
@@ -934,7 +934,7 @@ function openRest() {
     </button>
     <button class="choice" data-rest="long">
       <span class="choice-ico">${icon("moon", 26)}</span>
-      <span class="choice-text"><b>Descanso largo</b><small>Ocho horas. Vida, espacios de conjuro y recursos al máximo; baja un nivel de agotamiento.</small></span>
+      <span class="choice-text"><b>Descanso largo</b><small>Ocho horas. Vida, dados de golpe, espacios de conjuro y recursos al máximo; baja un nivel de agotamiento.</small></span>
     </button>
   </div>`);
   const m = modal({ title: "Descansar", body, actions: [{ label: "Cerrar" }] });
@@ -951,8 +951,8 @@ async function shortRest() {
 function spendHitDie(c) {
   const die = (c.hitDice || "").split(/d/i)[1];
   if (!die) return toast("Apunta los dados de golpe en su ficha (por ejemplo 5d8)", "bad");
-  const total = Math.max(1, +c.level - c.hitDiceUsed);
-  if (total <= 0) return toast("No le quedan dados de golpe");
+  const left = +c.level - c.hitDiceUsed;
+  if (left <= 0) return toast("No le quedan dados de golpe");
   const r = throwDice(`1d${die}` + sign(modOf(c.con)), { label: c.name + " · dado de golpe" });
   if (!r) return;
   op("hp.apply", { id: c.id, heal: Math.max(1, r.total), note: "dado de golpe" });
@@ -960,13 +960,13 @@ function spendHitDie(c) {
 }
 
 async function longRest() {
-  if (!await confirmBox("Descanso largo: la party recupera toda la vida, los espacios de conjuro y los recursos. Los monstruos no se enteran.", { danger: false, okLabel: "Descansar" })) return;
+  if (!await confirmBox("Descanso largo: la party recupera toda la vida, todos los dados de golpe, los espacios de conjuro y los recursos, y baja un nivel de agotamiento. Los monstruos no se enteran.", { danger: false, okLabel: "Descansar" })) return;
   pcs().forEach(c => patchChar(c.id, {
     hp: c.maxHp, tempHp: 0, deathOk: 0, deathFail: 0,
     slotsUsed: c.slots.map(() => 0),
     resources: c.resources.map(r => ({ ...r, uses: 0 })),
     exhaustion: Math.max(0, c.exhaustion - 1),
-    hitDiceUsed: Math.floor(c.hitDiceUsed / 2),
+    hitDiceUsed: 0,               // 2024: el descanso largo devuelve todos los dados de golpe
     conditions: c.conditions.filter(x => !["inconsciente", "envenenado", "derribado"].includes(x)),
     concentration: ""
   }));
@@ -1117,11 +1117,14 @@ function spawn(beast, row) {
     list.push(normalizeChar({
       id: uid(), kind: "monster", monsterKey: beast.id, name: beast.name,
       color: beast.color, avatarId: beast.avatarId, size: beast.size || "Mediano",
-      hp, maxHp: hp, ac: beast.ac, speed: beast.speed,
-      initiative: rollHitPoints("1d20", 10) + modOf(beast.dex),
+      hp, maxHp: hp, ac: beast.ac, speed: beast.speed, speedText: beast.speedText,
+      init: beast.init, initiative: rollHitPoints("1d20", 10) + initBonus(beast),
       str: beast.str, dex: beast.dex, con: beast.con, int: beast.int, wis: beast.wis, cha: beast.cha,
+      saves: beast.saves, proficiency: beast.pb || pbForCR(beast.cr), alignment: beast.alignment,
       sizeType: beast.sizeType, cr: beast.cr, xp: beast.xp, senses: beast.senses, languages: beast.languages,
-      resistances: beast.resistances, traits: beast.traits, actions: beast.actions
+      skillsText: beast.skills, gear: beast.gear, vulnerabilities: beast.vulnerabilities,
+      resistances: beast.resistances, immunities: beast.immunities, edition: beast.edition,
+      traits: beast.traits, actions: beast.actions, bonus: beast.bonus, reactions: beast.reactions, legendary: beast.legendary
     }));
   }
   // nombres correlativos aunque se añadan de golpe: Goblin 1, Goblin 2…
@@ -1156,18 +1159,27 @@ function openBeastEditor(beast) {
       </div>
     </div>
     <div class="cols2">
-      ${f("Tamaño y tipo (texto)", "sizeType", b.sizeType)}
+      ${f("Tamaño y tipo (texto)", "sizeType", b.sizeType)}${f("Alineamiento", "alignment", b.alignment)}
       ${f("Valor de desafío", "cr", b.cr)}${f("Puntos de experiencia", "xp", b.xp, "number")}
-      ${f("Clase de armadura", "ac", b.ac, "number")}${f("Vida media", "hpAvg", b.hpAvg, "number")}
-      ${f("Dados de vida", "hpDice", b.hpDice)}${f("Velocidad", "speed", b.speed, "number")}
+      ${f("Clase de armadura", "ac", b.ac, "number")}${f("Iniciativa (en blanco: la de Destreza)", "init", b.init ?? "", "number")}
+      ${f("Vida media", "hpAvg", b.hpAvg, "number")}${f("Dados de vida", "hpDice", b.hpDice)}
+      ${f("Velocidad a pie (pies)", "speed", b.speed, "number")}${f("Velocidades (texto)", "speedText", b.speedText)}
     </div>
     <div class="row">${ABILITIES.map(([k, l]) => `<label class="field" style="flex:1 1 80px"><span>${l}</span>
       <input name="${k}" type="number" value="${b[k]}"></label>`).join("")}</div>
-    <div class="cols2">${f("Sentidos", "senses", b.senses)}${f("Idiomas", "languages", b.languages)}</div>
-    <label class="field"><span>Resistencias e inmunidades</span><input name="resistances" value="${esc(b.resistances)}"></label>
+    <div class="row beast-saves"><span class="field-label">Competente en las salvaciones de</span>
+      ${ABILITIES.map(([k, l]) => `<label class="check mini"><input type="checkbox" name="save-${k}" ${b.saves.includes(k) ? "checked" : ""}> ${l}</label>`).join("")}
+      ${f("Bonificador por competencia", "pb", b.pb, "number")}</div>
+    <div class="cols2">${f("Habilidades", "skills", b.skills)}${f("Equipo", "gear", b.gear)}
+      ${f("Sentidos", "senses", b.senses)}${f("Idiomas", "languages", b.languages)}</div>
+    <div class="cols2">${f("Vulnerabilidades", "vulnerabilities", b.vulnerabilities)}${f("Resistencias", "resistances", b.resistances)}
+      ${f("Inmunidades", "immunities", b.immunities)}</div>
     <fieldset><legend>Rasgos</legend><div id="traitHost"></div></fieldset>
     <fieldset><legend>Acciones</legend><div id="actionHost"></div>
-      <p class="prose small-note">Un ataque se escribe así para poder tirarlo: «+4 al ataque — 1d6+2 cortante».</p></fieldset>
+      <p class="prose small-note">Un ataque se escribe así para poder tirarlo: «+4 al ataque — 1d6+2 cortante · alcance 5 pies», y una salvación, «CD 13 de Destreza — … Fallo: 6d6 fuego».</p></fieldset>
+    <fieldset><legend>Acciones adicionales</legend><div id="bonusHost"></div></fieldset>
+    <fieldset><legend>Reacciones</legend><div id="reactionHost"></div></fieldset>
+    <fieldset><legend>Acciones legendarias</legend><div id="legendHost"></div></fieldset>
     <label class="field"><span>Color</span><input name="color" type="color" value="${esc(b.color)}" style="height:38px"></label>
   </div>`);
 
@@ -1177,8 +1189,17 @@ function openBeastEditor(beast) {
     fields: entryFields("Huida ágil", "Se desengancha o se esconde como acción adicional.") });
   const actionEd = listEditor({ add: "Añadir acción", rows: linesToEntries(b.actions), blank: { name: "", text: "" },
     fields: entryFields("Cimitarra", "+4 al ataque — 1d6+2 cortante") });
+  const bonusEd = listEditor({ add: "Añadir acción adicional", rows: linesToEntries(b.bonus), blank: { name: "", text: "" },
+    fields: entryFields("Huida ágil", "Realiza la acción de Destrabarse o de Esconderse.") });
+  const reactionEd = listEditor({ add: "Añadir reacción", rows: linesToEntries(b.reactions), blank: { name: "", text: "" },
+    fields: entryFields("Parada", "Desencadenante: le impacta un ataque cuerpo a cuerpo. Respuesta: +2 a la CA.") });
+  const legendEd = listEditor({ add: "Añadir acción legendaria", rows: linesToEntries(b.legendary), blank: { name: "", text: "" },
+    fields: entryFields("Latigazo", "Hace un ataque de Tentáculo.") });
   body.querySelector("#traitHost").appendChild(traitEd.node);
   body.querySelector("#actionHost").appendChild(actionEd.node);
+  body.querySelector("#bonusHost").appendChild(bonusEd.node);
+  body.querySelector("#reactionHost").appendChild(reactionEd.node);
+  body.querySelector("#legendHost").appendChild(legendEd.node);
 
   const bfile = body.querySelector("#bavFile");
   body.querySelector("#bavPick").addEventListener("click", () => bfile.click());
@@ -1206,9 +1227,13 @@ function openBeastEditor(beast) {
           ...b, custom: true,
           name: v("name") || "Criatura", sizeType: v("sizeType"), cr: v("cr"), xp: +v("xp"),
           avatarId, size: v("size") || "Mediano",
-          ac: +v("ac"), hpAvg: +v("hpAvg"), hpDice: v("hpDice"), speed: +v("speed"),
+          ac: +v("ac"), hpAvg: +v("hpAvg"), hpDice: v("hpDice"), speed: +v("speed"), speedText: v("speedText"),
+          alignment: v("alignment"), init: v("init") === "" ? null : +v("init"), pb: +v("pb"),
+          saves: ABILITIES.map(([k]) => k).filter(k => host.querySelector(`[name="save-${k}"]`).checked),
+          skills: v("skills"), gear: v("gear"), vulnerabilities: v("vulnerabilities"), immunities: v("immunities"),
           senses: v("senses"), languages: v("languages"), resistances: v("resistances"),
-          traits: entriesToLines(traitEd.read()), actions: entriesToLines(actionEd.read()), color: v("color"),
+          traits: entriesToLines(traitEd.read()), actions: entriesToLines(actionEd.read()),
+          bonus: entriesToLines(bonusEd.read()), reactions: entriesToLines(reactionEd.read()), legendary: entriesToLines(legendEd.read()), color: v("color"),
           ...Object.fromEntries(ABILITIES.map(([k]) => [k, +v(k)]))
         });
         /* Retocar una de serie la guarda en la partida con su mismo id */

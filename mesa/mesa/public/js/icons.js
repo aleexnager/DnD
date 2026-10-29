@@ -111,6 +111,12 @@ const P = {
   mirror: '<path d="M12 3v18"/><path d="M9 7 4 12l5 5Z"/><path d="m15 7 5 5-5 5Z"/>',
   layerUp: '<path d="M12 19V5M6 11l6-6 6 6"/>',
   save: '<path d="M5 4h11l3 3v13H5Z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>',
+  /* Los indicadores de ataques y conjuros */
+  arrow: '<path d="M4.5 19.5 18.5 5.5"/><path d="M12.5 5h6.5v6.5"/><path d="M4.5 19.5h4M4.5 19.5v-4"/>',
+  spiral: '<path d="M12 12.4a1.2 1.2 0 1 0-1.2-1.2 3 3 0 0 0 3 3 4.4 4.4 0 0 0 4.4-4.4 6 6 0 0 0-6-6 7.6 7.6 0 0 0-7.6 7.6 9 9 0 0 0 9 9"/>',
+  summon: '<path d="M4 18.5c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5-3.6-2.5-8-2.5-8 1.1-8 2.5Z"/><circle cx="12" cy="6" r="2.6"/><path d="M8.6 16.4v-3a3.4 3.4 0 0 1 6.8 0v3"/>',
+  conc: '<path d="M12 2.8 21.2 12 12 21.2 2.8 12Z"/><path d="M14.6 9.7a3.3 3.3 0 1 0 0 4.6"/>',
+  aura: '<circle cx="12" cy="12" r="2.6"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 17.7a8 8 0 0 0 0-11.4"/><path d="M3.5 3.5a12 12 0 0 0 0 17M20.5 20.5a12 12 0 0 0 0-17"/>',
 };
 
 /* Botón con icono y texto: el texto se puede esconder en pantallas estrechas

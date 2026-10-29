@@ -9,7 +9,7 @@ import { SKILLS, normalizeChar, modOf, uid } from "./schema.js";
 import { op, uploadImage, store } from "./net.js";
 import { reachableCells, fits } from "./los.js";
 import { icon, withIcon } from "./icons.js";
-import { spellTags } from "./spellbook.js";
+import { spellChips, chipsHTML } from "./chips.js";
 import { SPELL_LIBRARY } from "./spells.js";
 import { CLASSES, SPECIES, BACKGROUNDS, STANDARD_ARRAY, POINT_COST, POINTS, ALIGNMENTS, ARMOR, WEAPONS,
   ABIL_KEYS, finalScores, armorClass, buildCharacter, randomChoice } from "./creador-datos.js";
@@ -228,7 +228,7 @@ export function openBuilder({ onManual, place = false } = {}) {
           const on = st.spells.includes(s.id);
           return `<button type="button" class="bd-spell ${on ? "on" : ""}" data-spell="${s.id}" aria-pressed="${on}" ${!on && st.spells.length >= c.pick ? "disabled" : ""}>
             <span class="bd-spell-lv">${s.level ? s.level + "º" : "T"}</span>
-            <span class="bd-spell-text"><b>${esc(s.name)}</b><small>${esc(spellTags(s) || s.desc)}</small></span>
+            <span class="bd-spell-text"><b>${esc(s.name)}</b>${spellChips(s).length ? chipsHTML(spellChips(s)) : `<small>${esc(s.desc)}</small>`}</span>
             <span class="bd-check">${on ? icon("check", 16) : ""}</span></button>`;
         }).join("")}</div>
       </div>`;

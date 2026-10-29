@@ -112,10 +112,12 @@ function render() {
   const last = rolls[rolls.length - 1];
   const rollBox = $("#roll");
   rollBox.classList.toggle("hidden", !last);
-  rollBox.innerHTML = last
+  /* Solo se reescribe si cambia: si no, cada repintado repetiría el salto */
+  const html = last
     ? `<small>${esc(last.actor)} · ${esc(last.label || last.formula)}</small>
        <b class="${last.crit ? "crit" : last.fumble ? "fumble" : ""}">${last.total}</b>`
     : "";
+  if (rollBox.dataset.html !== html) { rollBox.innerHTML = html; rollBox.dataset.html = html; }
   if (last && last.id !== lastRollId) {
     if (lastRollId !== null) {
       rollBox.classList.remove("pop");

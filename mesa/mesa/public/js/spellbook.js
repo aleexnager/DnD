@@ -4,15 +4,15 @@
 
 import { el, on, esc, toast, modal, confirmBox } from "./util.js";
 import { op, patchChar, store } from "./net.js";
-import { normalizeSpell, modOf, conditionName, CONDITIONS, SHAPE_NAMES, uid } from "./schema.js";
+import { normalizeSpell, modOf, CONDITIONS, SHAPE_NAMES, uid } from "./schema.js";
 import { guessAbility, libraryOf, isBuiltinSpell, builtinSpell } from "./spells.js";
 import { icon, withIcon } from "./icons.js";
 import { keyMods } from "./dice-panel.js";
 import { rollable } from "./rollable.js";
+import { spellChips, chipsHTML } from "./chips.js";
 
 const ABIL = { int: "Inteligencia", wis: "Sabiduría", cha: "Carisma" };
 const SAVE = { str: "FUE", dex: "DES", con: "CON", int: "INT", wis: "SAB", cha: "CAR" };
-const SHAPES = { circle: "esfera", cone: "cono", line: "línea", square: "cubo", ring: "anillo", rect: "rectángulo" };
 const levelName = n => n === 0 ? "Trucos" : `Nivel ${n}`;
 
 export function castStats(c) {
@@ -22,7 +22,8 @@ export function castStats(c) {
   return { ability, dc: c.spellDC || 8 + prof + mod, atk: c.spellAtk || prof + mod };
 }
 
-/* Resumen de una línea: qué hace */
+/* Resumen de una línea: qué tira y cuánto (el alcance, el área, el estado y
+   la concentración van en sus indicadores, chips.js) */
 export function spellTags(sp) {
   const t = [];
   if (sp.mode === "attack") t.push(sp.melee ? "ataque cuerpo a cuerpo" : "ataque a distancia");
@@ -31,9 +32,6 @@ export function spellTags(sp) {
   if (sp.mode === "heal") t.push(`cura ${sp.heal}${sp.healMod ? " + car." : ""}`);
   if (sp.mode === "sleep") t.push(`sueño ${sp.damage}`);
   if (sp.damage && sp.mode !== "sleep") t.push(`${sp.damage}${sp.type ? " " + sp.type : ""}`);
-  if (sp.cond) t.push(conditionName(sp.cond).toLowerCase());
-  if (sp.shape) t.push(`${SHAPES[sp.shape]} de ${sp.shape === "square" ? sp.size * 2 : sp.size} pies`);
-  if (sp.conc) t.push("concentración");
   return t.join(" · ");
 }
 
@@ -65,7 +63,7 @@ export function openSpellbook(c, ctx = {}) {
         <div class="sb-list">${byLevel[lv].map(sp => {
           const dry = sp.level > 0 && ch.slots.some(n => n) && !ch.slots.some((n, i) => i + 1 >= sp.level && slotsLeft(ch, i + 1) > 0);
           return `<div class="sb-spell ${dry ? "dry" : ""}">
-            <div class="sb-text"><b>${esc(sp.name)}</b><small>${esc(spellTags(sp))}</small></div>
+            <div class="sb-text"><b>${esc(sp.name)}</b>${chipsHTML(spellChips(sp))}</div>
             <button class="icon-btn" data-sb-edit="${esc(sp.id)}" title="Retocar este conjuro en esta ficha" aria-label="Retocar el conjuro">${icon("pencil", 15)}</button>
             <button class="icon-btn" data-sb-remove="${esc(sp.id)}" title="Quitar de la lista" aria-label="Quitar de la lista">${icon("close", 15)}</button>
             <button class="btn sm primary" data-sb-cast="${esc(sp.id)}" ${dry ? "disabled" : ""}>${withIcon("wand", "Lanzar", 15)}</button>
@@ -142,7 +140,7 @@ function openLibrary(c, done, ctx = {}) {
       <div class="lib-row ${known.has(sp.id) ? "known" : ""}">
         <label class="lib-pick"><input type="checkbox" value="${sp.id}" ${known.has(sp.id) ? "checked disabled" : ""}>
         <span class="lv">${sp.level === 0 ? "T" : sp.level}</span>
-        <span class="sb-text"><b>${esc(sp.name)}${sp.edited ? ' <i class="lib-tag">retocado</i>' : sp.custom ? ' <i class="lib-tag own">propio</i>' : ""}</b><small>${esc(spellTags(sp))}</small></span></label>
+        <span class="sb-text"><b>${esc(sp.name)}${sp.edited ? ' <i class="lib-tag">retocado</i>' : sp.custom ? ' <i class="lib-tag own">propio</i>' : ""}</b>${chipsHTML(spellChips(sp))}</span></label>
         ${isDM ? `<button type="button" class="icon-btn" data-lib-edit="${esc(sp.id)}" title="Retocar en la biblioteca" aria-label="Retocar en la biblioteca">${icon("pencil", 15)}</button>` : ""}
       </div>`).join("") || `<p class="prose small"><span>Nada con ese nombre.</span></p>`;
   };
@@ -211,12 +209,14 @@ export function openSpellEditor(sp, { title, note = "", onSave, sync = 0, extra 
       ${f("Nombre", inp("name", sp.name, 'maxlength="48"'))}
       ${f("Nivel", sel("level", sp.level, [[0, "Truco"], ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => [n, "Nivel " + n])]))}
       ${f("Escuela", inp("school", sp.school, 'placeholder="Evocación"'))}
-      ${f("Tiempo", inp("time", sp.time, 'placeholder="1 acción"'))}
+      ${f("Tiempo", inp("time", sp.time, 'placeholder="Acción"'))}
       ${f("Alcance", inp("range", sp.range, 'placeholder="120 pies"'))}
-      ${f("Duración", inp("duration", sp.duration, 'placeholder="Concentración, 1 minuto"'))}
+      ${f("Duración", inp("duration", sp.duration, 'placeholder="Concentración, hasta 1 minuto"'))}
+      ${f("Componentes", inp("components", sp.components, 'placeholder="V, S, M (un pellizco de azufre)" maxlength="100"'))}
     </div>
     ${chk("conc", sp.conc, "Necesita concentración")}
-    ${f("Descripción", `<textarea name="desc" rows="3" maxlength="400">${esc(sp.desc)}</textarea>`)}
+    ${chk("summon", sp.summon, "Crea o invoca algo que se queda en el tablero")}
+    ${f("Descripción", `<textarea name="desc" rows="4" maxlength="900">${esc(sp.desc)}</textarea>`)}
     <h4 class="menu-sec">Cómo se resuelve</h4>
     <div class="cols2">
       ${f("Modo", sel("mode", sp.mode, MODE_NAMES))}
@@ -234,6 +234,7 @@ export function openSpellEditor(sp, { title, note = "", onSave, sync = 0, extra 
     ${chk("scale", sp.scale, "Truco que sube de daño con el nivel (5, 11 y 17)", "attack save auto")}
     ${chk("scaleRays", sp.scaleRays, "Truco que suma rayos con el nivel (como Descarga sobrenatural)", "attack")}
     ${chk("healMod", sp.healMod, "Suma la característica de lanzamiento a la cura", "heal")}
+    ${chk("dmgMod", sp.dmgMod, "Suma la característica de lanzamiento al daño (como Arma espiritual)", "attack save")}
     <div class="cols2">
       ${f("Estado que pone", sel("cond", sp.cond, [["", "Ninguno"], ...CONDITIONS.map(x => [x.id, x.name])]), "attack save none")}
       ${f("Rondas que dura el estado (0: hasta quitarlo)", num("condRounds", sp.condRounds, 0, 1000), "attack save none sleep")}
@@ -263,7 +264,7 @@ export function openSpellEditor(sp, { title, note = "", onSave, sync = 0, extra 
       { label: "Guardar", tone: "primary", run: host => {
         const v = k => host.querySelector(`[name="${k}"]`);
         const val = k => v(k) ? (v(k).type === "checkbox" ? v(k).checked : v(k).type === "number" || k === "level" ? +v(k).value : v(k).value.trim()) : sp[k];
-        const keys = ["name", "level", "school", "time", "range", "duration", "conc", "desc", "mode", "save", "half", "damage", "type", "upcast", "scale", "scaleRays", "rays", "raysUp", "darts", "heal", "healMod", "cond", "condRounds", "failText", "targets", "targetsUp", "shape", "size", "width", "melee"];
+        const keys = ["name", "level", "school", "time", "range", "duration", "components", "conc", "summon", "dmgMod", "desc", "mode", "save", "half", "damage", "type", "upcast", "scale", "scaleRays", "rays", "raysUp", "darts", "heal", "healMod", "cond", "condRounds", "failText", "targets", "targetsUp", "shape", "size", "width", "melee"];
         const next = normalizeSpell({ ...sp, ...Object.fromEntries(keys.map(k => [k, val(k)])), id: sp.id });
         if (!next.name.trim()) { toast("Ponle un nombre", "bad"); return false; }
         if (next.mode === "save" && !next.save) next.save = "dex";
@@ -286,6 +287,7 @@ export function openCast(c, sp, ctx = {}) {
   const needsTarget = sp.mode !== "none";
 
   const body = el(`<div class="cast">
+    ${chipsHTML(spellChips(sp), "cast-chips")}
     <p class="cast-what">${esc(spellTags(sp))}${sp.mode === "save" ? ` · CD ${st.dc}` : sp.mode === "attack" ? ` · ${st.atk >= 0 ? "+" : ""}${st.atk} al ataque` : ""}</p>
     ${sp.desc ? `<p class="prose small"><span>${rollable(sp.desc, `${c.name} · ${sp.name}`)}</span></p>` : ""}
     ${levels.length ? `<label class="field"><span>Espacio</span><select id="castSlot">${levels.map(l =>
