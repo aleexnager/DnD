@@ -38,6 +38,11 @@ const opens = (sel, pre) => async () => {
   return closeModal;
 };
 const wide = () => innerWidth > 1080;
+/* La forja se carga aparte: esperar a que esté pintada antes de señalar nada */
+const forgeReady = async () => {
+  for (let i = 0; i < 40 && !$(".forja .fj-side .fj-panel > *"); i++) await later(50);
+  await later(120);
+};
 
 /* Las fichas de ejemplo (ver tour-example.js): se encienden en la pantalla
    del DM y se apagan al salir del paso. after abre algo sobre ellas. */
@@ -134,6 +139,28 @@ export const SCENES = {
     return null;
   },
   "dm.mapsettings": opens('[data-map="settings"]', async () => { dmTab("mapa"); await later(150); }),
+  /* La forja: se abre sobre la pantalla y se cierra al salir. No toca el mapa
+     hasta que se pulsa «Usar en este mapa». */
+  "dm.forge": async () => {
+    dmTab("mapa");
+    await later(150);
+    if (!$(".forja")) {
+      const dm = await import("./dm.js");
+      await dm.openMapForge();
+    }
+    await forgeReady();
+    return () => click('.forja [data-fj="close"]');
+  },
+  "dm.forgeGen": async () => {
+    dmTab("mapa");
+    await later(150);
+    if (!$(".forja")) { const dm = await import("./dm.js"); await dm.openMapForge(); }
+    await forgeReady();
+    click('.forja [data-fj="generate"]');
+    for (let i = 0; i < 40 && !$(".modal-back:not(.tour-host) .modal"); i++) await later(50);
+    await later(150);
+    return async () => { closeModal(); await later(120); click('.forja [data-fj="close"]'); };
+  },
   "dm.rest": opens("#restBtn"),
   "dm.presence": opens("#presence"),
   "dm.menu": opens("#moreBtn"),
@@ -162,6 +189,16 @@ export const SCENES = {
   "pl.dice": () => { pTab("dados"); },
   "pl.attack": opens('.action-grid [data-act="attack"]', () => pTab("ficha")),
   "pl.spells": opens('.action-grid [data-act="spells"]', () => pTab("ficha")),
+  /* La ficha de un compañero, en solo lectura */
+  "pl.mate": async () => {
+    pTab("party");
+    await later(120);
+    const b = [...document.querySelectorAll("[data-mate]")].find(n => n.title !== "Tu ficha" && n.title !== "Your sheet");
+    if (!b) return null;
+    b.click();
+    await later(150);
+    return closeModal;
+  },
   /* Entrada */
   "gate.dm": () => {
     const prev = ($("[data-role][aria-pressed=true]") || {}).dataset;
@@ -230,6 +267,8 @@ const DM = {
         ["The summary", "How many characters there are, how many hit points are still standing, how many are down and, with enemies, the **encounter difficulty** by the XP rules. (The tutorial's example sheets do not count here.)"]),
       S(EX_PC, ["Una tarjeta", "Cada personaje tiene la suya. La de Brisa, la clériga de ejemplo, dice:\n- **17 / 24**: puntos de golpe actuales y máximos, y **+4 temporales**\n- **CA 16**, en el escudo de la derecha\n- la **barra de vida**, que cambia de color al bajar\nLa etiqueta de arriba solo sale en el ejemplo."],
         ["A card", "Every character has one. Brisa's, the example cleric, says:\n- **17 / 24**: current and maximum hit points, plus **+4 temporary**\n- **AC 16**, on the shield to the right\n- the **health bar**, which changes colour as it drops\nThe label on top only appears on the example."]),
+      S(`${EX_PC} .ac-shield`, ["CA y CA temporal", "El escudo da la **CA total**. Si hay un extra temporal (Escudo +5, Escudo de fe +2, cobertura…), sale aparte en una etiqueta dorada y, al pasar el ratón, se lee «16 de base + 5 temporal». **Pulsa el escudo** para ponerla o quitarla: de uno en uno o con un atajo. Los ataques comparan con la total."],
+        ["AC and temporary AC", "The shield shows the **total AC**. A temporary bonus (Shield +5, Shield of Faith +2, cover…) shows apart on a gold tag and, on hover, reads “16 base + 5 temporary”. **Click the shield** to set or clear it: one by one or with a preset. Attacks are compared against the total."]),
       S(`${EX_PC} .acts`, ["Los botones de arriba", "- **Liberar** (el eslabón): a Brisa la lleva un jugador, Lu; liberarla la deja libre para otro\n- **Lápiz**: editar la ficha\n- **Equis**: quitarla de la mesa (pide confirmación)\n- **Flecha**: desplegar la ficha completa\nLos enemigos tienen además el **ojo** (ocultarlo a la party) y **duplicar**."],
         ["The top buttons", "- **Release** (the link): Brisa is played by Lu; releasing frees her for someone else\n- **Pencil**: edit the sheet\n- **Cross**: remove from the table (asks first)\n- **Arrow**: unfold the full sheet\nEnemies also have the **eye** (hide from the party) and **duplicate**."]),
       S(`${EX_PC} .dealer`, ["Daño y curación", "Escribe una cantidad y pulsa **−** para restar vida o **+** para curar; con la casilla vacía van de uno en uno. En la casilla, [[Intro]] aplica daño y [[Mayús]]+[[Intro]] cura. **Temp** da vida temporal.\nEjemplo: Brisa tiene 4 temporales; un golpe de **5** se come primero esos 4 y luego 1 de vida, y se queda en 16. Como está concentrada, salta el aviso de la salvación con la CD ya calculada (10, o la mitad del daño si es mayor)."],
@@ -255,8 +294,8 @@ const DM = {
         ["Slots and resources", "Each little square is a spell slot: Brisa has **4 at level 1** (one already spent, greyed out) and **2 at level 2**. Click one to spend it; past the maximum they all come back. Own resources work the same: **Channel Divinity 1/1**."]),
       S(`${EX_PC} .detail .deaths`, ["Salvaciones de muerte", "Para cuando un personaje cae a 0. Brisa lleva **1 éxito y 1 fallo** (en el ejemplo, para que los veas marcados). Márcalos a mano o pulsa **Tirar salvación de muerte**: con 10 o más es un éxito, un 20 natural la levanta con 1 PV y un 1 cuenta como dos fallos. Tres éxitos, estable; tres fallos, muerta."],
         ["Death saves", "For when a character drops to 0. Brisa has **1 success and 1 failure** (in the example, so you see them ticked). Tick them by hand or press **Roll death save**: 10 or more is a success, a natural 20 brings her back with 1 HP and a 1 counts as two failures. Three successes, stable; three failures, dead."]),
-      S(`${EX_PC} .detail .sheet-tabs`, ["Las pestañas de la ficha", "- **Acciones**: sus ataques (en Brisa, la Maza: toca **+3** para el ataque o **1d6+1** para el daño), las acciones de combate con su regla y los efectos\n- **Conjuros**: Llama sagrada, Bendecir, Curar heridas…\n- **Equipo**, **Rasgos** (Canalizar divinidad, Visión en la oscuridad) y **Notas**\nCualquier fórmula de un texto sale subrayada y se tira con un clic."],
-        ["The sheet tabs", "- **Actions**: its attacks (for Brisa, the Mace: tap **+3** for the attack or **1d6+1** for damage), combat actions with their rule, and effects\n- **Spells**: Sacred Flame, Bless, Cure Wounds…\n- **Equipment**, **Features** (Channel Divinity, Darkvision) and **Notes**\nAny formula in a text is underlined and rolls with one click."]),
+      S(`${EX_PC} .detail .sheet-tabs`, ["Las pestañas de la ficha", "- **Acciones**: sus ataques (en Brisa, la Maza: toca **+3** para el ataque o **1d6+1** para el daño), debajo sus **conjuros** con alcance, golpe o CD y efecto (y **Lanzar**), las acciones de combate con su regla y los efectos\n- **Conjuros**: Llama sagrada, Bendecir, Curar heridas…\n- **Equipo**, **Rasgos** (Canalizar divinidad, Visión en la oscuridad) y **Notas**\nCualquier fórmula de un texto sale subrayada y se tira con un clic."],
+        ["The sheet tabs", "- **Actions**: its attacks (for Brisa, the Mace: tap **+3** for the attack or **1d6+1** for damage), below them its **spells** with range, hit or DC and effect (and **Cast**), combat actions with their rule, and effects\n- **Spells**: Sacred Flame, Bless, Cure Wounds…\n- **Equipment**, **Features** (Channel Divinity, Darkvision) and **Notes**\nAny formula in a text is underlined and rolls with one click."]),
       S(`${EX_PC} .detail .buffs`, ["Efectos activos", "Brisa tiene **Bendecir** encendido: mientras lo esté, sus ataques y sus salvaciones suman 1d4 solos (la tirada lo dice: «· Bendecir»). Hay más listos (Perdición, Guía, Furia, Marca del cazador…) y se pueden crear a medida. Un toque los apaga sin borrarlos."],
         ["Active effects", "Brisa has **Bless** switched on: while it is, her attacks and saves add 1d4 by themselves (the roll says so: “· Bless”). More are ready (Bane, Guidance, Rage, Hunter's Mark…) and you can make custom ones. One tap switches them off without deleting them."])
     ]),
@@ -277,10 +316,10 @@ const DM = {
     ]),
 
     sec("combate", "swords", ["Combate", "Iniciativa, turnos, ataques y conjuros"], ["Combat", "Initiative, turns, attacks and spells"], "dm.table", [
-      S("#combatBtn", ["Iniciar combate", "Abre la lista de **quién entra**: la party y las criaturas que la party ya ha visto y están cerca. El mismo botón termina el combate. Atajo: [[Ctrl]]+[[K]]."],
-        ["Start combat", "Opens the list of **who joins**: the party and the creatures the party has already seen nearby. The same button ends combat. Shortcut: [[Ctrl]]+[[K]]."]),
-      S(".modal .pick-list", ["Quién entra", "Quita o añade a quien quieras, escribe la iniciativa a mano o tírala: **Tirar por todos** o **solo por las criaturas** (las suyas se tiran en secreto). **Empezar** ordena a todos por iniciativa. Aquí salen también Brisa y el goblin de ejemplo, con su iniciativa (14 y 12): Brisa iría primero. (Si ya hay un combate en marcha, esta ventana no se abre aquí.)"],
-        ["Who joins", "Remove or add anyone, type initiative by hand or roll it: **Roll for everyone** or **only for creatures** (theirs are rolled in secret). **Start** sorts everyone by initiative. Brisa and the example goblin appear here too, with their initiative (14 and 12): Brisa would go first. (If a combat is already running, this window is not opened here.)"], "dm.roster"),
+      S("#combatBtn", ["Iniciar combate", "Abre la lista de **quién entra**. No mete a todo el mapa: entra la party y las criaturas **vivas** y **no ocultas** de este mapa que la party **ve ahora**, que están **en su misma sala** o que ya ha visto y están **cerca sin un muro por medio**. El mismo botón termina el combate. Atajo: [[Ctrl]]+[[K]]."],
+        ["Start combat", "Opens the list of **who joins**. It does not take the whole map: in come the party and the **living**, **not hidden** creatures on this map that the party **sees now**, that are **in the same room**, or that it has already seen and are **near with no wall in between**. The same button ends combat. Shortcut: [[Ctrl]]+[[K]]."]),
+      S(".modal .pick-list", ["Quién entra", "Cada fila dice **por qué** entra o se queda fuera («a la vista», «en la misma sala», «a 25 pies de Brisa», «oculto a la party», «fuera de combate», «en otro mapa»). **Cerca es a cuántas casillas** cambia el radio (6 de serie) y rehace la lista. Quita o añade a quien quieras y escribe la iniciativa a mano o tírala: **Tirar por todos** o **solo por las criaturas** (en secreto). **Empezar** ordena a todos por iniciativa. Aquí salen también Brisa y el goblin de ejemplo (14 y 12). (Si ya hay un combate en marcha, esta ventana no se abre aquí.)"],
+        ["Who joins", "Each row says **why** it is in or out (“in sight”, “in the same room”, “25 ft from Brisa”, “hidden from the party”, “out of the fight”, “on another map”). **How many squares count as near** changes the radius (6 by default) and redoes the list. Remove or add anyone and type initiative by hand or roll it: **Roll for everyone** or **only for creatures** (in secret). **Start** sorts everyone by initiative. Brisa and the example goblin appear here too (14 and 12). (If a combat is already running, this window is not opened here.)"], "dm.roster"),
       S("#rail:not(.hidden)", ["La barra de turnos", "Si no hay un combate en marcha, el tutorial enseña uno de ejemplo (solo lo ves tú). Durante el combate sale arriba:\n- la **ronda** y el **orden**: pulsa a alguien para darle el turno, arrástralo para reordenar y su equis lo saca del combate\n- **Siguiente turno** ([[Espacio]], [[Intro]] o [[Ctrl]]+[[→]]) y el anterior ([[Ctrl]]+[[←]])\n- lo que le queda a quien juega: **acción**, **adicional**, **reacción** y los **pies** de movimiento\n- **Atacar**, **Retrasar**, **Tirar iniciativa** y **Añadir al combate**\nEn el ejemplo: ronda 2, le toca a **Brisa**, que ya ha gastado su **acción** y ha andado 10 de sus 30 pies; después va el goblin."],
         ["The turn bar", "If no combat is running, the tutorial shows an example one (only you see it). During combat it sits at the top:\n- the **round** and the **order**: click someone to give them the turn, drag to reorder, and their cross removes them from combat\n- **Next turn** ([[Space]], [[Enter]] or [[Ctrl]]+[[→]]) and the previous one ([[Ctrl]]+[[←]])\n- what the active creature has left: **action**, **bonus**, **reaction** and **feet** of movement\n- **Attack**, **Delay**, **Roll initiative** and **Add to combat**\nIn the example: round 2, it is **Brisa**'s turn, she has already used her **action** and walked 10 of her 30 feet; the goblin goes next."], "dm.exrail"),
       S("#rail:not(.hidden)", ["Al pasar turno", "Así queda el ejemplo tras pulsar **Siguiente turno**: le toca al **goblin**, con su acción y sus 30 pies enteros, y el veneno de Brisa ha bajado de 2 a **1 ronda** al acabar su turno. En una partida de verdad, además, se salta a los monstruos caídos y al jugador le llega al móvil «Es tu turno»."],
@@ -288,7 +327,11 @@ const DM = {
       S(".modal", ["La ventana de ataque", "Los ataques de Brisa. Arriba eliges el **objetivo** (aquí, el **Goblin (ejemplo)**; con la distancia si están en el mapa) y cómo se tira; debajo, «Se suma: **Bendecir**», porque lo tiene encendido. Al pulsar la **Maza**, el servidor tira 1d20+3+1d4, lo compara con la CA 15 del goblin y, si impacta, le resta el daño. A un pícaro le sale **Ataque furtivo**, a un paladín **Castigo divino**, y cualquiera puede sumar **daño extra**. (Con el ejemplo no se ataca de verdad.)"],
         ["The attack window", "Brisa's attacks. At the top you pick the **target** (here, the **Goblin (example)**; with the distance if they are on the map) and how to roll; below, “Adds: **Bless**”, since it is on. Pressing the **Mace**, the server rolls 1d20+3+1d4, compares it with the goblin's AC 15 and, on a hit, subtracts the damage. A rogue gets **Sneak Attack**, a paladin **Divine Smite**, and anyone can add **extra damage**. (With the example nothing really attacks.)"], "dm.exattack"),
       S(".modal", ["Lanzar conjuros", "Los conjuros de Brisa, por nivel, con su CD y su ataque de conjuro calculados de su Sabiduría, y los espacios que le quedan. **Lanzar** gasta el espacio y tira el ataque o las salvaciones de los objetivos y el daño: Llama sagrada pide una salvación de Destreza; Curar heridas cura 1d8 más su Sabiduría. Los de área se colocan en el mapa como plantilla y dicen a quién cogen. Se añaden más desde la biblioteca del SRD."],
-        ["Casting spells", "Brisa's spells, by level, with her DC and spell attack worked out from her Wisdom, and the slots she has left. **Cast** spends the slot and rolls the attack or the targets' saves and the damage: Sacred Flame asks for a Dexterity save; Cure Wounds heals 1d8 plus her Wisdom. Area spells are placed on the map as a template and say who they catch. More are added from the SRD library."], "dm.exspells")
+        ["Casting spells", "Brisa's spells, by level, with her DC and spell attack worked out from her Wisdom, and the slots she has left. **Cast** spends the slot and rolls the attack or the targets' saves and the damage: Sacred Flame asks for a Dexterity save; Cure Wounds heals 1d8 plus her Wisdom. Area spells are placed on the map as a template and say who they catch. More are added from the SRD library."], "dm.exspells"),
+      S(".modal", ["Retocar y crear conjuros", "Todo conjuro se puede ajustar como un ataque: el **lápiz** de cada fila cambia nombre, nivel, alcance, cómo se resuelve (ataque, salvación, dardos, cura, sueño o solo efecto), daño y tipo, lo que sube con espacios mayores, el estado que pone, los objetivos y el área. Ese cambio es **solo de esta ficha**. **Crear un conjuro** hace uno nuevo desde cero."],
+        ["Editing and creating spells", "Every spell can be tuned like an attack: each row's **pencil** changes name, level, range, how it resolves (attack, save, darts, healing, sleep or effect only), damage and type, what grows with higher slots, the condition it applies, targets and area. That change is **for this sheet only**. **Create a spell** makes a new one from scratch."], "dm.exspells"),
+      S(".modal", ["La biblioteca de conjuros es tuya", "En **Añadir de la biblioteca**, el DM tiene un lápiz en cada conjuro: si uno de serie se ha quedado viejo o lo queréis distinto, retócalo y en esta partida **sustituye** al de serie (sale con la etiqueta **retocado**); puedes aplicarlo también a las fichas que ya lo tienen. **Restaurar el de serie** lo deshace. **Crear en la biblioteca** añade conjuros propios para toda la mesa."],
+        ["The spell library is yours", "In **Add from library**, the DM has a pencil on every spell: if a built-in one is outdated or you want it different, edit it and in this game it **replaces** the original (tagged **edited**); you can also apply it to the sheets that already have it. **Restore the original** undoes it. **Create in the library** adds your own spells for the whole table."], "dm.exspells"),
     ]),
 
     sec("dados", "dice", ["Dados y charla", "Tirar, el registro, hablar y susurrar"], ["Dice and chat", "Rolling, the log, talking and whispering"], "dm.dock", [
@@ -311,20 +354,24 @@ const DM = {
     ]),
 
     sec("mapa", "map", ["El mapa: moverse", "Elegir mapa, mover fichas, zoom y la barra"], ["The map: getting around", "Choosing a map, moving tokens, zoom and the toolbar"], "dm.map", [
-      S("#mapPick", ["El mapa activo", "El que ven todos. Se crean más desde **Ajustes del mapa**."],
-        ["The active map", "The one everybody sees. Create more from **Map settings**."]),
-      S("#board", ["El tablero", "Rueda del ratón para acercar o alejar; botón derecho o central arrastrando para moverte; en el móvil, dos dedos. Abajo a la izquierda se ve la casilla que hay bajo el puntero."],
-        ["The board", "Mouse wheel to zoom; right or middle button drag to pan; on a phone, two fingers. The bottom-left corner shows the square under the pointer."]),
-      S('[data-tool="token"]', ["Fichas", "La herramienta normal:\n- **arrastra** una ficha para moverla (se pinta su alcance)\n- un **recuadro** elige varias para moverlas juntas\n- **pulsa una ficha** para su menú: apuntarle, atacar, estados, abrir la ficha, ocultarla, centrar en ella la cámara de la party o sacarla del mapa\n- **pulsa una casilla vacía** para colocar a quien falte\n- [[Alt]]+clic señala un punto a todos y [[Ctrl]]+clic en una ficha la apunta"],
-        ["Tokens", "The default tool:\n- **drag** a token to move it (its reach is painted)\n- a **box** selects several to move together\n- **click a token** for its menu: target, attack, conditions, open the sheet, hide it, centre the party camera on it or take it off the map\n- **click an empty square** to place whoever is missing\n- [[Alt]]+click pings a spot for everyone and [[Ctrl]]+click on a token targets it"]),
+      S(".map-tools", ["La barra lateral", "Las herramientas del mapa están a la izquierda, en **secciones que se pliegan**: Mapa, Fichas y medidas, Muros y puertas, Terreno, Salas y zonas, Notas, sonido y accesos, Plantillas de área y Dibujo. Pulsa el título de una para abrirla o cerrarla; cada una recuerda cómo la dejaste."],
+        ["The side bar", "The map tools sit on the left, in **folding sections**: Map, Tokens and measuring, Walls and doors, Terrain, Rooms and zones, Notes, sound and passages, Area templates and Drawing. Click a title to open or close it; each one remembers how you left it."]),
+      S("#mapPick", ["El mapa activo", "El que ven todos, arriba de la barra. Se crean más desde **Ajustes del mapa** o dibujándolos en la **Forja de mapas**."],
+        ["The active map", "The one everybody sees, at the top of the bar. Make more from **Map settings** or by drawing them in the **Map forge**."]),
+      S("#board", ["El tablero", "Rueda del ratón para acercar o alejar; botón derecho o central arrastrando para moverte; en el móvil, dos dedos. Arriba a la derecha se ve la casilla que hay bajo el puntero."],
+        ["The board", "Mouse wheel to zoom; right or middle button drag to pan; on a phone, two fingers. The top-right corner shows the square under the pointer."]),
+      S('[data-tool="token"]', ["Fichas", "La herramienta normal:\n- **arrastra** una ficha para moverla (se pinta su alcance)\n- un **recuadro** elige varias para moverlas juntas\n- **pulsa una ficha** para su globo: arriba, **vida** (escribe una cantidad: [[Intro]] resta, [[Mayús]]+[[Intro]] suma) y **CA temporal** con − y +, sin cerrarlo; debajo, apuntarle, atacar, estados, abrir la ficha, ocultarla, centrar la cámara de la party o sacarla del mapa\n- **pulsa una casilla vacía** para colocar a quien falte\n- [[Alt]]+clic señala un punto a todos y [[Ctrl]]+clic en una ficha la apunta"],
+        ["Tokens", "The default tool:\n- **drag** a token to move it (its reach is painted)\n- a **box** selects several to move together\n- **click a token** for its bubble: at the top, **hit points** (type an amount: [[Enter]] subtracts, [[Shift]]+[[Enter]] adds) and **temporary AC** with − and +, without closing it; below, target, attack, conditions, open the sheet, hide it, centre the party camera or take it off the map\n- **click an empty square** to place whoever is missing\n- [[Alt]]+click pings a spot for everyone and [[Ctrl]]+click on a token targets it"]),
       S('[data-map="fit"]', ["Encajar y zoom", "**Encajar** vuelve a ver el mapa entero; **−** y **+** acercan y alejan."],
         ["Fit and zoom", "**Fit** shows the whole map again; **−** and **+** zoom out and in."]),
+      S('[data-map="forge"]', ["Forja de mapas", "Dibuja tus propios mapas dentro de Mesa, al estilo de Dungeon Scrawl, y úsalos aquí con sus muros y puertas ya puestos. Se explica en su propia sección del tutorial."],
+        ["Map forge", "Draw your own maps inside Mesa, Dungeon Scrawl style, and use them here with their walls and doors already set. It has its own tutorial section."]),
       S("#mapPane .ambient-btn", ["Ambiente", "Enciende o apaga en este aparato los sonidos y la música que hayas puesto en el mapa."],
         ["Ambience", "Turns the sounds and music placed on the map on or off on this device."]),
       S('[data-map="roomCam"]', ["Encuadrar salas", "Cuando la party entra en una sala marcada, la cámara de la tele y de los móviles la encuadra entera; al salir, vuelve a la de antes."],
         ["Frame rooms", "When the party enters a marked room, the TV and phone cameras frame the whole room; on leaving, they return to the previous view."]),
-      S(".bar-fold", ["Ocultar la barra", "La flecha recoge las herramientas y el tablero ocupa todo el alto. El botón **Herramientas** de la esquina las vuelve a sacar."],
-        ["Hide the toolbar", "The arrow tucks the tools away and the board takes the full height. The **Tools** button in the corner brings them back."])
+      S(".bar-fold", ["Ocultar la barra", "La flecha recoge la barra lateral y el tablero ocupa todo el ancho. El botón **Herramientas** de la esquina las vuelve a sacar."],
+        ["Hide the toolbar", "The arrow tucks the side bar away and the board takes the full width. The **Tools** button in the corner brings them back."])
     ]),
 
     sec("muros", "wall", ["El mapa: muros y visión", "Muros, puertas, terreno, salas y lo que ve la party"], ["The map: walls and vision", "Walls, doors, terrain, rooms and what the party sees"], "dm.map", [
@@ -355,8 +402,23 @@ const DM = {
         ["Passages", "Stairs, trapdoors or tunnels to another map or another point on this one. When stepped on it can ask who crosses (the whole party), move only whoever stepped on it, or just mark it."]),
       S('[data-tool="draw"]', ["Dibujar", "Trazos a mano alzada: elige el color, si los ve la party, borra un trazo o todos."],
         ["Draw", "Freehand strokes: choose the colour, whether the party sees them, erase one stroke or all."]),
-      S("#shapes", ["Plantillas de área", "Esfera, cono, línea o cubo del tamaño en pies que escribas. Pulsa para colocarla y arrastra para girarla; dice a quién coge. La equis las quita todas."],
-        ["Area templates", "Sphere, cone, line or cube of the size in feet you type. Click to place it and drag to rotate it; it says who is caught. The cross removes them all."])
+      S("#shapes", ["Plantillas de área", "**Esfera**, **cono**, **línea**, **cubo**, **anillo** (un muro de fuego redondo), **rectángulo** girable y forma **libre** (pulsa los vértices y cierra con doble clic, [[Intro]] o el primer punto; [[Esc]] la deja). Debajo eliges el **tamaño** en pies y, según la forma, el **ancho**, la **abertura** del cono o el **radio de dentro** del anillo, además de un **nombre**, el **color** y si **la ve la party**. Pulsa para colocarla y arrastra para girarla; dice a quién coge. **Quitar** las borra todas."],
+        ["Area templates", "**Sphere**, **cone**, **line**, **cube**, **ring** (a round wall of fire), rotatable **rectangle** and **free** shape (click the corners and close with a double-click, [[Enter]] or the first point; [[Esc]] drops it). Below you choose the **size** in feet and, by shape, the **width**, the cone's **opening** or the ring's **inner radius**, plus a **name**, the **colour** and whether **the party sees it**. Click to place it and drag to rotate it; it says who it catches. **Remove** clears them all."]),
+    ]),
+
+    sec("forja", "map", ["Forja de mapas", "Dibujar tus propios mapas y usarlos en la partida"], ["Map forge", "Drawing your own maps and using them in the game"], "dm.forge", [
+      S(".forja .fj-tools", ["Herramientas", "Como en Dungeon Scrawl, el **suelo** hace las paredes solas:\n- **Sala** (rectángulo, con esquinas redondeadas), **Círculo**, **Polígono**, **Pincel de casillas** y **Cueva** (pincel de bordes irregulares)\n- **Agua**, **Camino o río**, **Muro suelto**, **Puerta** (normal, abierta, doble, secreta, rastrillo, arco o ventana)\n- **Objeto**, **Texto** y **Luz**\n**Sumar / Recortar** ([[X]]) quita suelo con la misma forma. Pasa el ratón por cada una para su atajo de teclado."],
+        ["Tools", "As in Dungeon Scrawl, the **floor** makes the walls by itself:\n- **Room** (rectangle, with rounded corners), **Circle**, **Polygon**, **Square brush** and **Cave** (rough-edged brush)\n- **Water**, **Path or river**, **Loose wall**, **Door** (normal, open, double, secret, portcullis, arch or window)\n- **Object**, **Text** and **Light**\n**Add / Cut** ([[X]]) removes floor with the same shape. Hover each one for its keyboard shortcut."]),
+      S(".forja .fj-stage", ["El plano", "Dibuja arrastrando. Lo que dibujas se ajusta a la **casilla**, a la **media casilla** o va **suelto** (arriba; [[Alt]] lo suelta al momento). Rueda para acercar, [[Espacio]] o la mano para moverte. Con **Elegir** pulsas o encierras piezas para moverlas, girarlas ([[Q]]/[[W]]), copiarlas, duplicarlas, hacer espejo o borrarlas. [[Ctrl]]+[[Z]] deshace y [[Ctrl]]+[[Y]] rehace sin límite."],
+        ["The plan", "Draw by dragging. What you draw snaps to the **square**, the **half square** or stays **free** (at the top; [[Alt]] frees it on the spot). Wheel to zoom, [[Space]] or the hand to pan. With **Select** you click or box pieces to move, rotate ([[Q]]/[[W]]), copy, duplicate, mirror or delete them. [[Ctrl]]+[[Z]] undoes and [[Ctrl]]+[[Y]] redoes without limit."]),
+      S(".forja .fj-side", ["Pieza, Capas y Estilo", "- **Pieza**: todo lo de lo elegido (medidas, rugosidad, giro, color, tipo de puerta, letra del texto…)\n- **Capas**: verlas u ocultarlas, bloquearlas, renombrarlas, su opacidad y su orden\n- **Estilo**: Pergamino, Mazmorra, Cueva, Tinta, Plano azul o Bosque, o tus colores, grosor de pared, rayado de roca, sombra, textura, cuadrícula y tamaño del plano"],
+        ["Piece, Layers and Style", "- **Piece**: everything about the selection (size, roughness, rotation, colour, door type, text font…)\n- **Layers**: show or hide, lock, rename, opacity and order\n- **Style**: Parchment, Dungeon, Cave, Ink, Blueprint or Forest, or your own colours, wall thickness, rock hatching, shadow, texture, grid and plan size"]),
+      S(".modal", ["Generar una mazmorra", "Una mazmorra entera con un clic: número y tamaño de salas, forma (cuadradas, redondeadas, variadas o cueva), ancho de pasillo, trazado (equilibrado, con bucles o serpenteante), puertas, escaleras y objetos. La **semilla** la repite igual; **Otra** prueba otra. Se ve al momento y luego se retoca a mano."],
+        ["Generate a dungeon", "A whole dungeon in one click: number and size of rooms, shape (square, rounded, mixed or cave), corridor width, layout (balanced, with loops or winding), doors, stairs and objects. The **seed** repeats it exactly; **Other** tries another. It shows at once and can then be edited by hand."], "dm.forgeGen"),
+      S('.forja [data-fj="use"]', ["Usar en este mapa", "Convierte el plano en el **fondo del mapa**, con la cuadrícula ya encajada, y pone sus **paredes, puertas y ventanas como muros de Mesa** (las secretas son pared para la party; los arcos, hueco). Las luces del plano pueden alumbrar como casillas de luz. El diseño se guarda con el mapa para retocarlo después."],
+        ["Use on this map", "Turns the plan into the **map background**, with the grid already aligned, and places its **walls, doors and windows as Mesa walls** (secret ones are walls to the party; arches are gaps). The plan's lights can shine as lit squares. The design is saved with the map to edit later."]),
+      S(".forja .fj-top", ["Guardar y exportar", "**Guardar proyecto** descarga el plano para seguir otro día o en otra partida (**Abrir** lo carga); **Exportar imagen** lo baja en PNG a 50, 70 o 140 píxeles por casilla. Mientras dibujas, el borrador se guarda solo en este navegador. **Cerrar** sale sin tocar el mapa."],
+        ["Save and export", "**Save project** downloads the plan to continue another day or in another game (**Open** loads it); **Export image** downloads a PNG at 50, 70 or 140 pixels per square. While you draw, the draft saves itself in this browser. **Close** leaves without touching the map."])
     ]),
 
     sec("ajustes", "gear", ["Ajustes del mapa", "El plano, la cuadrícula, lo que ve la party y la cámara"], ["Map settings", "The battle map, grid, what the party sees and the camera"], "dm.mapsettings", [
@@ -366,10 +428,10 @@ const DM = {
         ["The battle map", "**Background image** loads your map. Mesa finds the drawn grid by itself and shows it for you to confirm (**Fit grid**), then **proposes walls and doors** (**Walls and doors from the map**) for you to review before adding them."]),
       S(".modal #teachWalls", ["La propuesta aprende", "Cuando los muros de un plano estén bien, **Enseñar con este plano** hace que la propuesta acierte más en los siguientes. Lo aprendido se puede exportar, importar u olvidar."],
         ["The proposal learns", "Once a map's walls are right, **Teach with this map** makes the proposal better on the next ones. What it learned can be exported, imported or forgotten."]),
-      S('.modal [name="show"]', ["Qué ve la party", "- enseñar el mapa en la tele y revelarlo entero\n- recordar lo explorado y dibujar la cuadrícula\n- dejar que cada jugador mueva su ficha o dibuje\n- enseñar muros y puertas\n- mapa a oscuras: solo se ve con luz o visión en la oscuridad\n- dejar hacer zoom a los jugadores\n- pintar el alcance al arrastrar y enseñar la vida de los enemigos"],
-        ["What the party sees", "- show the map on the TV and reveal it all\n- remember explored areas and draw the grid\n- let each player move their token or draw\n- show walls and doors\n- dark map: only seen with light or darkvision\n- let players zoom\n- paint the reach while dragging and show enemies' health"]),
-      S('.modal [name="camera"]', ["Cámara y medidas", "La cámara de la party (todo el mapa o centrada en el personaje, con cuántas casillas a lo ancho), encuadrar salas, los pies por casilla y cómo cuentan las diagonales: 5 pies cada una o la variante 5-10-5."],
-        ["Camera and measures", "The party camera (whole map or centred on the character, how many squares wide), framing rooms, feet per square and how diagonals count: 5 feet each or the 5-10-5 variant."]),
+      S('.modal [name="show"]', ["Qué ve la party", "- enseñar el mapa en la tele y revelarlo entero\n- recordar lo explorado y dibujar la cuadrícula\n- dejar que cada jugador mueva su ficha o dibuje\n- enseñar muros y puertas\n- mapa a oscuras: solo se ve con luz o visión en la oscuridad\n- dejar hacer zoom a los jugadores\n- pintar el alcance al arrastrar y enseñar la vida de los enemigos\nEn una partida nueva, de serie, los jugadores **no mueven** sus fichas, **no dibujan** y **no ven muros ni puertas**: lo decides tú."],
+        ["What the party sees", "- show the map on the TV and reveal it all\n- remember explored areas and draw the grid\n- let each player move their token or draw\n- show walls and doors\n- dark map: only seen with light or darkvision\n- let players zoom\n- paint the reach while dragging and show enemies' health\nIn a new game, by default, players **don't move** their tokens, **don't draw** and **don't see walls or doors**: it is your call."]),
+      S('.modal [name="camera"]', ["Cámara y medidas", "La cámara de la party (todo el mapa o siguiendo a los personajes, con cuántas casillas a lo ancho: **seguir con 18** es lo de serie en mapas nuevos), encuadrar salas al entrar y volver al salir (encendido de serie), los pies por casilla y cómo cuentan las diagonales: 5 pies cada una o la variante 5-10-5."],
+        ["Camera and measures", "The party camera (whole map or following the characters, how many squares wide: **follow with 18** is the default on new maps), framing rooms on entry and back on exit (on by default), feet per square and how diagonals count: 5 feet each or the 5-10-5 variant."]),
       S(".modal #resetFog", ["Limpiezas", "**Restablecer niebla** borra lo explorado; **Vaciar muros**, **Quitar niebla y oscuridad** pintadas y **Cerrar contorno** pone un muro alrededor del mapa."],
         ["Clean-ups", "**Reset fog** wipes explored areas; **Clear walls**, **Remove fog and darkness** painted squares, and **Close outline** walls the map's edge."]),
       S(".modal #newMap", ["Mapas nuevos", "**Mapa nuevo** crea otro en la partida; **Borrar este mapa** lo elimina con todo lo dibujado (pide confirmación). Para que los cambios de esta ventana se apliquen, **Guardar**."],
@@ -392,12 +454,14 @@ const DM = {
         ["Party screen", "Opens the TV or projector view in a separate window, on the other monitor or in another tab, and chooses what it shows: the map, the party's exact HP, how hurt enemies are, or the map without fog."]),
       S('.modal [data-menu="link"]', ["Cómo entran tus jugadores", "La dirección para la misma wifi y, si arrancaste con «Jugar por internet», la de internet, con botón para copiarla. En la entrada eligen **Jugador**, escriben su nombre y cogen su personaje."],
         ["How your players join", "The address for the same wifi and, if you started with “Play over the internet”, the internet one, with a copy button. On the entrance screen they pick **Player**, type their name and take their character."]),
-      S('.modal [data-menu="handout"]', ["Enseñar una imagen", "Un mapa del tesoro, una carta, el retrato del villano: sale a pantalla completa en la tele y en todos los móviles. Una barra arriba te recuerda que la estás enseñando y la guarda con un clic."],
+      S('.modal [data-menu="handout"]', ["Enseñar una imagen", "Un mapa del tesoro, una carta, el retrato del villano: sale a pantalla completa en la tele y en todos los móviles. Una barra arriba te recuerda que la estás enseñando y la guarda con un clic. Los jugadores pueden **cerrarla** para mirar el mapa y **reabrirla** con el botón «Imagen del DM» mientras la sigas enseñando; al guardarla, se les va."],
         ["Show a picture", "A treasure map, a letter, the villain's portrait: it fills the TV and every phone. A bar at the top reminds you it is showing and hides it with one click."]),
       S('.modal [data-menu="ask"]', ["Pedir una tirada", "Qué pides («Percepción»), la fórmula, la dificultad y a quién. A cada jugador le sale un botón en el móvil; al pulsarlo tira y se anuncia si supera la CD."],
         ["Ask for a roll", "What you ask for (“Perception”), the formula, the DC and who. Each player gets a button on their phone; pressing it rolls and announces whether they beat the DC."]),
       S('.modal [data-menu="export"]', ["Copias de la partida", "**Guardar copia** descarga un archivo con toda la partida; **Cargar una copia** la sustituye por la de un archivo. Útil antes de una sesión importante o para llevarla a otro ordenador."],
         ["Game backups", "**Save backup** downloads a file with the whole game; **Load a backup** replaces it with one from a file. Handy before a big session or to move to another computer."]),
+      S('.modal [data-menu="charsOut"]', ["Llevar personajes a otra campaña", "**Exportar personajes** guarda en un archivo uno, varios o toda la party, con la ficha entera (conjuros, equipo, ataques, rasgos, notas) y su retrato. **Importar personajes** los mete en otra partida como fichas nuevas, sin colocar y sin pisar a nadie (si se llaman igual, se numeran). Cada jugador puede además exportar la suya y traerla al entrar."],
+        ["Taking characters to another campaign", "**Export characters** saves one, several or the whole party to a file, with the full sheet (spells, gear, attacks, features, notes) and portrait. **Import characters** brings them into another game as new sheets, unplaced and overwriting nobody (same names get a number). Each player can also export their own and bring it when joining."]),
       S(".modal .menu-item.static", ["Idioma y salir", "El idioma cambia solo en este aparato. **Salir de la sesión** te devuelve a la entrada; la partida sigue guardada."],
         ["Language and leaving", "The language changes on this device only. **Leave the session** takes you back to the entrance; the game stays saved."])
     ]),
@@ -458,8 +522,10 @@ const PLAYER = {
     sec("ficha", "shield", ["Tu ficha", "Vida, estados, características y tiradas"], ["Your sheet", "Hit points, conditions, abilities and rolls"], "pl.sheet", [
       S(".sheet-head", ["Quién eres", "Retrato, nombre, clase, especie y nivel. **Editar** abre tu ficha completa: ataques, características, conjuros, equipo, rasgos y notas."],
         ["Who you are", "Portrait, name, class, species and level. **Edit** opens your full sheet: attacks, abilities, spells, equipment, features and notes."]),
-      S(".quick-stats", ["Lo básico", "Competencia, **iniciativa** (púlsala para tirarla y apuntarla), clase de armadura y velocidad."],
-        ["The basics", "Proficiency, **initiative** (tap it to roll and record it), armour class and speed."]),
+      S('.sheet-head [data-act="exportMe"]', ["Llevarte la ficha", "Guarda tu ficha entera en un archivo, con retrato, conjuros y equipo. En otra campaña, al entrar sin personaje, **Traer mi ficha de otra partida** la mete tal cual."],
+        ["Take your sheet with you", "Saves your full sheet to a file, with portrait, spells and gear. In another campaign, joining without a character, **Bring my sheet from another game** brings it in as is."]),
+      S(".quick-stats", ["Lo básico", "Competencia, **iniciativa** (púlsala para tirarla y apuntarla), clase de armadura y velocidad. El escudo de la CA da la **total**; un extra temporal (Escudo, cobertura…) sale aparte en dorado. Púlsalo para ponerte o quitarte la CA temporal."],
+        ["The basics", "Proficiency, **initiative** (tap it to roll and record it), armour class and speed. The AC shield shows the **total**; a temporary bonus (Shield, cover…) shows apart in gold. Tap it to set or clear your temporary AC."]),
       S(".hp-box", ["Puntos de golpe", "Escribe una cantidad y pulsa **Daño** o **Curar**, o usa −1, −5, +1 y +5. La vida temporal se gasta primero. Si caes a 0, aquí aparecen las salvaciones de muerte."],
         ["Hit points", "Type an amount and press **Damage** or **Heal**, or use −1, −5, +1 and +5. Temporary HP is spent first. If you drop to 0, death saves appear here."]),
       S(".cond-box", ["Estados", "Tus estados, agotamiento, concentración e inspiración. **Estados** abre la lista para ponerte o quitarte alguno; pasa el dedo o el ratón por uno para leer qué hace."],
@@ -472,15 +538,17 @@ const PLAYER = {
         ["Slots and resources", "Tap a spell slot or a resource (rage, ki…) to spend it."]),
       S(".roll-box", ["Salvaciones y habilidades", "Toca una fila para tirarla con su modificador. El punto dorado dice que tienes competencia."],
         ["Saves and skills", "Tap a row to roll it with its modifier. The golden dot means you are proficient."]),
-      S(".notes-box", ["Acciones, conjuros, equipo, rasgos y notas", "Las pestañas de abajo: tus ataques (toca el bonificador o el daño para tirar), las acciones de combate con su regla y tus **Efectos** activos (Bendecir, Furia…), que se suman solos. Cualquier fórmula subrayada se tira con un toque."],
-        ["Actions, spells, equipment, features and notes", "The tabs at the bottom: your attacks (tap the bonus or damage to roll), combat actions with their rule and your active **Effects** (Bless, Rage…), which add themselves. Any underlined formula rolls with a tap."])
+      S(".notes-box", ["Acciones, conjuros, equipo, rasgos y notas", "Las pestañas de abajo: tus ataques (toca el bonificador o el daño para tirar) y, debajo, tus **conjuros** con alcance, golpe o CD y efecto (y **Lanzar**), las acciones de combate con su regla y tus **Efectos** activos (Bendecir, Furia…), que se suman solos. Cualquier fórmula subrayada se tira con un toque."],
+        ["Actions, spells, equipment, features and notes", "The tabs at the bottom: your attacks (tap the bonus or damage to roll) and, below them, your **spells** with range, hit or DC and effect (and **Cast**), combat actions with their rule and your active **Effects** (Bless, Rage…), which add themselves. Any underlined formula rolls with a tap."])
     ]),
 
     sec("atacar", "sword", ["Atacar y lanzar conjuros", "La ventana de ataque y tus conjuros"], ["Attacking and casting", "The attack window and your spells"], "pl.attack", [
       S(".modal", ["La ventana de ataque", "Elige el objetivo, cómo tiras y el ataque. El servidor tira por ti, compara con la CA del objetivo (que tú no ves) y aplica el daño. Si eres pícaro o paladín salen **Ataque furtivo** y **Castigo divino**, y puedes sumar un daño extra."],
         ["The attack window", "Choose the target, how you roll and the attack. The server rolls for you, compares with the target's AC (which you cannot see) and applies the damage. Rogues and paladins get **Sneak Attack** and **Divine Smite**, and you can add extra damage."]),
       S(".modal", ["Tus conjuros", "Lanza un conjuro: se gasta el espacio y se tiran el ataque o las salvaciones y el daño. Los de área se colocan en el mapa."],
-        ["Your spells", "Cast a spell: the slot is spent and the attack or saves and damage are rolled. Area spells are placed on the map."], "pl.spells")
+        ["Your spells", "Cast a spell: the slot is spent and the attack or saves and damage are rolled. Area spells are placed on the map."], "pl.spells"),
+      S(".modal", ["Ajustar tus conjuros", "El **lápiz** de cada conjuro lo retoca solo en tu ficha (daño, alcance, cómo se resuelve…), por si tu mesa usa otra versión. **Crear un conjuro** añade uno a tu medida."],
+        ["Tuning your spells", "Each spell's **pencil** edits it on your sheet only (damage, range, how it resolves…), in case your table uses another version. **Create a spell** adds a custom one."], "pl.spells"),
     ]),
 
     sec("turno", "hourglass", ["Tu turno y lo que pide el DM", "Avisos de turno, tiradas pedidas e imágenes"], ["Your turn and DM requests", "Turn alerts, requested rolls and pictures"], "pl.sheet", [
@@ -488,13 +556,15 @@ const PLAYER = {
         ["When it's your turn", "In combat, the top shows whose turn it is and who is next. When it is yours, “It's your turn” lights up and the phone vibrates."]),
       S("#asks button", ["Tiradas que pide el DM", "Si el DM pide una tirada a la party sale un botón grande: «El DM te pide: Percepción · CD 13». Púlsalo para tirar; todos verán si la superas."],
         ["Rolls the DM asks for", "When the DM asks the party for a roll, a big button appears: “The DM asks you: Perception · DC 13”. Press it to roll; everyone sees whether you beat it."]),
-      S(null, ["Imágenes del DM", "Cuando el DM enseña una imagen (un mapa, una carta), te sale en grande. **Cerrar** la quita de tu pantalla."],
-        ["Pictures from the DM", "When the DM shows a picture (a map, a letter), it pops up large. **Close** removes it from your screen."])
+      S(null, ["Imágenes del DM", "Cuando el DM enseña una imagen (un mapa, una carta), te sale en grande. **Cerrar** la quita para mirar el mapa o tu ficha, y el botón **Imagen del DM** de arriba la vuelve a abrir mientras el DM la siga enseñando. Cuando deja de enseñarla, desaparecen la imagen y el botón."],
+        ["DM pictures", "When the DM shows a picture (a map, a letter), it opens big. **Close** puts it away so you can look at the map or your sheet, and the **DM's image** button at the top opens it again while the DM keeps showing it. When the DM stops, both the picture and the button go away."]),
     ]),
 
     sec("party", "users", ["La party", "Tus compañeros y los enemigos a la vista"], ["The party", "Your companions and visible enemies"], "pl.party", [
-      S(".party-strip", ["Tus compañeros", "Su vida, su CA y quién los lleva."],
-        ["Your companions", "Their hit points, AC and who plays them."]),
+      S(".party-strip", ["Tus compañeros", "Su vida, su CA (con el extra temporal aparte) y quién los lleva. **Pulsa a un compañero** para ver su ficha completa y su ficha detallada, con sus pestañas, en **solo lectura**: miras, pero no cambias nada."],
+        ["Your companions", "Their hit points, AC (with the temporary bonus apart) and who plays them. **Tap a companion** to see their full sheet and detailed sheet, with its tabs, **read only**: you look but change nothing."]),
+      S(".modal .mate-sheet", ["La ficha de un compañero", "Igual que la tuya, con la etiqueta **Solo lectura**: sin botones de vida, ni dados, ni editar. Las pestañas sí cambian, para mirar sus ataques, conjuros, equipo, rasgos y notas."],
+        ["A companion's sheet", "Same as yours, tagged **Read only**: no hit point buttons, no dice, no edit. The tabs do switch, to look at their attacks, spells, gear, features and notes."], "pl.mate"),
       S(".party-strip ~ .section-title", ["Los enemigos", "**A la vista**: los que tu party ve ahora, con lo heridos que parecen y el daño que les habéis hecho. **Vistos antes**: donde los visteis por última vez. Su vida exacta y su CA solo las sabe el DM."],
         ["The enemies", "**In sight**: those your party can see now, how hurt they look and the damage you have dealt. **Seen before**: where you last saw them. Their exact HP and AC are known only to the DM."])
     ]),
@@ -512,6 +582,8 @@ const PLAYER = {
         ["My areas", "Pick one of your area spells and place it to see who it would catch. Only you see it and nothing is spent; to cast it, **Attack**. **Clear areas** removes it."]),
       S('[data-pmap="fit"]', ["Zoom", "**−**, **+** y **Todo**, si el DM deja hacer zoom; con dos dedos también."],
         ["Zoom", "**−**, **+** and **All**, if the DM allows zooming; two fingers work too."]),
+      S('[data-pmap="followMe"]', ["Seguir a mi personaje", "Encendido, la cámara se queda centrada en **tu** personaje (con las casillas a lo ancho que marque el DM) aunque el DM mueva la acción a otro sitio. Apagado, sigue la acción como la tele, y encuadra las salas al entrar. Se recuerda en este aparato."],
+        ["Follow my character", "On, the camera stays centred on **your** character (with as many squares across as the DM set) even if the DM moves the action elsewhere. Off, it follows the action like the TV, framing rooms as you enter. It is remembered on this device."]),
       S(null, ["Accesos y notas", "Al pisar una escalera o un pasadizo puedes pasar a otro mapa, a veces con toda la party. Si pisas una nota del DM, puede que te salga lo que pone."],
         ["Passages and notes", "Stepping on stairs or a tunnel can take you to another map, sometimes with the whole party. Step on one of the DM's notes and you may get to read it."])
     ]),
@@ -528,8 +600,8 @@ const PLAYER = {
     ]),
 
     sec("personaje", "userPlus", ["Sin personaje", "Elegir uno o crear el tuyo"], ["No character yet", "Pick one or create your own"], null, [
-      S(".picker", ["Elegir o crear", "Si entras sin personaje, eliges uno libre de la mesa (los que lleva otra persona salen ocupados) o pulsas **Crear mi personaje**: el creador paso a paso o uno al azar."],
-        ["Pick or create", "If you join without a character, pick a free one from the table (those held by someone else show as taken) or press **Create my character**: the step-by-step builder or a random one."]),
+      S(".picker", ["Elegir o crear", "Si entras sin personaje, eliges uno libre de la mesa (los que lleva otra persona salen ocupados), pulsas **Crear mi personaje** (el creador paso a paso o uno al azar) o **Traer mi ficha de otra partida**, desde el archivo que exportaste allí."],
+        ["Pick or create", "If you join without a character, pick a free one from the table (those held by someone else show as taken) or press **Create my character**: the step-by-step builder or a random one, or **Bring my sheet from another game**, from the file you exported there."]),
       S(null, ["Si el DM te libera", "Si el DM libera tu personaje se te avisa y vuelves a elegir. Desde otro aparato puedes recuperar el tuyo entrando con tu nombre."],
         ["If the DM releases you", "If the DM releases your character you are told and pick again. From another device you can take yours back by joining with your name."])
     ])

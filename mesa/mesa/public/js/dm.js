@@ -1,14 +1,15 @@
 /* Vista del DM: todo a la vista y todo editable. */
 
+import { openExportChars, importChars } from "./chars-io.js";
 import { afterMove } from "./portals.js";
 import { voiceWidget } from "./voice.js";
 import { $, el, on, esc, lines, sign, pct, hpTone, hpBar, tweenBars, initials, imgURL, toast, modal, confirmBox, shrinkImage, clamp } from "./util.js";
-import { CONDITIONS, conditionName, ABILITIES, SKILLS, PIN_KINDS, normalizeSound, modOf, normalizeChar, normalizeBeast, bestiaryOf, isBaseBeast, normalizeMap, normalizePin, normalizePortal, uid, encounterDifficulty, MAX_COLS, MAX_ROWS } from "./schema.js";
+import { acOf, cellKey, CONDITIONS, conditionName, ABILITIES, SKILLS, PIN_KINDS, normalizeSound, modOf, normalizeChar, normalizeBeast, bestiaryOf, isBaseBeast, normalizeMap, normalizePin, normalizePortal, uid, encounterDifficulty, MAX_COLS, MAX_ROWS } from "./schema.js";
 import { openAttacks } from "./attacks.js";
-import { feetChars, nextRoomId } from "./los.js";
+import { feetChars, nextRoomId, visibleCells, roomsOf, hasSight, occupied } from "./los.js";
 import { store, onState, onPresence, onStatus, op, patchChar, patchSession, patchMap, uploadImage, leave, lobby, setOpGuard } from "./net.js";
 import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret } from "./dice-panel.js";
-import { openCharEditor, openConditions } from "./char-editor.js";
+import { openCharEditor, openConditions, openTempAC, acShield } from "./char-editor.js";
 import { openBuilder, quickRandom } from "./creador.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
@@ -18,7 +19,7 @@ import { icon, withIcon } from "./icons.js";
 import { rollHitPoints } from "./dice.js";
 import { TYPE_NAMES, typeOf, crValue, CATALOG_BY_ID } from "./catalog.js";
 import { statBlockHTML } from "./statblock.js";
-import { sheetTabsHTML, attackTableHTML, handleSheetAct } from "./sheet.js";
+import { sheetTabsHTML, attackTableHTML, spellTableHTML, handleSheetAct } from "./sheet.js";
 import { listEditor, linesToEntries, entriesToLines } from "./list-editor.js";
 import { ambientToggle, previewSound, stopPreview } from "./ambient.js";
 import { SOUND_LIBRARY, SOUND_CATS, libSound } from "./sound-library.js";
@@ -40,6 +41,8 @@ const beastOpen = new Set();   // fichas desplegadas en el bestiario
 const beastDraft = new Map();  // cantidad y «PV al azar» de cada fila, para que no se pierdan al repintar
 let drawerOpen = false;
 let shapeSize = 20;
+let shapeColor = "#8878d8";
+const SHAPE_COLORS = ["#8878d8", "#e56b6f", "#f08a2b", "#7fd0ff", "#8fd694", "#e0bd76"];
 let targetId = null;
 let lastAlert = null;   // null = todavía no se ha pintado nada
 let lastArea = null;    // la última plantilla colocada para un conjuro
@@ -466,7 +469,7 @@ function cardHTML(c) {
         <b class="tnum">${c.hp}</b><span>/ ${c.maxHp}</span>
         ${c.tempHp ? `<span class="temp">+${c.tempHp} temporales</span>` : ""}
         <span class="spacer"></span>
-        <span class="ac-shield" title="Clase de armadura"><small>CA</small><b class="tnum">${c.ac}</b></span>
+        ${acShield(c, { act: "tempAc" })}
       </div>
       ${hpBar(c.id, p)}
     </div>
@@ -514,6 +517,7 @@ function detailHTML(c) {
       ${!monster && c.hitDice ? `<button class="btn sm" data-act="hitDie">Dado de golpe (${Math.max(0, c.level - c.hitDiceUsed)})</button>` : ""}
     </div>
     ${monster ? attackTableHTML(c) : ""}
+    ${monster && (c.spellbook || []).length ? spellTableHTML(c) : ""}
     ${!monster && c.slots.some(n => n > 0) ? `<div class="slots">
       ${c.slots.map((n, i) => n ? `<span class="slot" data-act="slot" data-level="${i}">${i + 1}º
         ${Array.from({ length: n }, (_, j) => `<i class="${j < c.slotsUsed[i] ? "used" : ""}"></i>`).join("")}</span>` : "").join("")}
@@ -569,6 +573,7 @@ function bindTable(root) {
         return;
       }
       case "conditions": return openConditions(c);
+      case "tempAc": return openTempAC(c);
       case "dropCond": return patchChar(c.id, { conditions: c.conditions.filter(x => x !== btn.dataset.cond) });
       case "checkAbility": {
         const k = btn.dataset.ability;
@@ -769,29 +774,46 @@ function toggleCombat() {
   openCombatRoster();
 }
 
-/* A cuánto se considera que una criatura está «en el ajo». Más lejos de esto
-   se queda fuera de la iniciativa, aunque esté en el mismo mapa. */
-const COMBAT_REACH = 12;
+/* A cuántas casillas se considera que una criatura está «en el ajo». Se
+   puede cambiar al empezar el combate. */
+let combatReach = 6;
 
 /* Quién entra al empezar un combate.
 
-   No entra todo el que esté en el mapa: se caen los que están fuera de
-   combate, las criaturas que la party todavía no ha visto (meterlas delataría
-   que hay algo ahí) y las que están lejos de la pelea. La lista se puede
-   retocar a mano antes de empezar. */
-function combatCandidates() {
+   La party que está en el mapa, y de las criaturas solo las que tienen
+   sentido: vivas, en este mapa, no ocultas, y además
+   - que la party las vea ahora mismo, o
+   - que estén en la misma sala que alguien de la party, o
+   - que ya las hayan visto y estén a «combatReach» casillas o menos de un
+     personaje (o de quien se movió el último) sin un muro por medio.
+   Lo de la otra punta del mapa, lo muerto y lo que nadie ha descubierto se
+   queda fuera. La lista se puede retocar a mano antes de empezar. */
+function combatCandidates(reach = combatReach) {
   const map = activeMap();
-  const heroes = pcs().filter(c => c.hp > 0);
-  const near = c => {
-    if (!map || c.mx === null || c.mapId !== map.id) return false;
-    return heroes.some(h => h.mx !== null && h.mapId === map.id && feetChars(map, h, c) <= COMBAT_REACH * (map.feet || 5));
-  };
-  return chars().filter(c => {
+  const onThis = c => map && c.mx !== null && c.mapId === map.id;
+  const heroes = pcs().filter(c => c.hp > 0 && onThis(c));
+  const focus = byId(session().focusId);
+  const anchors = [...heroes, ...(focus && onThis(focus) && !heroes.includes(focus) ? [focus] : [])];
+  const seen = map ? visibleCells(doc(), map) : new Set();
+  const rooms = map ? roomsOf(map) : { of: new Map() };
+  const heroRooms = new Set(heroes.flatMap(h => occupied(h).flatMap(([x, y]) => rooms.of.get(cellKey(x, y)) || [])));
+  const why = new Map();
+  const list = chars().filter(c => {
     if (c.hp <= 0) return false;
-    if (c.kind === "pc") return true;
-    return c.discovered && near(c);
+    if (c.kind === "pc") return !map || c.mx === null || onThis(c);
+    if (c.hidden || !onThis(c)) return false;
+    const cells = occupied(c);
+    if (cells.some(([x, y]) => seen.has(cellKey(x, y)))) { why.set(c.id, "a la vista"); return true; }
+    if (cells.some(([x, y]) => (rooms.of.get(cellKey(x, y)) || []).some(r => heroRooms.has(r)))) { why.set(c.id, "en la misma sala"); return true; }
+    if (!c.discovered) return false;
+    const close = anchors.find(h => feetChars(map, h, c) <= reach * (map.feet || 5) && hasSight(map, h.mx, h.my, c.mx, c.my));
+    if (close) { why.set(c.id, `a ${Math.round(feetChars(map, close, c))} pies de ${close.name}`); return true; }
+    return false;
   });
+  combatWhy = why;
+  return list;
 }
+let combatWhy = new Map();
 
 const sortByInitiative = list => list.slice()
   .sort((a, b) => b.initiative - a.initiative || modOf(b.dex) - modOf(a.dex) || a.name.localeCompare(b.name))
@@ -815,7 +837,8 @@ function openCombatRoster() {
     <button type="button" class="btn sm" data-roll="${c.id}" title="Tirar su iniciativa">d20</button>
   </label>`;
   const body = el(`<div>
-    <p class="prose" style="font-size:13px;margin:0 0 10px">Entran estos. Quita o añade a quien quieras, y escribe la iniciativa a mano o tírala.</p>
+    <p class="prose" style="font-size:13px;margin:0 0 10px">Entran la party y las criaturas vivas que la party ve, que están en su misma sala o que ya ha visto y están cerca sin un muro por medio. Quita o añade a quien quieras, y escribe la iniciativa a mano o tírala.</p>
+    <label class="field combat-reach"><span>Cerca es a cuántas casillas</span><input type="number" id="combatReach" min="1" max="60" value="${combatReach}"></label>
     <div class="row" style="margin-bottom:10px">
       <button type="button" class="btn sm" id="rollAllInit">Tirar por todos</button>
       <button type="button" class="btn sm" id="rollFoesInit">Tirar solo por las criaturas</button>
@@ -836,7 +859,13 @@ function openCombatRoster() {
   body.querySelector("#rollFoesInit").addEventListener("click", () =>
     [...body.querySelectorAll("input:checked")].forEach(i => { const c = byId(i.value); if (c && c.kind === "monster") rollOne(c, true); }));
 
-  modal({
+  const reachBox = body.querySelector("#combatReach");
+  reachBox.addEventListener("change", () => {
+    combatReach = clamp(Math.trunc(+reachBox.value || 6), 1, 60);
+    rosterWin.close();
+    openCombatRoster();
+  });
+  const rosterWin = modal({
     title: "Quién entra en combate", body, wide: true,
     actions: [{ label: "Cancelar" }, {
       label: "Empezar", tone: "primary",
@@ -863,7 +892,9 @@ function openCombatRoster() {
 }
 
 function whyOut(c, inside) {
-  if (inside.has(c.id)) return c.kind === "pc" ? "de la party" : "iniciativa " + c.initiative;
+  if (inside.has(c.id)) return c.kind === "pc" ? "de la party" : [combatWhy.get(c.id), "iniciativa " + c.initiative].filter(Boolean).join(" · ");
+  if (c.hidden) return "oculto a la party";
+  if (c.mapId !== activeMap().id && c.mx !== null) return "en otro mapa";
   if (c.hp <= 0) return "fuera de combate";
   if (c.kind === "monster" && !c.discovered) return "la party aún no lo ha visto";
   if (c.mx === null) return "no está en el tablero";
@@ -1203,64 +1234,98 @@ function renderMap() {
   const map = activeMap();
   if (!pane.dataset.ready || !mapView) {
     pane.dataset.ready = "1";
+    /* Las herramientas, a la izquierda y por secciones que se pliegan. Cada
+       sección recuerda si estaba abierta. */
+    const sec = (id, title, ico, body, openDefault = true) => `<details class="ms-sec" data-sec="${id}" ${secOpen(id, openDefault) ? "open" : ""}>
+      <summary>${icon(ico, 15)}<span>${title}</span>${icon("down", 14)}</summary><div class="ms-body">${body}</div></details>`;
     pane.innerHTML = `
       <div class="map-wrap ${barHidden() ? "bar-hidden" : ""}">
-        <div class="map-bar">
-          <button class="icon-btn bar-fold" data-map="hideBar" title="Ocultar las herramientas del mapa" aria-label="Ocultar las herramientas del mapa">${icon("up")}</button>
-          <select id="mapPick" aria-label="Mapa activo" style="max-width:200px"></select>
-          <div class="tool-set" id="tools">
-            <button data-tool="token" aria-pressed="true" title="Mover y seleccionar fichas">${icon("move", 15)}Fichas</button>
-            <button data-tool="measure" aria-pressed="false" title="Medir distancias">${icon("ruler", 15)}Regla</button>
-            <button data-tool="wall" aria-pressed="false" title="Muro: por los bordes, recto; desde el centro de una casilla, en diagonal">${icon("wall", 15)}Muro</button>
-            <button data-tool="freewall" aria-pressed="false" title="Muro a mano alzada, para paredes redondas o irregulares (con Mayúsculas, recto)">${icon("scribble", 15)}Muro libre</button>
-            <button data-tool="door" aria-pressed="false" title="Puerta, recta, en diagonal o en un muro libre: se abre y se cierra">${icon("door", 15)}Puerta</button>
-            <button data-tool="erase" aria-pressed="false" title="Quitar muros, diagonales, muros libres y puertas">${icon("eraser", 15)}Borrar</button>
-            <button data-tool="pin" aria-pressed="false" title="Clavar una nota">${icon("note", 15)}Nota</button>
-            <button data-tool="sound" aria-pressed="false" title="Sonido ambiente: una hoguera, un río, la música de la taberna">${icon("volume", 15)}Sonido</button>
-            <button data-tool="portal" aria-pressed="false" title="Escalera o pasadizo: a otro mapa o a otro punto de este">${icon("stairs", 15)}Acceso</button>
-            <button data-tool="draw" aria-pressed="false" title="Dibujar a mano alzada">${icon("scribble", 15)}Dibujar</button>
+        <aside class="map-bar map-tools" aria-label="Herramientas del mapa">
+          <div class="ms-head">
+            <select id="mapPick" aria-label="Mapa activo"></select>
+            <button class="icon-btn bar-fold" data-map="hideBar" title="Ocultar las herramientas del mapa" aria-label="Ocultar las herramientas del mapa">${icon("prev")}</button>
           </div>
-          <div class="tool-set" id="terrain" aria-label="Terreno">
-            <button data-brush="fog" title="Niebla: ver a través cuesta el triple">${icon("brush", 15)}Niebla</button>
-            <button data-brush="dark" title="Oscuridad: no se ve a través">${icon("brush", 15)}Oscuridad</button>
-            <button data-brush="lit" title="Luz fija: alumbra aunque el mapa esté a oscuras">${icon("brush", 15)}Luz</button>
-            <button data-layer="rough" data-value="1" title="Terreno difícil: entrar cuesta el doble de movimiento">${icon("boot", 15)}Difícil</button>
-            <button data-brush="none" title="Quitar terreno pintado y terreno difícil">${icon("eraser", 15)}</button>
-          </div>
-          <div class="tool-set" id="zones" aria-label="Zonas">
-            <button data-layer="rooms" data-value="1" title="Sala: al entrar, la party ve la sala entera">${icon("room", 15)}Sala</button>
-            <button data-layer="vis" data-value="show" title="Revelar: la party lo ve siempre">${icon("eye", 15)}Revelar</button>
-            <button data-layer="vis" data-value="hide" title="Ocultar: la party no lo ve nunca">${icon("eyeOff", 15)}Ocultar</button>
-            <button data-layer="zones" data-value="" title="Quitar salas y zonas reveladas u ocultas">${icon("eraser", 15)}</button>
-          </div>
-          <div class="tool-set draw-opts hidden" id="drawOpts" aria-label="Dibujo">
-            ${DRAW_COLORS.map((c, i) => `<button class="swatch" data-color="${c}" aria-pressed="${i === 0}" title="Color" style="--sw:${c}"></button>`).join("")}
-            <label class="check mini" title="Si no, solo lo ves tú"><input type="checkbox" id="drawParty" checked> Lo ve la party</label>
-            <button data-draw="erase" title="Borrar un trazo">${icon("eraser", 15)}Trazo</button>
-            <button data-draw="clear" title="Borrar todos los dibujos de este mapa">${icon("trash", 15)}Todo</button>
-          </div>
-          <div class="tool-set" id="shapes">
-            <button data-shape="circle" title="Esfera o ráfaga">${icon("circle")}</button>
-            <button data-shape="cone" title="Cono">${icon("cone")}</button>
-            <button data-shape="line" title="Línea">${icon("line")}</button>
-            <button data-shape="square" title="Cubo">${icon("square")}</button>
-            <input type="number" id="shapeSize" min="5" max="200" step="5" value="20" title="Tamaño en pies" aria-label="Tamaño de la plantilla en pies">
-            <button data-shape="clear" title="Quitar todas las plantillas">${icon("close")}</button>
-          </div>
-          <button class="btn sm" data-map="fit">Encajar</button>
-          <button class="btn sm" data-map="zoomOut">−</button>
-          <span class="pill" id="zoomLabel">100%</span>
-          <button class="btn sm" data-map="zoomIn">+</button>
-          <span id="ambientSlot"></span>
-          <button class="btn sm" data-map="roomCam" id="roomCamBtn" aria-pressed="false"
-            title="Cuando la party entre en una sala, su cámara la encuadra entera; al salir, vuelve a la de antes">${withIcon("room", "Encuadrar salas", 15)}</button>
-          <span class="spacer"></span>
-          <span class="pill" id="mapHint"></span>
-          <button class="btn sm" data-map="settings">Ajustes del mapa</button>
-        </div>
+          ${sec("mapa", "Mapa", "map", `
+            <div class="ms-zoom">
+              <button class="btn sm" data-map="zoomOut" aria-label="Alejar">−</button>
+              <span class="pill" id="zoomLabel">100%</span>
+              <button class="btn sm" data-map="zoomIn" aria-label="Acercar">+</button>
+              <button class="btn sm" data-map="fit">Encajar</button>
+            </div>
+            <button class="btn sm wide" data-map="settings">${withIcon("gear", "Ajustes del mapa", 15)}</button>
+            <button class="btn sm wide" data-map="forge">${withIcon("map", "Forja de mapas", 15)}</button>
+            <button class="btn sm wide" data-map="roomCam" id="roomCamBtn" aria-pressed="false"
+              title="Cuando la party entre en una sala, su cámara la encuadra entera; al salir, vuelve a la de antes">${withIcon("room", "Encuadrar salas", 15)}</button>
+            <span id="ambientSlot"></span>`)}
+          ${sec("fichas", "Fichas y medidas", "move", `
+            <div class="tool-set" id="tools">
+              <button data-tool="token" aria-pressed="true" title="Mover y seleccionar fichas">${icon("move", 15)}Fichas</button>
+              <button data-tool="measure" aria-pressed="false" title="Medir distancias">${icon("ruler", 15)}Regla</button>
+            </div>`)}
+          ${sec("muros", "Muros y puertas", "wall", `
+            <div class="tool-set">
+              <button data-tool="wall" aria-pressed="false" title="Muro: por los bordes, recto; desde el centro de una casilla, en diagonal">${icon("wall", 15)}Muro</button>
+              <button data-tool="freewall" aria-pressed="false" title="Muro a mano alzada, para paredes redondas o irregulares (con Mayúsculas, recto)">${icon("scribble", 15)}Muro libre</button>
+              <button data-tool="door" aria-pressed="false" title="Puerta, recta, en diagonal o en un muro libre: se abre y se cierra">${icon("door", 15)}Puerta</button>
+              <button data-tool="erase" aria-pressed="false" title="Quitar muros, diagonales, muros libres y puertas">${icon("eraser", 15)}Borrar</button>
+            </div>`)}
+          ${sec("terreno", "Terreno", "brush", `
+            <div class="tool-set" id="terrain" aria-label="Terreno">
+              <button data-brush="fog" title="Niebla: ver a través cuesta el triple">${icon("brush", 15)}Niebla</button>
+              <button data-brush="dark" title="Oscuridad: no se ve a través">${icon("brush", 15)}Oscuridad</button>
+              <button data-brush="lit" title="Luz fija: alumbra aunque el mapa esté a oscuras">${icon("brush", 15)}Luz</button>
+              <button data-layer="rough" data-value="1" title="Terreno difícil: entrar cuesta el doble de movimiento">${icon("boot", 15)}Difícil</button>
+              <button data-brush="none" title="Quitar terreno pintado y terreno difícil">${icon("eraser", 15)}Limpiar</button>
+            </div>`, false)}
+          ${sec("zonas", "Salas y zonas", "room", `
+            <div class="tool-set" id="zones" aria-label="Zonas">
+              <button data-layer="rooms" data-value="1" title="Sala: al entrar, la party ve la sala entera">${icon("room", 15)}Sala</button>
+              <button data-layer="vis" data-value="show" title="Revelar: la party lo ve siempre">${icon("eye", 15)}Revelar</button>
+              <button data-layer="vis" data-value="hide" title="Ocultar: la party no lo ve nunca">${icon("eyeOff", 15)}Ocultar</button>
+              <button data-layer="zones" data-value="" title="Quitar salas y zonas reveladas u ocultas">${icon("eraser", 15)}Quitar</button>
+            </div>`, false)}
+          ${sec("marcas", "Notas, sonido y accesos", "note", `
+            <div class="tool-set">
+              <button data-tool="pin" aria-pressed="false" title="Clavar una nota">${icon("note", 15)}Nota</button>
+              <button data-tool="sound" aria-pressed="false" title="Sonido ambiente: una hoguera, un río, la música de la taberna">${icon("volume", 15)}Sonido</button>
+              <button data-tool="portal" aria-pressed="false" title="Escalera o pasadizo: a otro mapa o a otro punto de este">${icon("stairs", 15)}Acceso</button>
+            </div>`, false)}
+          ${sec("areas", "Plantillas de área", "circle", `
+            <div class="tool-set" id="shapes">
+              <button data-shape="circle" title="Esfera o ráfaga (radio)">${icon("circle")}Esfera</button>
+              <button data-shape="cone" title="Cono (largo y abertura)">${icon("cone")}Cono</button>
+              <button data-shape="line" title="Línea (largo y ancho)">${icon("line")}Línea</button>
+              <button data-shape="square" title="Cubo">${icon("square")}Cubo</button>
+              <button data-shape="ring" title="Anillo (radio de fuera y de dentro): un muro de fuego redondo">${icon("circle")}Anillo</button>
+              <button data-shape="rect" title="Rectángulo girable (largo y ancho)">${icon("roomShape")}Rectángulo</button>
+              <button data-shape="poly" title="Forma libre: pulsa los vértices, doble clic o Intro para cerrar">${icon("polygon")}Libre</button>
+              <button data-shape="clear" title="Quitar todas las plantillas">${icon("close")}Quitar</button>
+            </div>
+            <div class="ms-shape-opts">
+              <label class="field"><span>Tamaño (pies)</span><input type="number" id="shapeSize" min="5" max="300" step="5" value="20" title="Radio, largo o lado en pies" aria-label="Tamaño de la plantilla en pies"></label>
+              <label class="field" data-for="line rect"><span>Ancho (pies)</span><input type="number" id="shapeWidth" min="5" max="60" step="5" value="5"></label>
+              <label class="field" data-for="cone"><span>Abertura (grados)</span><input type="number" id="shapeAngle" min="10" max="360" step="5" value="60"></label>
+              <label class="field" data-for="ring"><span>Radio de dentro (pies)</span><input type="number" id="shapeInner" min="0" max="290" step="5" value="10"></label>
+              <label class="field"><span>Nombre</span><input id="shapeLabel" maxlength="40" placeholder="Bola de fuego"></label>
+              <div class="ms-colors">${SHAPE_COLORS.map((c, i) => `<button type="button" class="swatch" data-shape-color="${c}" aria-pressed="${i === 0}" title="Color" style="--sw:${c}"></button>`).join("")}</div>
+              <label class="check mini"><input type="checkbox" id="shapeParty" checked> La ve la party</label>
+            </div>`, false)}
+          ${sec("dibujo", "Dibujo", "scribble", `
+            <div class="tool-set">
+              <button data-tool="draw" aria-pressed="false" title="Dibujar a mano alzada">${icon("scribble", 15)}Dibujar</button>
+            </div>
+            <div class="tool-set draw-opts hidden" id="drawOpts" aria-label="Dibujo">
+              ${DRAW_COLORS.map((c, i) => `<button class="swatch" data-color="${c}" aria-pressed="${i === 0}" title="Color" style="--sw:${c}"></button>`).join("")}
+              <label class="check mini" title="Si no, solo lo ves tú"><input type="checkbox" id="drawParty" checked> Lo ve la party</label>
+              <button data-draw="erase" title="Borrar un trazo">${icon("eraser", 15)}Trazo</button>
+              <button data-draw="clear" title="Borrar todos los dibujos de este mapa">${icon("trash", 15)}Todo</button>
+            </div>`, false)}
+        </aside>
         <div class="board" id="board"><canvas id="canvas"></canvas><div class="coords" id="coords"></div>
-          <button class="btn sm bar-show" data-map="showBar" title="Enseñar las herramientas del mapa">${withIcon("down", "Herramientas", 15)}</button></div>
+          <div class="map-hint" id="mapHint"></div>
+          <button class="btn sm bar-show" data-map="showBar" title="Enseñar las herramientas del mapa">${withIcon("next", "Herramientas", 15)}</button></div>
       </div>`;
+    pane.querySelectorAll(".ms-sec").forEach(d => d.addEventListener("toggle", () => secOpen(d.dataset.sec, null, d.open)));
 
     mapView = new MapView($("#canvas", pane), {
       mode: "dm",
@@ -1306,6 +1371,7 @@ function renderMap() {
       onZoom: z => { closeTokenMenu(); const l = $("#zoomLabel"); if (l) l.textContent = Math.round(z * 100) + "%"; }
     });
 
+    window.__mesaMap = mapView;   // para las pruebas
     mapView.drawColor = DRAW_COLORS[0];
     mapView.drawWidth = 0.08;
     const pressOnly = b => pane.querySelectorAll("[data-tool],[data-shape],[data-brush],[data-layer],[data-draw]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
@@ -1372,16 +1438,45 @@ function renderMap() {
         : "Arrastra para pintar casillas; cambia lo que la party alcanza a ver";
     });
 
+    /* Plantillas: la forma y sus medidas. Solo se enseñan los campos que
+       usa la forma elegida. */
+    const shapeFields = kind => pane.querySelectorAll(".ms-shape-opts [data-for]").forEach(f => f.classList.toggle("hidden", !f.dataset.for.split(" ").includes(kind)));
+    shapeFields("circle");
+    on(pane, "click", "[data-shape-color]", (e, b) => {
+      shapeColor = b.dataset.shapeColor;
+      pane.querySelectorAll("[data-shape-color]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      refreshPending();
+    });
+    /* La plantilla que se va a colocar, con las medidas que haya escritas */
+    const shapeFromForm = kind => {
+      shapeSize = clamp(+$("#shapeSize", pane).value || 20, 5, 300);
+      const width = clamp(+$("#shapeWidth", pane).value || 5, 5, 60);
+      const coneAngle = clamp(+$("#shapeAngle", pane).value || 60, 10, 360);
+      const inner = clamp(+$("#shapeInner", pane).value || 0, 0, shapeSize - 5);
+      const name = $("#shapeLabel", pane).value.trim();
+      const label = name || (kind === "poly" ? "" : kind === "line" || kind === "rect" ? `${shapeSize} × ${width} pies` : kind === "ring" ? `${inner}–${shapeSize} pies` : kind === "cone" && coneAngle !== 60 ? `${shapeSize} pies · ${coneAngle}°` : shapeSize + " pies");
+      return { kind, size: shapeSize, width, coneAngle, inner, color: shapeColor, label, party: $("#shapeParty", pane).checked };
+    };
     on(pane, "click", "[data-shape]", (e, b) => {
       const kind = b.dataset.shape;
       if (kind === "clear") return op("shape.clear", { mapId: activeMap().id });
-      shapeSize = clamp(+$("#shapeSize", pane).value || 20, 5, 200);
+      shapeFields(kind);
       mapView.tool = "shape";
-      mapView.pending = { kind, size: shapeSize, width: 5, angle: 0, x: 0, y: 0, color: "#8878d8", label: shapeSize + " pies", party: true };
+      mapView.pending = { ...shapeFromForm(kind), angle: 0, x: 0, y: 0, points: [] };
       pressOnly(b);
       $("#drawOpts", pane).classList.add("hidden");
-      $("#mapHint", pane).textContent = "Pulsa para colocar; arrastra para girar";
+      $("#mapHint", pane).textContent = kind === "poly"
+        ? "Pulsa los vértices de la forma; doble clic, Intro o el primer punto para cerrarla. Esc la deja"
+        : "Ajusta las medidas a la izquierda si quieres; pulsa para colocar y arrastra para girar";
     });
+    /* Cambiar una medida o el color cambia la plantilla que aún no se ha puesto */
+    function refreshPending() {
+      const pd = mapView && mapView.pending;
+      if (!pd || pd.local || !["circle", "cone", "line", "square", "ring", "rect", "poly"].includes(pd.kind)) return;
+      mapView.pending = { ...pd, ...shapeFromForm(pd.kind) };
+      mapView.draw();
+    }
+    $(".ms-shape-opts", pane).addEventListener("input", refreshPending);
     on(pane, "click", "[data-map]", (e, b) => mapAction(b.dataset.map));
     $("#mapPick", pane).addEventListener("change", e => patchSession({ activeMapId: e.target.value }));
     $("#ambientSlot", pane).replaceWith(ambientToggle("dm", true));
@@ -1395,6 +1490,7 @@ function renderMap() {
   pick.innerHTML = doc().maps.map(m => `<option value="${m.id}" ${m.id === map.id ? "selected" : ""}>${esc(m.name)}</option>`).join("");
   if (tokenPop) requestAnimationFrame(placeTokenMenu);
   const roomCam = $("#roomCamBtn", pane);
+  pane.querySelector(".map-wrap").classList.toggle("bar-hidden", barHidden());
   roomCam.setAttribute("aria-pressed", String(map.roomCamera));
   roomCam.classList.toggle("on", map.roomCamera);
   mapView.set({ map, chars: chars(), session: session(), you: null });
@@ -1436,6 +1532,16 @@ function placeTokenMenu() {
   if (!tokenPop || !mapView) return;
   const at = mapView.tokenBox(tokenPop.id);
   if (!at) return closeTokenMenu();
+  /* La vida y la CA de la cabecera, al día */
+  const c = byId(tokenPop.id);
+  if (c) {
+    const small = tokenPop.node.querySelector(".tk-id small");
+    if (small) small.innerHTML = `<span class="tnum">${c.hp}/${c.maxHp}</span> PV · CA <span class="tnum">${acOf(c)}</span>${c.tempAc ? ` <i class="ac-extra">${c.tempAc > 0 ? "+" : "−"}${Math.abs(c.tempAc)}</i>` : ""}`;
+    const bar = tokenPop.node.querySelector(".tk-id .bar i");
+    if (bar) { bar.style.width = pct(c) + "%"; bar.className = hpTone(pct(c)); }
+    const acb = tokenPop.node.querySelector(".tk-ac b");
+    if (acb) acb.textContent = acOf(c);
+  }
   const n = tokenPop.node, w = n.offsetWidth, h = n.offsetHeight, gap = 10, pad = 8;
   const minX = Math.max(pad, at.board.left + pad), maxX = Math.min(innerWidth - pad, at.board.right - pad);
   const left = clamp(at.x - w / 2, minX, Math.max(minX, maxX - w));
@@ -1463,8 +1569,21 @@ function tokenMenu(id) {
       ${c.avatarId ? `<img class="avatar" src="${imgURL(c.avatarId)}" alt="">` : `<div class="avatar">${initials(c.name)}</div>`}
       <div class="tk-id">
         <b>${esc(c.name)}</b>
-        <small><span class="tnum">${c.hp}/${c.maxHp}</span> PV · CA <span class="tnum">${c.ac}</span></small>
+        <small><span class="tnum">${c.hp}/${c.maxHp}</span> PV · CA <span class="tnum">${acOf(c)}</span>${c.tempAc ? ` <i class="ac-extra">${c.tempAc > 0 ? "+" : "−"}${Math.abs(c.tempAc)}</i>` : ""}</small>
         ${hpBar(c.id, p)}
+      </div>
+    </div>
+    <div class="tk-quick">
+      <div class="tk-hp">
+        <button type="button" class="btn sm bad" data-tkq="dmg" title="Restar vida">${icon("minus", 15)}</button>
+        <input type="number" min="0" max="999" placeholder="0" data-tk-amount aria-label="Cantidad de vida" inputmode="numeric">
+        <button type="button" class="btn sm good" data-tkq="heal" title="Sumar vida">${icon("plus", 15)}</button>
+      </div>
+      <div class="tk-ac" title="CA temporal: Escudo, cobertura…">
+        <span>CA</span>
+        <button type="button" class="btn sm" data-tkq="acDown" aria-label="Bajar la CA temporal">−</button>
+        <b class="tnum">${acOf(c)}</b>
+        <button type="button" class="btn sm" data-tkq="acUp" aria-label="Subir la CA temporal">+</button>
       </div>
     </div>
     <div class="tk-list">
@@ -1498,6 +1617,26 @@ function tokenMenu(id) {
   const first = node.querySelector(".tk-item");
   if (first) first.focus({ preventScroll: true });
 
+  /* Vida y CA al momento, sin cerrar el globo: para encajar tres golpes
+     seguidos o el Escudo de un mago */
+  const amount = node.querySelector("[data-tk-amount]");
+  amount.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); node.querySelector(`[data-tkq="${e.shiftKey ? "heal" : "dmg"}"]`).click(); }
+  });
+  on(node, "click", "[data-tkq]", (e, b) => {
+    const now = byId(id);
+    if (!now) return;
+    const what = b.dataset.tkq, n = Math.max(0, Math.trunc(+amount.value || 0));
+    if (what === "dmg" || what === "heal") {
+      if (!n) { amount.focus(); return toast("Escribe cuánta vida", "bad"); }
+      op("hp.apply", { id, [what === "dmg" ? "damage" : "heal"]: n });
+      amount.value = "";
+      return;
+    }
+    const next = Math.max(-20, Math.min(30, (now.tempAc || 0) + (what === "acUp" ? 1 : -1)));
+    patchChar(id, { tempAc: next });
+    node.querySelector(".tk-ac b").textContent = (now.ac || 0) + next;
+  });
   on(node, "click", "[data-tk]", (e, b) => {
     const what = b.dataset.tk;
     closeTokenMenu();
@@ -1751,6 +1890,15 @@ function paintEdge(key, tool) {
 /* La barra de herramientas del mapa se pliega para dejar la vista limpia;
    cada aparato recuerda cómo la dejó */
 const BAR_KEY = "mesa.mapbar.hidden";
+/* Qué secciones de la barra están abiertas: sin valor, abiertas las primeras */
+function secOpen(id, def, set) {
+  const k = "mesa.mapside." + id;
+  try {
+    if (set !== undefined) { localStorage.setItem(k, set ? "1" : "0"); return set; }
+    const v = localStorage.getItem(k);
+    return v === null ? def : v === "1";
+  } catch { return def; }
+}
 function barHidden() { try { return localStorage.getItem(BAR_KEY) === "1"; } catch { return false; } }
 function setBarHidden(on) {
   try { localStorage.setItem(BAR_KEY, on ? "1" : "0"); } catch {}
@@ -1766,6 +1914,7 @@ function mapAction(what) {
   if (what === "zoomOut") return mapView.setZoom(mapView.zoom / 1.25);
   if (what === "fit") return mapView.setZoom(1);
   if (what === "settings") return openMapSettings(map);
+  if (what === "forge") return openMapForge(map);
   if (what === "roomCam") {
     const on = !map.roomCamera;
     patchMap(map.id, { roomCamera: on });
@@ -1773,6 +1922,29 @@ function mapAction(what) {
     return toast(on ? (rooms ? "La cámara de la party encuadrará cada sala al entrar"
       : "Activado. Marca las salas con la herramienta «Sala» para que se encuadren") : "La cámara de la party ya no encuadra las salas");
   }
+}
+
+/* La forja de mapas: dibujar el plano aquí mismo. Al usarlo, la imagen pasa
+   a ser el fondo con la cuadrícula ya encajada, y sus paredes y puertas
+   sustituyen a los muros del mapa. El proyecto se guarda en el mapa (solo
+   lo ve el DM) para poder seguir editándolo. */
+export async function openMapForge(map = activeMap()) {
+  const { openForja } = await import("./forja.js");
+  openForja({
+    design: map.design || null, draftId: map.id, title: map.name,
+    cols: map.cols, rows: map.rows,
+    onUse: async (design, res) => {
+      const imageId = await uploadImage(res.blob);
+      const cells = { ...map.cells };
+      for (const k of Object.keys(cells)) if (cells[k] === "lit") delete cells[k];
+      patchMap(map.id, {
+        imageId, imageW: res.width, imageH: res.height, cols: design.cols, rows: design.rows, lockRatio: true,
+        imgGrid: { x: 0, y: 0, w: res.ppc, h: res.ppc }, walls: res.walls, edges: {},
+        cells: { ...cells, ...res.cells }, explored: [], design
+      });
+      toast(`Plano listo: ${res.walls.filter(w => w.type === "wall").length} tramos de pared y ${res.walls.filter(w => w.type !== "wall").length} puertas y ventanas`, "good");
+    }
+  });
 }
 
 function openMapSettings(map) {
@@ -1784,6 +1956,7 @@ function openMapSettings(map) {
       <label class="field"><span>Filas</span><input name="rows" type="number" min="5" max="${MAX_ROWS}" value="${map.rows}"></label>
     </div>
     <div class="row" style="margin-bottom:12px">
+      <button type="button" class="btn sm" id="forgeBtn">${withIcon("map", "Forja de mapas", 15)}</button>
       <button type="button" class="btn sm" id="imgBtn">Imagen de fondo</button>
       <button type="button" class="btn sm" id="fitGrid">Encajar cuadrícula con el plano</button>
       <button type="button" class="btn sm" id="fitWalls">Muros y puertas del plano</button>
@@ -1853,6 +2026,7 @@ function openMapSettings(map) {
     body.querySelector('[name="rows"]').value = rows;
   };
   body.querySelector("#imgBtn").addEventListener("click", () => file.click());
+  body.querySelector("#forgeBtn").addEventListener("click", () => { win.close(); openMapForge(map); });
   file.addEventListener("change", async () => {
     if (!file.files[0]) return;
     try {
@@ -1974,6 +2148,9 @@ function openMenu() {
     <h4 class="menu-sec">Partida</h4>
     ${item("export", "download", "Guardar copia", "Descarga un archivo con toda la partida")}
     ${item("import", "upload", "Cargar una copia", "Sustituye la partida por la de un archivo")}
+    <h4 class="menu-sec">Personajes</h4>
+    ${item("charsOut", "download", "Exportar personajes", "Uno, varios o toda la party, con sus retratos, para otra campaña")}
+    ${item("charsIn", "upload", "Importar personajes", "Fichas de otra campaña: entran como nuevas, sin pisar a nadie")}
     <div class="menu-item static"><span class="menu-ico">${icon("lang", 20)}</span><span class="menu-text"><b>Idioma</b><small>Solo cambia en este aparato</small></span><span id="menuLang"></span></div>
     ${item("leave", "exit", "Salir de la sesión", "Vuelves a la pantalla de entrada", "danger")}
     <input type="file" id="handoutFile" accept="image/*" hidden>
@@ -2016,6 +2193,8 @@ function openMenu() {
       URL.revokeObjectURL(a.href);
     }
     if (what === "import") file.click();
+    if (what === "charsOut") { m.close(); openExportChars(chars().filter(c => !isExample(c.id))); }
+    if (what === "charsIn") { m.close(); importChars({ isDM: true }); }
     if (what === "handout") {
       if (session().handoutId) {
         modal({ title: "Ya estás enseñando una imagen", body: '<p class="prose">Puedes cambiarla o guardarla.</p>',

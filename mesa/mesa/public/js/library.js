@@ -56,7 +56,12 @@ export function mountLibrary() {
   </aside>`);
   document.querySelectorAll(".shelf").forEach(x => x.remove());
   document.body.appendChild(shelf);
-  const setOpen = on => { shelf.dataset.open = on ? "1" : "0"; memo(SHELF_KEY, on ? "1" : "0"); };
+  /* El hueco que ocupa la estantería abajo a la izquierda: la barra del mapa
+     deja ese sitio libre para que no le tape nada */
+  const setOpen = on => {
+    shelf.dataset.open = on ? "1" : "0"; memo(SHELF_KEY, on ? "1" : "0");
+    document.documentElement.style.setProperty("--shelf-space", on ? "186px" : "66px");
+  };
   setOpen(memo(SHELF_KEY) !== "0" && innerWidth > 700);
   shelf.querySelector(".shelf-toggle").addEventListener("click", () => setOpen(shelf.dataset.open !== "1"));
   shelf.addEventListener("click", e => {

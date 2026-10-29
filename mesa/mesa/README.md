@@ -177,6 +177,28 @@ en blanco.
   llevara vuelve a elegir, con un aviso de por qué.
 - Los susurros se reconocen por la sesión y el personaje, no por el nombre:
   alguien que entra otro día con tu mismo nombre no lee lo que susurraste.
+- **Las fichas de los compañeros se ven, no se tocan.** En la pestaña
+  **Party**, pulsar a un compañero abre su ficha y su ficha detallada (con
+  sus pestañas de acciones, conjuros, equipo, rasgos y notas) en **solo
+  lectura**: sin botones de vida, de dados ni de editar. El servidor tampoco
+  dejaría cambiarla.
+
+### Llevar personajes a otra campaña
+
+**⋯ → Exportar personajes** guarda en un archivo `.mesa-personajes.json`
+uno, varios o toda la party (y las criaturas que marques), con la ficha
+entera —ataques, conjuros con sus retoques, equipo, rasgos, notas— y el
+**retrato dentro**, porque las imágenes viven en cada partida. **⋯ →
+Importar personajes** los mete en otra partida como **fichas nuevas**: con
+un identificador nuevo, sin colocar en el mapa y sin pisar a nadie (si ya
+hay uno con el mismo nombre, el nuevo sale numerado, «Aria 2»). No viaja lo
+que es de la partida vieja: dónde estaba, quién lo llevaba, la iniciativa o
+lo que la party sabía de él. También vale una copia entera de partida: se
+sacan sus fichas.
+
+Cada jugador tiene además en su ficha el botón **Exportar mi ficha**, y al
+entrar en otra partida sin personaje, **Traer mi ficha de otra partida**: entra
+como suya.
 
 En **⋯ → Cómo entran mis jugadores** sale la dirección de la red del
 ordenador del DM (la de `localhost` no le sirve a nadie más), con un botón
@@ -280,6 +302,14 @@ daño y curación; `Intro` aplica daño y `Mayús + Intro`, curación. La vida
 temporal se descuenta antes que la de verdad y el aviso de concentración salta
 solo, con la CD ya calculada.
 
+La **CA temporal** funciona igual que la vida temporal: pulsando el escudo de
+la CA (en la tarjeta, en la ficha del jugador o con − y + en el globo del
+mapa) se suma o se resta de uno en uno o con un atajo (**Escudo +5**, **Escudo
+de fe +2**, **cobertura media +2**, **de tres cuartos +5**). El escudo enseña la
+**total** y el extra va aparte en una etiqueta dorada («17 +2»); al pasar el
+ratón se lee «15 de base + 2 temporal». Los ataques y conjuros comparan con la
+total. Se quita con **Quitar** o poniéndola a 0.
+
 Los estados son los del reglamento, con su explicación al pasar el ratón, y se
 quitan pulsando la etiqueta. El agotamiento va aparte, por niveles.
 
@@ -318,10 +348,20 @@ crearlo.
 y reordena. Cada jugador puede tirar la suya desde su móvil.
 
 Al empezar un combate, Mesa propone quién entra y te deja retocarlo antes de
-arrancar. No entra todo el que esté en el mapa: se quedan fuera los que están a
-0 puntos de vida, las criaturas que **la party todavía no ha visto** (meterlas
-delataría que hay algo ahí) y las que están a más de doce casillas de la pelea.
-De cada uno se dice por qué está dentro o fuera, y se marca o desmarca a mano.
+arrancar. No entra todo el que esté en el mapa. Entran la party y las criaturas
+**vivas**, **no ocultas** y **de este mapa** que cumplan una de tres cosas:
+
+- **la party las ve ahora** (con los muros, la luz y la visión de cada uno);
+- están **en la misma sala** que alguien de la party;
+- la party **ya las ha visto** y están **cerca** (6 casillas de serie) de un
+  personaje o de quien hizo lo último, **sin un muro por medio**.
+
+Se quedan fuera los que están a 0 puntos de vida, las ocultas a la party, las
+de otro mapa, las que la party aún no ha visto (meterlas delataría que hay algo
+ahí) y las lejanas. De cada uno se dice **por qué** está dentro o fuera («a la
+vista», «en la misma sala», «a 25 pies de Aria», «oculto a la party»…), la
+casilla **Cerca es a cuántas casillas** cambia el radio y rehace la lista, y
+cualquiera se marca o desmarca a mano.
 
 La **iniciativa se escribe a mano** en la misma ventana, en la casilla de cada
 uno. Si prefieres tirarla, hay un dado por fila, un botón para tirar por todos y
@@ -443,9 +483,20 @@ puertas** sobre el plano, con un control de sensibilidad, para revisarlos
 antes de ponerlos. Es una propuesta: se corrige con las herramientas de
 siempre. Las dos ventanas están también en los ajustes del mapa.
 
-La flecha a la izquierda del selector de mapa **oculta la barra de
-herramientas** y el tablero ocupa todo el alto; un botón pequeño en la esquina
-del plano la vuelve a sacar.
+Las herramientas del DM están en una **barra a la izquierda**, por
+**secciones que se pliegan**: Mapa (zoom, ajustes, forja, encuadrar salas,
+ambiente), Fichas y medidas, Muros y puertas, Terreno, Salas y zonas, Notas,
+sonido y accesos, Plantillas de área y Dibujo. Cada sección recuerda en ese
+navegador si la dejaste abierta. La flecha junto al selector de mapa **oculta
+la barra** y el tablero ocupa todo el ancho; un botón pequeño en la esquina del
+plano la vuelve a sacar. La casilla bajo el puntero se lee **arriba a la
+derecha** del tablero, donde no la tapa la estantería de la biblioteca.
+
+**Pulsar una ficha** abre su globo: arriba, la **vida** (escribe una cantidad;
+`Intro` o **−** restan, `Mayús + Intro` o **+** suman) y la **CA temporal** con
+− y +, sin cerrarlo, para ir rápido en combate; debajo, apuntarle, atacar,
+estados, abrir la ficha, ocultarla, centrar la cámara de la party o sacarla del
+mapa.
 
 ### La propuesta de muros aprende de tus planos
 
@@ -476,10 +527,15 @@ así que no hay que volver a enseñarlos nunca:
   juntas guardando la formación; `Mayús` + clic añade o quita de la selección.
 - **Regla** mide entre dos casillas en pies y en casillas, con la regla del
   manual o la variante 5-10-5, la que elijas en los ajustes.
-- **Plantillas**: círculo, cono, línea y cuadrado. Al elegir una se pega al
-  cursor y va contigo por el tablero; un clic la deja fija donde estés, y si
-  arrastras antes de soltar, la giras. Para moverla, vuelve a pulsar su botón.
-  Se ven en la mesa y en los móviles, y se quitan todas con la ✕.
+- **Plantillas**: esfera, cono, línea, cubo, **anillo** (un muro de fuego
+  redondo, con radio de fuera y de dentro), **rectángulo** girable y forma
+  **libre** (pulsa los vértices y cierra con doble clic, `Intro` o el primer
+  punto; `Esc` la deja). Debajo se ajusta el **tamaño** en pies y, según la
+  forma, el **ancho**, la **abertura** del cono (de 10 a 360 grados) o el
+  **radio de dentro**, además de un **nombre** que se lee en el plano, el
+  **color** y si **la ve la party**. Los cambios se aplican a la plantilla
+  que llevas pegada al cursor. Un clic la deja fija; si arrastras antes de
+  soltar, la giras. Dice a quién coge y se quitan todas con **Quitar**.
 - **Niebla**, **Oscuridad** y **Luz** son pinceles de casilla. Ver más abajo.
 - **Muro**, recto o en diagonal con la misma herramienta. **Junto a un
   borde** de casilla pinta una pared recta y se puede arrastrar para trazar un
@@ -630,6 +686,57 @@ puertas** dibujados (quitado, no les llega ni el trazo: siguen cortando la
 vista y el paso igual, solo deja de verse la línea), si puede acercarse y alejarse,
 si se pinta el alcance al arrastrar, cuántos pies mide una casilla, cómo cuentan
 las diagonales y si la cámara enseña todo el plano o sigue al personaje.
+
+En una **partida o un mapa nuevos**, de serie: los jugadores **no mueven** sus
+fichas, **no dibujan** y **no ven muros ni puertas**; la cámara de la party
+**sigue a los personajes con 18 casillas a lo ancho** y **encuadra las salas**
+al entrar y vuelve a la de antes al salir. Las partidas que ya tenías conservan
+sus ajustes.
+
+Cada jugador tiene en su mapa el botón **Mi personaje**: encendido, su cámara
+se queda centrada en **su** personaje aunque el DM lleve la acción a otro sitio;
+apagado, sigue la acción como la tele. Se recuerda en su aparato.
+
+### Forja de mapas
+
+**Mapa → Forja de mapas** (también en los ajustes del mapa) abre un editor de
+planos a pantalla completa, al estilo de **Dungeon Scrawl**, para dibujar tus
+mapas dentro de Mesa y usarlos en la partida con los muros ya puestos.
+
+- **El suelo hace las paredes.** Sala (rectángulo, con esquinas redondeadas),
+  círculo u óvalo, polígono (con curvas suaves si quieres), pincel de casillas
+  y **cueva** (un pincel de bordes irregulares). Lo que se toca se une en una
+  sola planta y la pared sale sola alrededor; **Recortar** (`X`) quita suelo
+  con la misma forma. Las paredes salen rectas y con las esquinas exactas.
+- **Agua**, **caminos y ríos** (rectos, con curvas o a trazos), **muros
+  sueltos** (tabiques, columnas) y **puertas**: normal, abierta, doble,
+  secreta, rastrillo, arco o ventana. La puerta corta la pared sola.
+- **42 objetos** vectoriales por grupos (mobiliario, templo y cripta,
+  escaleras y trampillas, luz y fuego, naturaleza y marcas), con giro, tamaño,
+  color y espejo; **textos** con letra, tamaño, negrita, giro y sombra, y
+  **luces** con radio y color.
+- **Elegir** para mover, girar (`Q`/`W`), copiar y pegar, duplicar, hacer
+  **espejo** o borrar; ajuste a la casilla, a la media casilla o suelto (`Alt`).
+  **Deshacer y rehacer** sin límite (`Ctrl + Z` / `Ctrl + Y`).
+- **Capas** con visibilidad, bloqueo, nombre, opacidad y orden.
+- **Estilos** de serie (Pergamino, Mazmorra, Cueva, Tinta, Plano azul, Bosque)
+  o a mano: colores, grosor de pared, rayado de roca alrededor, sombra,
+  textura del suelo, cuadrícula (en el suelo, en todo o sin ella) y tamaño
+  del plano.
+- **Generar una mazmorra**: salas (cuántas y de qué tamaño), su forma
+  (cuadradas, redondeadas, variadas o cueva), ancho de pasillo, trazado
+  (equilibrado, con bucles, serpenteante), puertas, escaleras y objetos. La
+  **semilla** la repite igual y se ve antes de aceptarla.
+- **Guardar proyecto** y **Abrir** (un `.json` para seguir otro día o llevarlo
+  a otra partida), **Exportar imagen** en PNG a 50, 70 o 140 píxeles por
+  casilla, y un borrador que se guarda solo en el navegador mientras dibujas.
+
+**Usar en este mapa** convierte el plano en la imagen de fondo con la
+cuadrícula ya encajada y pone sus paredes, puertas y ventanas como **muros de
+Mesa**: las puertas se abren y se cierran, las secretas son pared para la party
+y los arcos son hueco. Si quieres, las luces del plano alumbran como casillas de
+luz fija. El diseño se guarda con el mapa (no se manda a los jugadores) para
+volver a abrirlo y retocarlo.
 
 ### Salas, zonas reveladas y zonas ocultas
 
@@ -793,6 +900,26 @@ Gasta el espacio solo si el lanzamiento es válido (si no hay objetivos o no
 quedan espacios, avisa y no gasta nada). El DM puede lanzar en secreto. Un
 jugador solo puede lanzar los de su propio personaje.
 
+En la pestaña **Acciones** de la ficha, debajo de los ataques, sale la **tabla
+de conjuros**: nombre y nivel, alcance, golpe o CD, y efecto (daño y tipo, o
+cura), con el bonificador y el daño listos para tirar con un toque y el botón
+**Lanzar**. Los trucos ya salen con el daño de su nivel.
+
+**Todo conjuro se puede retocar**, como un ataque: el lápiz de cada uno en la
+lista de conjuros cambia nombre, nivel, tiempo, alcance, duración, cómo se
+resuelve (ataque, salvación, dardos, cura, sueño o solo efecto), daño y tipo,
+mitad si salva, lo que sube con espacios mayores, el estado que pone y cuántas
+rondas, objetivos, área y concentración. Ese cambio es solo de esa ficha.
+**Crear un conjuro** hace uno desde cero.
+
+**La biblioteca también es editable.** Si un conjuro de serie se queda
+anticuado o tu mesa lo juega de otra forma, el DM lo retoca en **Añadir de la
+biblioteca** y, en esa partida, su versión **sustituye** a la de serie (sale
+marcado como **retocado**); al guardarlo puede aplicarlo también a las fichas
+que ya lo tienen. **Restaurar el de serie** lo deshace, en la biblioteca y en
+esas fichas. **Crear en la biblioteca** añade conjuros propios para toda la
+mesa. Los retoques viajan con la copia de la partida.
+
 ## Voz
 
 Botón **Voz** en la barra de arriba, para el DM y para cada jugador. Al
@@ -862,7 +989,9 @@ Desde **⋯ → Pedir una tirada a la party** eliges qué pides, a quién y con 
 CD; a cada jugador le sale un botón grande en su móvil y, al pulsarlo, tira y se
 anuncia si supera la dificultad. Y con **Enseñar una imagen a la mesa** sale a
 pantalla completa en la tele y en el móvil de todos: mapas de tesoro, cartas,
-retratos del villano.
+retratos del villano. Cada jugador puede **cerrarla** para mirar el mapa o su
+ficha y **reabrirla** con el botón **Imagen del DM** de arriba mientras la
+sigas enseñando; cuando la guardas, se cierra en todos y el botón desaparece.
 
 ## La pantalla de la mesa
 
@@ -987,6 +1116,10 @@ public/
     schema.js          forma de los datos y migración (lo usan servidor y navegador)
     los.js             muros, luz, visión, distancias y plantillas (compartido)
     attacks.js         leer y lanzar ataques
+    chars-io.js        exportar e importar personajes entre campañas
+    forja.js           la forja de mapas: el editor a pantalla completa
+    forja-core.js      la forja: geometría del plano, paredes, puertas y generador
+    forja-draw.js      la forja: estilos, objetos y cómo se pinta el plano
     spells.js          biblioteca de conjuros del SRD
     spellbook.js       lista de conjuros de cada personaje y ventana de lanzar
     voice.js           voz entre aparatos (WebRTC)
@@ -1046,6 +1179,9 @@ data/                  la partida y las imágenes (se crea al arrancar)
   aparato con aparato, no llega.
 - Los muros diagonales van de esquina a esquina; curvas de otro ángulo se
   aproximan con varios tramos.
+- La forja dibuja en cuadrícula cuadrada: no hace mapas hexagonales ni
+  isométricos, ni exporta a PDF o al formato UVTT de otros programas (sí a
+  PNG y a su propio proyecto). La imagen se genera en el navegador del DM.
 
 Del inglés, además: se traduce la interfaz, no la partida. Si escribes tus
 notas o el bestiario en español, en inglés seguirán en español.

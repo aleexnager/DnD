@@ -1,7 +1,7 @@
 /* Editor de ficha. El DM lo abre para cualquiera; cada jugador, para la suya. */
 
 import { modal, esc, toast, shrinkImage, imgURL, initials } from "./util.js";
-import { ABILITIES, SKILLS, CONDITIONS, SHAPE_NAMES, FEATURE_SOURCES, normalizeChar, normalizeAttack, normalizeItem, normalizeFeature, modOf, uid } from "./schema.js";
+import { ABILITIES, SKILLS, CONDITIONS, SHAPE_NAMES, FEATURE_SOURCES, normalizeChar, normalizeAttack, normalizeItem, normalizeFeature, modOf, uid, acParts } from "./schema.js";
 import { attacksOf } from "./attacks.js";
 import { listEditor } from "./list-editor.js";
 import { op, patchChar, uploadImage } from "./net.js";
@@ -224,6 +224,54 @@ export function openCharEditor(source, { isDM = true, title } = {}) {
       }
     ]
   });
+}
+
+/* ---------- CA temporal ----------
+   Lo que sube o baja la CA un rato: Escudo, Escudo de fe, la cobertura de
+   una mesa volcada. Se suma a la de la ficha en las reglas y se ve aparte. */
+const AC_PRESETS = [["Escudo", 5], ["Escudo de fe", 2], ["Cobertura media", 2], ["Cobertura de tres cuartos", 5]];
+export function openTempAC(c) {
+  let extra = c.tempAc || 0;
+  const body = document.createElement("div");
+  const paint = () => {
+    body.innerHTML = `
+      <div class="tac">
+        <div class="tac-sum"><span><small>Base</small><b class="tnum">${c.ac}</b></span><span class="tac-op">${extra < 0 ? "−" : "+"}</span>
+          <span><small>Temporal</small><b class="tnum">${Math.abs(extra)}</b></span><span class="tac-op">=</span>
+          <span class="tac-total"><small>Total</small><b class="tnum">${c.ac + extra}</b></span></div>
+        <div class="tac-steps">
+          <button type="button" class="btn sm" data-d="-1">−1</button>
+          <input type="number" class="tnum" data-v value="${extra}" min="-20" max="30" aria-label="CA temporal">
+          <button type="button" class="btn sm" data-d="1">+1</button>
+        </div>
+        <div class="tac-presets">${AC_PRESETS.map(([n, v]) => `<button type="button" class="chip" data-set="${v}">${esc(n)} +${v}</button>`).join("")}</div>
+      </div>`;
+  };
+  paint();
+  body.addEventListener("click", e => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.d) extra = Math.max(-20, Math.min(30, extra + +b.dataset.d));
+    if (b.dataset.set) extra = +b.dataset.set;
+    paint();
+  });
+  body.addEventListener("change", e => { if (e.target.matches("[data-v]")) { extra = Math.max(-20, Math.min(30, Math.trunc(+e.target.value || 0))); paint(); } });
+  modal({
+    title: "CA temporal de " + c.name, body,
+    actions: [
+      ...(c.tempAc ? [{ label: "Quitar", run: () => patchChar(c.id, { tempAc: 0 }) }] : []),
+      { label: "Cancelar" },
+      { label: "Guardar", tone: "primary", run: () => patchChar(c.id, { tempAc: extra }) }
+    ]
+  });
+}
+
+/* El escudo de la CA: el total, con la parte temporal marcada aparte */
+export function acShield(c, { cls = "ac-shield", act = "" } = {}) {
+  const p = acParts(c);
+  const tag = act ? "button" : "div";
+  return `<${tag} class="${cls}${p.extra ? " ac-temp" : ""}" title="${esc(p.title)}${act ? " · pulsa para la CA temporal" : ""}"${act ? ` type="button" data-act="${act}"` : ""}>
+    <small>CA</small><b class="tnum">${p.total}</b>${p.extra ? `<i class="ac-extra">${p.extra > 0 ? "+" : "−"}${Math.abs(p.extra)}</i>` : ""}</${tag}>`;
 }
 
 /* ---------- Estados ---------- */

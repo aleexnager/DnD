@@ -7,7 +7,7 @@
 
 import { el, on, esc, toast, modal } from "./util.js";
 import { store, op } from "./net.js";
-import { normalizeAttack, modOf, parseAttackLine, canSneak, canSmite, sneakDice, buffsFor } from "./schema.js";
+import { acOf, normalizeAttack, modOf, parseAttackLine, canSneak, canSmite, sneakDice, buffsFor } from "./schema.js";
 import { critDamage } from "./attacks-core.js";
 import { keyMods } from "./dice-panel.js";
 import { icon } from "./icons.js";
@@ -101,7 +101,7 @@ export function openAttacks(attacker, { targets = [], preselect = null, secret =
       <span>Objetivo</span>
       <select id="atkTarget">
         <option value="">Sin objetivo (solo tirar)</option>
-        ${targets.map(t => `<option value="${t.id}" ${t.id === targetId ? "selected" : ""}>${esc(t.name)}${t.ac ? " · CA " + t.ac : ""}</option>`).join("")}
+        ${targets.map(t => `<option value="${t.id}" ${t.id === targetId ? "selected" : ""}>${esc(t.name)}${t.ac ? " · CA " + acOf(t) : ""}</option>`).join("")}
       </select>
     </div>
     <div class="adv" style="margin:10px 0 14px">

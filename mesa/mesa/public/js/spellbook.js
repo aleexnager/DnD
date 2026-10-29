@@ -2,17 +2,17 @@
    La resolución (tiradas, salvaciones, daño, estados) la hace el servidor:
    aquí solo se elige qué, a qué nivel y contra quién. */
 
-import { el, on, esc, toast, modal } from "./util.js";
-import { op, patchChar } from "./net.js";
-import { normalizeSpell, modOf, conditionName } from "./schema.js";
-import { SPELL_LIBRARY, guessAbility } from "./spells.js";
+import { el, on, esc, toast, modal, confirmBox } from "./util.js";
+import { op, patchChar, store } from "./net.js";
+import { normalizeSpell, modOf, conditionName, CONDITIONS, SHAPE_NAMES, uid } from "./schema.js";
+import { guessAbility, libraryOf, isBuiltinSpell, builtinSpell } from "./spells.js";
 import { icon, withIcon } from "./icons.js";
 import { keyMods } from "./dice-panel.js";
 import { rollable } from "./rollable.js";
 
 const ABIL = { int: "Inteligencia", wis: "Sabiduría", cha: "Carisma" };
 const SAVE = { str: "FUE", dex: "DES", con: "CON", int: "INT", wis: "SAB", cha: "CAR" };
-const SHAPES = { circle: "esfera", cone: "cono", line: "línea", square: "cubo" };
+const SHAPES = { circle: "esfera", cone: "cono", line: "línea", square: "cubo", ring: "anillo", rect: "rectángulo" };
 const levelName = n => n === 0 ? "Trucos" : `Nivel ${n}`;
 
 export function castStats(c) {
@@ -66,6 +66,7 @@ export function openSpellbook(c, ctx = {}) {
           const dry = sp.level > 0 && ch.slots.some(n => n) && !ch.slots.some((n, i) => i + 1 >= sp.level && slotsLeft(ch, i + 1) > 0);
           return `<div class="sb-spell ${dry ? "dry" : ""}">
             <div class="sb-text"><b>${esc(sp.name)}</b><small>${esc(spellTags(sp))}</small></div>
+            <button class="icon-btn" data-sb-edit="${esc(sp.id)}" title="Retocar este conjuro en esta ficha" aria-label="Retocar el conjuro">${icon("pencil", 15)}</button>
             <button class="icon-btn" data-sb-remove="${esc(sp.id)}" title="Quitar de la lista" aria-label="Quitar de la lista">${icon("close", 15)}</button>
             <button class="btn sm primary" data-sb-cast="${esc(sp.id)}" ${dry ? "disabled" : ""}>${withIcon("wand", "Lanzar", 15)}</button>
           </div>`;
@@ -78,7 +79,14 @@ export function openSpellbook(c, ctx = {}) {
   win = modal({
     title: "Conjuros de " + c.name, body, wide: true,
     actions: [
-      { label: "Añadir de la biblioteca", run: () => { openLibrary(fresh(), () => setTimeout(repaint, 300)); return false; } },
+      { label: "Crear un conjuro", run: () => {
+        openSpellEditor(normalizeSpell({ id: "propio-" + uid(), name: "Conjuro nuevo", level: 1, mode: "save", save: "dex", damage: "2d6", type: "fuego", time: "1 acción", range: "60 pies" }), {
+          title: "Conjuro nuevo para " + c.name,
+          onSave: sp => { const ch = fresh(); patchChar(ch.id, { spellbook: [...ch.spellbook, sp] }); setTimeout(repaint, 300); }
+        });
+        return false;
+      } },
+      { label: "Añadir de la biblioteca", run: () => { openLibrary(fresh(), () => setTimeout(repaint, 300), ctx); return false; } },
       { label: "Cerrar", tone: "primary" }
     ]
   });
@@ -90,6 +98,17 @@ export function openSpellbook(c, ctx = {}) {
     if (k === "dc") patchChar(ch.id, { spellDC: Math.max(0, +e.target.value || 0) });
     if (k === "atk") patchChar(ch.id, { spellAtk: Math.max(0, +e.target.value || 0) });
     setTimeout(repaint, 250);
+  });
+  /* Retocar el conjuro de esta ficha: la copia es suya, no cambia la biblioteca */
+  on(body, "click", "[data-sb-edit]", (e, b) => {
+    const ch = fresh();
+    const sp = ch.spellbook.find(x => x.id === b.dataset.sbEdit);
+    if (!sp) return;
+    openSpellEditor(sp, {
+      title: `${sp.name} · ${ch.name}`,
+      note: "Cambia el conjuro solo en esta ficha. La biblioteca se queda como está.",
+      onSave: next => { const cur = fresh(); patchChar(cur.id, { spellbook: cur.spellbook.map(x => x.id === sp.id ? next : x) }); setTimeout(repaint, 300); }
+    });
   });
   on(body, "click", "[data-sb-remove]", (e, b) => {
     const ch = fresh();
@@ -105,36 +124,150 @@ export function openSpellbook(c, ctx = {}) {
   });
 }
 
-/* ---------- La biblioteca ---------- */
-function openLibrary(c, done) {
+/* ---------- La biblioteca ----------
+   La de serie con los retoques del DM. Cualquiera añade de aquí a su ficha;
+   solo el DM retoca, crea o restaura los de la biblioteca. */
+function openLibrary(c, done, ctx = {}) {
   const known = new Set(c.spellbook.map(s => s.id));
   let query = "";
-  const list = () => SPELL_LIBRARY.filter(sp => !query || sp.name.toLowerCase().includes(query) || String(sp.level) === query);
+  const isDM = !!ctx.isDM;
+  const all = () => libraryOf(store.doc);
+  const list = () => all().filter(sp => !query || sp.name.toLowerCase().includes(query) || String(sp.level) === query || (sp.school || "").toLowerCase().includes(query));
   const body = el(`<div>
-    <input type="search" id="libSearch" placeholder="Buscar conjuro o nivel (0 a 5)" aria-label="Buscar conjuro">
+    <input type="search" id="libSearch" placeholder="Buscar conjuro, escuela o nivel (0 a 9)" aria-label="Buscar conjuro">
     <div class="lib-list" id="libList"></div>
   </div>`);
   const paintList = () => {
     body.querySelector("#libList").innerHTML = list().map(sp => `
-      <label class="lib-row ${known.has(sp.id) ? "known" : ""}">
-        <input type="checkbox" value="${sp.id}" ${known.has(sp.id) ? "checked disabled" : ""}>
+      <div class="lib-row ${known.has(sp.id) ? "known" : ""}">
+        <label class="lib-pick"><input type="checkbox" value="${sp.id}" ${known.has(sp.id) ? "checked disabled" : ""}>
         <span class="lv">${sp.level === 0 ? "T" : sp.level}</span>
-        <span class="sb-text"><b>${esc(sp.name)}</b><small>${esc(spellTags(sp))}</small></span>
-      </label>`).join("");
+        <span class="sb-text"><b>${esc(sp.name)}${sp.edited ? ' <i class="lib-tag">retocado</i>' : sp.custom ? ' <i class="lib-tag own">propio</i>' : ""}</b><small>${esc(spellTags(sp))}</small></span></label>
+        ${isDM ? `<button type="button" class="icon-btn" data-lib-edit="${esc(sp.id)}" title="Retocar en la biblioteca" aria-label="Retocar en la biblioteca">${icon("pencil", 15)}</button>` : ""}
+      </div>`).join("") || `<p class="prose small"><span>Nada con ese nombre.</span></p>`;
   };
   paintList();
   body.querySelector("#libSearch").addEventListener("input", e => { query = e.target.value.trim().toLowerCase(); paintList(); });
+  on(body, "click", "[data-lib-edit]", (e, b) => {
+    const sp = all().find(x => x.id === b.dataset.libEdit);
+    if (sp) editLibrarySpell(sp, () => setTimeout(paintList, 300));
+  });
   modal({
     title: "Biblioteca de conjuros", body, wide: true,
     actions: [
+      ...(isDM ? [{ label: "Crear en la biblioteca", run: () => {
+        editLibrarySpell(normalizeSpell({ id: "bib-" + uid(), name: "Conjuro nuevo", level: 1, mode: "save", save: "dex", damage: "2d6", type: "fuego", time: "1 acción", range: "60 pies" }), () => setTimeout(paintList, 300));
+        return false;
+      } }] : []),
       { label: "Cancelar" },
       { label: "Añadir", tone: "primary", run: host => {
         const ids = [...host.querySelectorAll("input[type=checkbox]:checked:not([disabled])")].map(i => i.value);
         if (!ids.length) return;
-        const add = SPELL_LIBRARY.filter(sp => ids.includes(sp.id)).map(sp => normalizeSpell(sp));
+        const add = all().filter(sp => ids.includes(sp.id)).map(sp => normalizeSpell(sp));
         patchChar(c.id, { spellbook: [...c.spellbook, ...add], castAbility: c.castAbility || guessAbility(c.className) });
         toast(add.length === 1 ? `${add[0].name} añadido` : `${add.length} conjuros añadidos`, "good");
         done && done();
+      } }
+    ]
+  });
+}
+
+/* El DM retoca un conjuro de la biblioteca (o uno suyo) */
+function editLibrarySpell(sp, done) {
+  const builtin = isBuiltinSpell(sp.id);
+  const holders = (store.doc.chars || []).filter(c => (c.spellbook || []).some(x => x.id === sp.id)).length;
+  openSpellEditor(sp, {
+    title: `${sp.name} · biblioteca`,
+    note: builtin ? "Es uno de serie: tu versión sustituye a la de serie en esta partida. Puedes volver a la de serie cuando quieras." : "Es un conjuro tuyo de la biblioteca.",
+    sync: holders,
+    onSave: (next, { sync }) => { op("spellLib.set", { spell: next, sync }); toast(`«${next.name}» guardado en la biblioteca`, "good"); done && done(); },
+    extra: sp.edited ? { label: "Restaurar el de serie", run: async () => {
+      if (!(await confirmBox(`¿Volver a «${builtinSpell(sp.id).name}» tal como viene de serie?${holders ? ` Las ${holders} fichas que lo tienen también vuelven a la de serie.` : ""}`, { okLabel: "Restaurar" }))) return;
+      op("spellLib.remove", { id: sp.id, sync: true, restore: builtinSpell(sp.id) });
+      toast("Restaurado el de serie", "good"); done && done();
+    } } : sp.custom ? { label: "Quitar de la biblioteca", run: async () => {
+      if (!(await confirmBox(`¿Quitar «${sp.name}» de la biblioteca? Las fichas que ya lo tienen lo conservan.`))) return;
+      op("spellLib.remove", { id: sp.id }); done && done();
+    } } : null
+  });
+}
+
+/* ---------- Editor de un conjuro ----------
+   Todo lo que hace un conjuro, como en el editor de ataques: nombre, nivel,
+   tiempo, alcance, cómo se resuelve (ataque, salvación, dardos, cura, sueño o
+   nada), daño y tipo, cuánto sube con espacios mayores, estado que pone,
+   objetivos y área. Solo se ven los campos que usa el modo elegido. */
+const MODE_NAMES = [["attack", "Tirada de ataque"], ["save", "Salvación"], ["auto", "Impacta siempre (dardos)"], ["heal", "Cura"], ["sleep", "Sueño (reserva de vida)"], ["none", "Sin tirada (solo efecto)"]];
+const SAVE_NAMES = [["str", "Fuerza"], ["dex", "Destreza"], ["con", "Constitución"], ["int", "Inteligencia"], ["wis", "Sabiduría"], ["cha", "Carisma"]];
+export function openSpellEditor(sp, { title, note = "", onSave, sync = 0, extra = null } = {}) {
+  const f = (label, html, show = "") => `<label class="field"${show ? ` data-show="${show}"` : ""}><span>${label}</span>${html}</label>`;
+  const inp = (k, v, attrs = "") => `<input name="${k}" value="${esc(v ?? "")}" ${attrs}>`;
+  const num = (k, v, min = 0, max = 99, step = 1) => `<input name="${k}" type="number" min="${min}" max="${max}" step="${step}" value="${v}">`;
+  const chk = (k, v, label, show = "") => `<label class="check"${show ? ` data-show="${show}"` : ""}><input type="checkbox" name="${k}" ${v ? "checked" : ""}> ${label}</label>`;
+  const sel = (k, v, opts) => `<select name="${k}">${opts.map(([a, b]) => `<option value="${a}" ${String(a) === String(v) ? "selected" : ""}>${esc(b)}</option>`).join("")}</select>`;
+  const body = el(`<div class="spell-editor">
+    ${note ? `<p class="prose small"><span>${esc(note)}</span></p>` : ""}
+    <div class="cols2">
+      ${f("Nombre", inp("name", sp.name, 'maxlength="48"'))}
+      ${f("Nivel", sel("level", sp.level, [[0, "Truco"], ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => [n, "Nivel " + n])]))}
+      ${f("Escuela", inp("school", sp.school, 'placeholder="Evocación"'))}
+      ${f("Tiempo", inp("time", sp.time, 'placeholder="1 acción"'))}
+      ${f("Alcance", inp("range", sp.range, 'placeholder="120 pies"'))}
+      ${f("Duración", inp("duration", sp.duration, 'placeholder="Concentración, 1 minuto"'))}
+    </div>
+    ${chk("conc", sp.conc, "Necesita concentración")}
+    ${f("Descripción", `<textarea name="desc" rows="3" maxlength="400">${esc(sp.desc)}</textarea>`)}
+    <h4 class="menu-sec">Cómo se resuelve</h4>
+    <div class="cols2">
+      ${f("Modo", sel("mode", sp.mode, MODE_NAMES))}
+      ${f("Salvación de", sel("save", sp.save || "dex", SAVE_NAMES), "save")}
+      ${f("Daño (o reserva de sueño)", inp("damage", sp.damage, 'placeholder="8d6"'), "attack save auto sleep")}
+      ${f("Tipo de daño", inp("type", sp.type, 'placeholder="fuego"'), "attack save auto")}
+      ${f("Cura", inp("heal", sp.heal, 'placeholder="1d8"'), "heal")}
+      ${f("Dados de más por cada espacio mayor", inp("upcast", sp.upcast, 'placeholder="1d6"'), "attack save auto heal sleep")}
+      ${f("Rayos (ataques)", num("rays", sp.rays, 1, 10), "attack")}
+      ${f("Rayos de más por espacio", num("raysUp", sp.raysUp, 0, 3), "attack")}
+      ${f("Dardos", num("darts", sp.darts, 0, 12), "auto")}
+    </div>
+    ${chk("half", sp.half, "La mitad de daño si supera la salvación", "save")}
+    ${chk("melee", sp.melee, "Ataque cuerpo a cuerpo", "attack")}
+    ${chk("scale", sp.scale, "Truco que sube de daño con el nivel (5, 11 y 17)", "attack save auto")}
+    ${chk("scaleRays", sp.scaleRays, "Truco que suma rayos con el nivel (como Descarga sobrenatural)", "attack")}
+    ${chk("healMod", sp.healMod, "Suma la característica de lanzamiento a la cura", "heal")}
+    <div class="cols2">
+      ${f("Estado que pone", sel("cond", sp.cond, [["", "Ninguno"], ...CONDITIONS.map(x => [x.id, x.name])]), "attack save none")}
+      ${f("Rondas que dura el estado (0: hasta quitarlo)", num("condRounds", sp.condRounds, 0, 1000), "attack save none sleep")}
+      ${f("Si falla, además", inp("failText", sp.failText, 'placeholder="queda derribado"'), "save")}
+      ${f("Objetivos", num("targets", sp.targets, 1, 20))}
+      ${f("Objetivos de más por espacio", num("targetsUp", sp.targetsUp, 0, 3))}
+    </div>
+    <h4 class="menu-sec">Área</h4>
+    <div class="cols2">
+      ${f("Forma", sel("shape", sp.shape, SHAPE_NAMES))}
+      ${f("Tamaño (pies)", num("size", sp.size, 0, 300, 5))}
+      ${f("Ancho (pies)", num("width", sp.width, 1, 60, 5))}
+    </div>
+    ${sync ? `<label class="check"><input type="checkbox" name="sync" checked> Cambiarlo también en las ${sync} fichas que ya lo tienen</label>` : ""}
+  </div>`);
+  const showFor = () => {
+    const mode = body.querySelector('[name="mode"]').value;
+    body.querySelectorAll("[data-show]").forEach(n => n.classList.toggle("hidden", !n.dataset.show.split(" ").includes(mode)));
+  };
+  body.querySelector('[name="mode"]').addEventListener("change", showFor);
+  showFor();
+  modal({
+    title: title || sp.name, body, wide: true,
+    actions: [
+      ...(extra ? [{ label: extra.label, tone: "danger", run: () => { extra.run(); } }] : []),
+      { label: "Cancelar" },
+      { label: "Guardar", tone: "primary", run: host => {
+        const v = k => host.querySelector(`[name="${k}"]`);
+        const val = k => v(k) ? (v(k).type === "checkbox" ? v(k).checked : v(k).type === "number" || k === "level" ? +v(k).value : v(k).value.trim()) : sp[k];
+        const keys = ["name", "level", "school", "time", "range", "duration", "conc", "desc", "mode", "save", "half", "damage", "type", "upcast", "scale", "scaleRays", "rays", "raysUp", "darts", "heal", "healMod", "cond", "condRounds", "failText", "targets", "targetsUp", "shape", "size", "width", "melee"];
+        const next = normalizeSpell({ ...sp, ...Object.fromEntries(keys.map(k => [k, val(k)])), id: sp.id });
+        if (!next.name.trim()) { toast("Ponle un nombre", "bad"); return false; }
+        if (next.mode === "save" && !next.save) next.save = "dex";
+        onSave && onSave(next, { sync: !!(v("sync") && v("sync").checked) });
       } }
     ]
   });

@@ -252,30 +252,58 @@ const normalizeAngle = a => Math.atan2(Math.sin(a), Math.cos(a));
    desde el centro de cada casilla, que es como se resuelve en la mesa. */
 export function shapeCells(map, shape) {
   const step = map.feet || 5;
-  const r = shape.size / step;
   const set = new Set();
-  const span = Math.ceil(r) + 2;
-  const ox = shape.x, oy = shape.y;
-  for (let y = Math.floor(oy - span); y <= Math.ceil(oy + span); y++) {
-    for (let x = Math.floor(ox - span); x <= Math.ceil(ox + span); x++) {
+  const poly = shapeOutline(shape, step);
+  if (poly.length < 3) return set;
+  const xs = poly.map(p => p[0]), ys = poly.map(p => p[1]);
+  const inner = shape.kind === "ring" ? Math.max(0, Math.min(shape.inner || 0, shape.size - 1)) / step : 0;
+  for (let y = Math.floor(shape.y + Math.min(...ys)) - 1; y <= Math.ceil(shape.y + Math.max(...ys)) + 1; y++) {
+    for (let x = Math.floor(shape.x + Math.min(...xs)) - 1; x <= Math.ceil(shape.x + Math.max(...xs)) + 1; x++) {
       if (x < 0 || y < 0 || x >= map.cols || y >= map.rows) continue;
-      const dx = x + 0.5 - ox, dy = y + 0.5 - oy;
-      const dist = Math.hypot(dx, dy);
-      let inside = false;
-      if (shape.kind === "circle") inside = dist <= r;
-      else if (shape.kind === "square") inside = Math.abs(dx) <= r && Math.abs(dy) <= r;
-      else if (shape.kind === "cone") {
-        const diff = Math.abs(normalizeAngle(Math.atan2(dy, dx) - shape.angle));
-        inside = dist <= r && diff <= Math.PI / 6 + 0.001;    // el cono del manual
-      } else if (shape.kind === "line") {
-        const along = dx * Math.cos(shape.angle) + dy * Math.sin(shape.angle);
-        const across = Math.abs(-dx * Math.sin(shape.angle) + dy * Math.cos(shape.angle));
-        inside = along >= -0.5 && along <= r && across <= (shape.width / step) / 2;
-      }
-      if (inside) set.add(cellKey(x, y));
+      const dx = x + 0.5 - shape.x, dy = y + 0.5 - shape.y;
+      if (!inPoly(poly, dx, dy)) continue;
+      if (inner && Math.hypot(dx, dy) < inner) continue;
+      set.add(cellKey(x, y));
     }
   }
   return set;
+}
+
+/* El contorno de una plantilla, en casillas respecto a su origen. Lo usan el
+   tablero (para dibujarla) y shapeCells (para saber a quién coge): así lo que
+   se ve y lo que cuenta son lo mismo. */
+export function shapeOutline(s, step = 5) {
+  const r = (s.size || 0) / step, a = s.angle || 0;
+  const ca = Math.cos(a), sa = Math.sin(a);
+  const rot = (u, v) => [u * ca - v * sa, u * sa + v * ca];
+  const arc = (rad, from, to, n) => Array.from({ length: n + 1 }, (_, i) => { const t = from + (to - from) * i / n; return [Math.cos(t) * rad, Math.sin(t) * rad]; });
+  switch (s.kind) {
+    case "circle": case "ring": return arc(r + 0.001, 0, Math.PI * 2, 48).slice(0, -1);
+    case "square": return [[-r, -r], [r, -r], [r, r], [-r, r]];
+    case "cone": {
+      const half = Math.min(Math.PI, ((s.coneAngle || 60) * Math.PI / 180) / 2) + 0.001;
+      if (half >= Math.PI) return arc(r + 0.001, 0, Math.PI * 2, 48).slice(0, -1);
+      return [[0, 0], ...arc(r + 0.001, a - half, a + half, 24)];
+    }
+    case "line": {
+      const w = (s.width || 5) / step / 2;
+      return [rot(-0.5, -w), rot(r, -w), rot(r, w), rot(-0.5, w)];
+    }
+    case "rect": {
+      const w = (s.width || 5) / step / 2;
+      return [rot(-r / 2, -w), rot(r / 2, -w), rot(r / 2, w), rot(-r / 2, w)];
+    }
+    case "poly": return (s.points || []).map(p => [p[0], p[1]]);
+  }
+  return [];
+}
+function inPoly(poly, x, y) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
 }
 
 /* ---------- Luz y visión ----------

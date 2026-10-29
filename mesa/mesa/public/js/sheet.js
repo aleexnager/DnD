@@ -4,7 +4,7 @@
    abierta; las dos reenvían aquí los clics con handleSheetAct. */
 
 import { esc, lines, sign, el, on, modal, toast } from "./util.js";
-import { FEATURE_SOURCES, BUFF_PRESETS, BUFF_KINDS, normalizeBuff } from "./schema.js";
+import { FEATURE_SOURCES, BUFF_PRESETS, BUFF_KINDS, normalizeBuff, cantripTier, scaleDice, modOf, conditionName } from "./schema.js";
 import { attacksOf, shapeLabel } from "./attacks.js";
 import { castStats, spellTags, openCast } from "./spellbook.js";
 import { throwDice } from "./dice-panel.js";
@@ -51,6 +51,38 @@ export function attackTableHTML(c) {
         </div>`;
       }).join("")}
     </div>` : "";
+}
+
+/* Los conjuros, en la misma tabla que los ataques: el ataque o la CD, el
+   daño (o la cura) y el botón de lanzar. El ataque y el daño se tocan para
+   tirarlos a mano; «Lanzar» abre la ventana que lo resuelve entero. */
+export function spellRollOf(c, sp) {
+  const st = castStats(c);
+  const times = sp.level === 0 && sp.scale ? cantripTier(c.level || 1) : 1;
+  const dmg = sp.damage ? (times > 1 ? scaleDice(sp.damage, times) : sp.damage) : "";
+  return { st, dmg, heal: sp.heal ? sp.heal + (sp.healMod ? (modOf(c[st.ability]) >= 0 ? "+" : "") + modOf(c[st.ability]) : "") : "" };
+}
+export function spellTableHTML(c, { cast = true } = {}) {
+  const list = (c.spellbook || []).slice().sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+  if (!list.length) return "";
+  return `<div class="sheet-table atk-table spell-table">
+      <div class="st-head"><span>Conjuro</span><span>Alcance</span><span>Golpe/CD</span><span>Efecto</span></div>
+      ${list.map(sp => {
+        const { st, dmg, heal } = spellRollOf(c, sp);
+        const sub = [sp.level ? `nivel ${sp.level}` : "truco", sp.time, sp.conc ? "concentración" : "", sp.shape ? `${sp.size} pies` : ""].filter(Boolean).join(" · ");
+        const hit = sp.mode === "attack" ? `<button class="st-pill" data-act="spHit" data-spell="${esc(sp.id)}" title="Tirar el ataque de conjuro"><b>${sign(st.atk)}</b></button>`
+          : sp.mode === "save" ? `<span class="st-pill dc"><b>CD ${st.dc}</b><small>${SAVE_ABBR[sp.save] || "DES"}</small></span>` : `<span class="st-range">—</span>`;
+        const eff = heal ? `<button class="st-pill heal" data-act="spDmg" data-spell="${esc(sp.id)}" title="Tirar la cura"><b>${esc(heal)}</b></button>`
+          : dmg ? `<button class="st-pill dmg" data-act="spDmg" data-spell="${esc(sp.id)}" title="Tirar el daño"><b>${esc(sp.mode === "auto" ? sp.darts + "×" + dmg : dmg)}</b>${sp.type ? `<small>${esc(sp.type)}</small>` : ""}</button>`
+          : `<span class="st-range">${esc(sp.cond ? conditionName(sp.cond) : "efecto")}</span>`;
+        return `<div class="st-row">
+          <span class="st-name"><b>${esc(sp.name)}</b><small>${esc(sub)}</small></span>
+          <span class="st-range">${esc(sp.range || "—")}</span>
+          ${hit}${eff}
+          ${cast ? `<button class="btn sm st-cast" data-act="castSpell" data-spell="${esc(sp.id)}">Lanzar</button>` : ""}
+        </div>`;
+      }).join("")}
+    </div>`;
 }
 
 /* Efectos activos: lo que se suma solo a las tiradas mientras dura */
@@ -117,6 +149,7 @@ function actionsHTML(c) {
   return `
     ${buffsHTML(c)}
     ${attackTableHTML(c) || `<p class="sheet-empty">Sin ataques apuntados. Añádelos al editar la ficha.</p>`}
+    ${(c.spellbook || []).length ? `<h4 class="sheet-sub">Conjuros</h4>${spellTableHTML(c)}` : ""}
     <h4 class="sheet-sub">Acciones en combate</h4>
     <div class="std-acts">${COMBAT_ACTIONS.map(([n, hint]) => `<span class="std-act" title="${esc(hint)}">${n}</span>`).join("")}</div>`;
 }
@@ -218,6 +251,15 @@ export function handleSheetAct(c, act, btn, opts = {}) {
     case "itemEquip": {
       const i = +btn.dataset.i;
       patchChar(c.id, { items: c.items.map((it, j) => j === i ? { ...it, equipped: !it.equipped } : it) });
+      return true;
+    }
+    case "spHit": case "spDmg": {
+      const sp = c.spellbook.find(x => x.id === btn.dataset.spell);
+      if (!sp) return true;
+      const { st, dmg, heal } = spellRollOf(c, sp);
+      if (act === "spHit") roll("1d20" + sign(st.atk), `${c.name} · ${sp.name}`, "attack");
+      else if (heal) roll(heal, `${c.name} · ${sp.name} · cura`, "");
+      else if (dmg) roll(sp.mode === "auto" ? Array.from({ length: sp.darts || 1 }, () => dmg).join("+") : dmg, `${c.name} · ${sp.name} · daño`, "damage");
       return true;
     }
     case "castSpell": {

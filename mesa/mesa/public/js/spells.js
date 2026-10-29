@@ -143,6 +143,21 @@ export const SPELL_LIBRARY = [
 /* Para que las fichas con los conjuros escritos a mano los encuentren aquí */
 registerSpellLibrary(SPELL_LIBRARY);
 
+/* La biblioteca de la partida: la de serie con los retoques del DM encima
+   (mismo id = sustituye al de serie) y los conjuros que haya creado él. La
+   de serie no se toca: si una versión nueva de Mesa la corrige, basta con
+   «Restaurar el de serie» para recibir la corrección. */
+const BUILTIN_IDS = new Set(SPELL_LIBRARY.map(s => s.id));
+export const isBuiltinSpell = id => BUILTIN_IDS.has(id);
+export const builtinSpell = id => SPELL_LIBRARY.find(s => s.id === id) || null;
+export function libraryOf(doc) {
+  const own = (doc && doc.spellLib) || [];
+  const byId = new Map(own.map(s => [s.id, s]));
+  const merged = SPELL_LIBRARY.map(s => byId.get(s.id) ? { ...byId.get(s.id), edited: true } : s);
+  const custom = own.filter(s => !BUILTIN_IDS.has(s.id)).map(s => ({ ...s, custom: true }));
+  return [...merged, ...custom].sort((a, b) => a.level - b.level || a.name.localeCompare(b.name, "es"));
+}
+
 /* Característica de lanzamiento que suele usar cada clase */
 export function guessAbility(className = "") {
   const c = className.toLowerCase();

@@ -5,7 +5,7 @@
 import { ambientToggle } from "./ambient.js";
 import { $, esc, pct, hpTone, initials, imgURL, hpBar, tweenBars, reducedMotion } from "./util.js";
 import { store, onState, onStatus, leave } from "./net.js";
-import { conditionName } from "./schema.js";
+import { conditionName, acOf, acParts } from "./schema.js";
 import { MapView } from "./map.js";
 import { icon } from "./icons.js";
 import { langPicker } from "./i18n.js";
@@ -267,7 +267,7 @@ function whoCard(c, session, { inTurn = false, fighting = true } = {}) {
         <b>${esc(c.name)}</b>
         <span class="state">${esc(sub)}</span>
       </div>
-      ${monster ? "" : `<span class="ac" title="Clase de armadura">${c.ac}</span>`}
+      ${monster ? "" : `<span class="ac${c.tempAc ? " ac-temp" : ""}" title="${acParts(c).title}">${acOf(c)}${c.tempAc ? `<i class="ac-extra">${c.tempAc > 0 ? "+" : "−"}${Math.abs(c.tempAc)}</i>` : ""}</span>`}
     </div>
     ${p !== null ? hpBar(c.id, p) : ""}
     ${exact || (monster && c.wound) || c.conditions.length ? `<div class="state row-line">
@@ -294,7 +294,7 @@ function turnBand(c, next, session, combat) {
       </div>
     </div>
     <div class="tb-stats">
-      ${monster ? "" : `<span><i>${c.ac}</i>CA</span>`}
+      ${monster ? "" : `<span><i>${acOf(c)}</i>CA</span>`}
       <span><i>${left}</i>pies</span>
       ${monster ? "" : `<span><i>${session.showPartyHP ? c.hp : Math.round(p) + "%"}</i>vida</span>`}
     </div>

@@ -1,14 +1,15 @@
 /* Vista del jugador. Manda su ficha y poco más: lo que el DM no enseña, no
    llega ni siquiera al navegador. */
 
+import { exportChars, importChars } from "./chars-io.js";
 import { afterMove } from "./portals.js";
 import { voiceWidget } from "./voice.js";
 import { $, el, on, esc, lines, sign, pct, hpTone, hpBar, tweenBars, initials, imgURL, toast, modal, clamp } from "./util.js";
-import { ABILITIES, SKILLS, CONDITIONS, conditionName, modOf } from "./schema.js";
+import { ABILITIES, SKILLS, CONDITIONS, conditionName, modOf, acOf, acParts } from "./schema.js";
 import { store, onState, onStatus, onPresence, op, patchChar, leave } from "./net.js";
 import { dicePanel, renderLog, throwDice, tellTable } from "./dice-panel.js";
 import { openAttacks, areaAttacks, slotsLeft, shapeLabel } from "./attacks.js";
-import { openCharEditor, openConditions } from "./char-editor.js";
+import { openCharEditor, openConditions, openTempAC, acShield } from "./char-editor.js";
 import { openBuilder } from "./creador.js";
 import { MapView } from "./map.js";
 import { openSpellbook } from "./spellbook.js";
@@ -63,6 +64,7 @@ export function mountPlayer(root) {
         <div class="brand"><h1>Mesa</h1></div>
         <span class="spacer"></span>
         <div class="who"><span class="dot" id="dot"></span><span class="pill" id="whoami"></span></div>
+        <button class="btn sm handout-btn hidden" id="handoutBtn" title="Volver a ver la imagen que enseña el DM">${withIcon("image", "Imagen del DM", 15)}</button>
         <span id="voiceSlot"></span>
         <span id="ambientSlot"></span>
         <span id="plang"></span>
@@ -88,6 +90,7 @@ export function mountPlayer(root) {
   $("#plang", root).appendChild(langPicker());
   $("#voiceSlot", root).replaceWith(voiceWidget());
   $("#leaveBtn", root).addEventListener("click", () => leave());
+  $("#handoutBtn", root).addEventListener("click", openHandout);
   const help = tourButton("player");
   $("#tourSlot", root).replaceWith(help);
   setTimeout(() => inviteTour("player", help), 1500);
@@ -168,16 +171,34 @@ function noticeChat() {
   badge.classList.toggle("hidden", n <= seenLog);
 }
 
-/* La imagen que el DM enseña a la mesa */
+/* La imagen que el DM enseña a la mesa. Sale sola la primera vez; se puede
+   cerrar para mirar el mapa y volver a abrir con el botón de arriba mientras
+   el DM la siga enseñando. Cuando deja de enseñarla, desaparece todo. */
+let handoutWin = null;
 function noticeHandout() {
   const id = doc().session.handoutId;
-  if (!id || id === seenHandout) { if (!id) seenHandout = ""; return; }
+  const btn = $("#handoutBtn");
+  if (btn) btn.classList.toggle("hidden", !id);
+  if (!id) {
+    seenHandout = "";
+    if (handoutWin) { handoutWin.close(); handoutWin = null; }
+    return;
+  }
+  if (id === seenHandout) return;
   seenHandout = id;
-  modal({
+  openHandout();
+}
+function openHandout() {
+  const id = doc().session.handoutId;
+  if (!id) return;
+  if (handoutWin) handoutWin.close();
+  handoutWin = modal({
     title: doc().session.handoutText || "El DM te enseña algo",
-    body: `<img src="${imgURL(id)}" alt="" style="width:100%;border-radius:10px">`,
+    body: `<img src="${imgURL(id)}" alt="" style="width:100%;border-radius:10px">
+      <p class="prose small" style="margin-top:8px"><span>Puedes cerrarla para mirar el mapa: mientras el DM la enseñe, el botón «Imagen del DM» de arriba la vuelve a abrir.</span></p>`,
     wide: true,
-    actions: [{ label: "Cerrar" }]
+    actions: [{ label: "Cerrar" }],
+    onClose: () => { handoutWin = null; }
   });
 }
 
@@ -208,6 +229,7 @@ function renderPicker(pane) {
         </button>`; }).join("")}
       </div>
       <button class="btn primary" data-new>${withIcon("userPlus", "Crear mi personaje")}</button>
+      <button class="btn" data-import-me>${withIcon("upload", "Traer mi ficha de otra partida")}</button>
     </div>`;
 }
 
@@ -215,7 +237,8 @@ function renderPicker(pane) {
 /* La pestaña de abajo de la ficha (acciones, conjuros, equipo, rasgos, notas) */
 let sheetTab = "acciones";
 
-function renderSheet(pane, c) {
+function renderSheet(pane, c, opts = {}) {
+  const tabNow = opts.tab || sheetTab;
   const p = pct(c);
   const avatar = c.avatarId
     ? `<img class="avatar" src="${imgURL(c.avatarId)}" alt="" style="--tone:${esc(c.color)}">`
@@ -233,13 +256,14 @@ function renderSheet(pane, c) {
         <small>${esc([c.className, c.race, "nivel " + c.level].filter(Boolean).join(" · "))}</small>
       </div>
       <button class="btn sm" data-act="edit" title="Editar ficha">${withIcon("pencil", "Editar", 16)}</button>
+      <button class="icon-btn" data-act="exportMe" title="Guardar mi ficha en un archivo, para otra campaña" aria-label="Exportar mi ficha">${icon("download", 16)}</button>
     </div>
 
     <div class="sheet" style="--tone:${esc(c.color)}">
       <div class="quick-stats">
         <div class="qs"><span class="qs-l">Competencia</span><b class="tnum">${sign(c.proficiency)}</b></div>
         <button class="qs" data-act="initiative" title="Tirar iniciativa"><span class="qs-l">Iniciativa</span><b class="tnum">${c.initiative}</b></button>
-        <div class="qs ac-shield" title="Clase de armadura"><small>CA</small><b class="tnum">${c.ac}</b></div>
+        ${acShield(c, { cls: "qs ac-shield", act: "tempAc" })}
         <div class="qs"><span class="qs-l">Velocidad</span><b class="tnum">${c.speed}</b><small>pies</small></div>
       </div>
 
@@ -324,9 +348,37 @@ function renderSheet(pane, c) {
       </div>
 
       <section class="sheet-box notes-box">
-        ${sheetTabsHTML(c, sheetTab)}
+        ${sheetTabsHTML(c, tabNow)}
       </section>
     </div>`;
+  if (opts.readOnly) readOnlySheet(pane, c);
+}
+
+/* La ficha de un compañero: se ve entera, pero no se toca. Quedan las
+   pestañas para mirar sus ataques, conjuros, equipo, rasgos y notas. */
+function readOnlySheet(pane, c) {
+  pane.querySelectorAll(".hp-deal, .pad, .action-grid, [data-act=edit], .cond-box .btn, .sheet-more, .buffs [data-act]").forEach(n => n.remove());
+  pane.querySelectorAll('[data-act]:not([data-act="sheetTab"])').forEach(n => {
+    n.removeAttribute("data-act");
+    if (n.tagName === "BUTTON") { n.disabled = true; n.classList.add("ro"); }
+  });
+  const head = pane.querySelector(".sheet-head");
+  if (head) head.insertAdjacentHTML("beforeend", `<span class="pill ro-pill">${icon("eye", 13)} Solo lectura</span>`);
+}
+
+function openMateSheet(id) {
+  const c = doc().chars.find(x => x.id === id && x.kind === "pc");
+  if (!c) return;
+  let tab = "acciones";
+  const body = document.createElement("div");
+  body.className = "mate-sheet";
+  const paint = () => renderSheet(body, doc().chars.find(x => x.id === id) || c, { readOnly: true, tab });
+  paint();
+  body.addEventListener("click", e => {
+    const b = e.target.closest('[data-act="sheetTab"]');
+    if (b) { tab = b.dataset.tabId; paint(); }
+  });
+  modal({ title: "Ficha de " + c.name, body, wide: true, actions: [{ label: "Cerrar", tone: "primary" }] });
 }
 
 /* ---------- La party ---------- */
@@ -340,7 +392,7 @@ function renderParty(pane) {
     <div class="party-strip">
       ${mates.map(c => {
         const p = pct(c);
-        return `<div class="mate" data-flash style="--tone:${esc(c.color)}">
+        return `<button type="button" class="mate mate-open" data-mate="${esc(c.id)}" data-flash style="--tone:${esc(c.color)}" title="${c.id === (me() || {}).id ? "Tu ficha" : "Ver la ficha de " + esc(c.name)}">
           ${c.avatarId ? `<img class="avatar" src="${imgURL(c.avatarId)}" alt="" style="--tone:${esc(c.color)}">`
             : `<div class="avatar" style="--tone:${esc(c.color)}">${initials(c.name)}</div>`}
           <div class="info">
@@ -350,9 +402,9 @@ function renderParty(pane) {
           </div>
           <div style="text-align:right">
             <b class="tnum">${c.hp}</b><small style="color:var(--dim)">/${c.maxHp}</small><br>
-            <small style="color:var(--dim)">CA ${c.ac}</small>
+            <small style="color:var(--dim)" title="${esc(acParts(c).title)}">CA ${acOf(c)}${c.tempAc ? ` <i class="ac-extra">${c.tempAc > 0 ? "+" : "−"}${Math.abs(c.tempAc)}</i>` : ""}</small>
           </div>
-        </div>`;
+        </button>`;
       }).join("")}
     </div>
     ${foes.length ? `<div class="section-title"><h2>A la vista</h2><span class="line"></span></div>
@@ -434,6 +486,8 @@ function renderMap(pane, mine) {
         <button class="btn sm" data-pmap="out">−</button>
         <button class="btn sm" data-pmap="in">+</button>
         <button class="btn sm" data-pmap="fit">Todo</button>
+        <button class="btn sm follow-me" data-pmap="followMe" aria-pressed="false"
+          title="Encendido, la cámara se queda en tu personaje. Apagado, sigue la acción, como en la tele.">${withIcon("user", "Mi personaje", 15)}</button>
       </div>
       <div class="board"><canvas id="pcanvas"></canvas></div>`;
     pane.dataset.map = "1";
@@ -480,6 +534,13 @@ function renderMap(pane, mine) {
       if (what === "in") mapView.setZoom(mapView.zoom * 1.3);
       if (what === "out") mapView.setZoom(mapView.zoom / 1.3);
       if (what === "fit") mapView.setZoom(1);
+      if (what === "followMe") {
+        mapView.followMe = !mapView.followMe;
+        try { localStorage.setItem("mesa.followMe", mapView.followMe ? "1" : "0"); } catch {}
+        b.setAttribute("aria-pressed", String(mapView.followMe));
+        toast(mapView.followMe ? "La cámara sigue a tu personaje" : "La cámara sigue la acción");
+        mapView.draw();
+      }
     });
   }
   /* Si el DM quita el dibujo, desaparecen los botones (y se vuelve a mover) */
@@ -490,6 +551,11 @@ function renderMap(pane, mine) {
     mapView.stroke = null;
     pane.querySelectorAll("[data-ptool]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.ptool === "token")));
   }
+  /* Seguir a mi personaje o la acción: cada jugador lo elige en su móvil */
+  window.__mesaMap = mapView;   // para las pruebas
+  if (mapView.followMe === undefined) { try { mapView.followMe = localStorage.getItem("mesa.followMe") === "1"; } catch { mapView.followMe = false; } }
+  const fm = pane.querySelector('[data-pmap="followMe"]');
+  if (fm) fm.setAttribute("aria-pressed", String(!!mapView.followMe));
   mapView.set({ map, chars: doc().chars, session: doc().session, you: mine.id });
 }
 
@@ -511,6 +577,12 @@ function renderDice(pane) {
 
 /* ---------- Acciones ---------- */
 function bindActions(root) {
+  /* La party: tu fila lleva a tu ficha; la de otro, a la suya en solo lectura */
+  on(root, "click", "[data-mate]", (e, b) => {
+    const mine = me();
+    if (mine && b.dataset.mate === mine.id) { const t = root.querySelector('[data-ptab="ficha"]'); if (t) t.click(); return; }
+    openMateSheet(b.dataset.mate);
+  });
   on(root, "click", "[data-claim]", (e, b) => op("char.claim", { id: b.dataset.claim }));
 
   on(root, "click", "[data-ask]", (e, b) => {
@@ -521,6 +593,7 @@ function bindActions(root) {
     op("request.done", { id: b.dataset.ask, charId: c ? c.id : "" });
   });
   on(root, "click", "[data-new]", () => openBuilder({ onManual: () => openCharEditor(null, { isDM: false }) }));
+  on(root, "click", "[data-import-me]", () => importChars({ isDM: false }));
 
   on(root, "click", "[data-act]", (e, b) => {
     const c = me();
@@ -574,6 +647,8 @@ function bindActions(root) {
         return;
       }
       case "conditions": return openConditions(c);
+      case "tempAc": return openTempAC(c);
+      case "exportMe": return exportChars([c]);
       case "ability": {
         const k = b.dataset.k;
         return throwDice("1d20" + sign(modOf(c[k])), { label: `${c.name} · ${ABILITIES.find(a => a[0] === k)[1]}`, char: c, kind: "check" });
