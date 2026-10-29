@@ -321,10 +321,14 @@ mesa.
 
 Cada estado puede llevar **una duración en rondas**: al cerrarse el turno de
 quien lo sufre, la cuenta baja sola y el estado se cae solo cuando toca, con
-aviso en el registro. El agotamiento va aparte, por niveles.
+aviso en el registro. El agotamiento va aparte, por niveles: como en 2024,
+cada nivel resta 2 a todas las tiradas de d20 (ataques, salvaciones y
+pruebas), y Mesa lo suma solo. Las descripciones de los estados son las de
+2024.
 
 **Descansar** abre las dos opciones. El **largo** devuelve vida, espacios,
-recursos y la mitad de los dados de vida, y baja un nivel de agotamiento. En el
+recursos y **todos** los dados de golpe (regla de 2024), y baja un nivel de
+agotamiento. En el
 **corto**, cada personaje gasta sus dados de golpe desde su propia ficha (tira
 el dado, suma Constitución y se cura). A los monstruos no les afecta ninguno.
 
@@ -385,10 +389,30 @@ personajes se les da su turno para las salvaciones de muerte).
 ### Ataques
 
 Cada ficha tiene su botón **Atacar**. La lista sale de dos sitios: los ataques
-que apuntes en la ficha y los que Mesa **lee de las acciones de la criatura**,
-que vienen escritos en prosa en el bestiario ("Cimitarra. Ataque con arma cuerpo
-a cuerpo: +4 al ataque… Impacto: 5 (1d6+2) de daño cortante"). De ahí saca el
-bonificador, el daño y el tipo.
+que apuntes en la ficha y los que Mesa **lee de las acciones de la criatura**
+(«Cimitarra — +4 al ataque — 1d6+2 cortante · alcance 5 pies»), también de sus
+acciones adicionales, reacciones y acciones legendarias. De ahí saca el
+bonificador, el daño, el tipo, el alcance, el área («cono de 15 pies») y el
+estado que puede poner («queda derribado»).
+
+**Indicadores.** Cada ataque y cada conjuro llevan unas pastillas con icono que
+dicen de un vistazo lo que hace, con la explicación entera al pasar el ratón:
+
+| Pastilla | Qué dice |
+|---|---|
+| espada · «5 pies» | cuerpo a cuerpo, con su alcance |
+| flecha · «80/320 pies» | a distancia: normal / máximo (con desventaja) |
+| mano · «Toque», silueta · «Personal» | hay que tocar / sale de quien lo lanza |
+| esfera, cono, línea, cubo · «20 pies» | de área, con su tamaño (ámbar) |
+| dado · «Ataque», escudo · «DES ½» | tirada de ataque / salvación y si es a mitad |
+| corazón · «Cura», rayo · «Impacta» | cura / impacta siempre |
+| espiral · «Paralizado» | el estado que puede poner (violeta) |
+| figura en un círculo · «Invoca» | crea o invoca algo que se queda en el tablero |
+| rombo con C · «Conc.» | pide concentración |
+
+Salen en la tabla de ataques y de conjuros de la ficha (el alcance, en su
+columna), en la ventana de atacar, en el libro de conjuros, al lanzar, en la
+biblioteca y en el creador de personajes.
 
 Cada ataque puede llevar además **un nivel de conjuro** y **una forma de área**
 (esfera, cono, línea o cubo, con su tamaño en pies). Con nivel, al lanzarlo se
@@ -416,14 +440,23 @@ medio, difícil o mortal antes de que empiece.
 
 ## Bestiario
 
-Trae **115 criaturas listas**, de VD 0 a 30: del plebeyo y el goblin a la
+Trae **115 criaturas listas** con **las reglas de 2024** (SRD 5.2.1), de VD 0 a 30: del plebeyo y el goblin a la
 tarasca, pasando por necrófagos, oso lechuza, mantícora, trol, elementales,
 gigantes, dragones de cría a adulto, vampiro, liche, balor y kraken. Hay de los
 catorce tipos (humanoides, bestias, muertos vivientes, monstruosidades,
-infernales, hadas, dragones, gigantes, elementales, constructos, cienos,
-plantas, celestiales y aberraciones), con fichas completas: características,
-sentidos, idiomas, resistencias, rasgos y acciones, y sus ataques listos para
-tirar de un clic, alientos y conjuros con salvación incluidos.
+infernales, feéricos, dragones, gigantes, elementales, constructos, cienos,
+plantas, celestiales y aberraciones), con la **ficha de 2024** completa:
+iniciativa propia, características con su modificador y su salvación (las
+competentes, marcadas), bonificador por competencia, habilidades, equipo,
+vulnerabilidades, resistencias, inmunidades, sentidos, idiomas, rasgos,
+acciones, **acciones adicionales, reacciones y acciones legendarias**, y sus
+ataques listos para tirar de un clic, alientos y conjuros con salvación
+incluidos. Varias cambian de nombre como en 2024 (Guerrero goblin, Guerrero
+trasgo, Guerrero veterano, Centauro soldado…). Cuatro no están en el SRD de
+2024 (orco, drow, hombre lagarto y banshee) y conservan su ficha de 2014: lo
+dice una etiqueta en su ficha («Ficha 2014»). Al sacarlas a la mesa, la
+iniciativa se tira con su bonificador de 2024 y sus salvaciones usan su
+competencia.
 
 Arriba del bestiario se busca por nombre (también en inglés: «owlbear»
 encuentra al oso lechuza) y se filtra **por tipo** y **por VD** (0 a 1/2, 1 a
@@ -458,8 +491,8 @@ editaste y los monstruos que ya estaban en la mesa estrenan retrato.
 
 ### Créditos del bestiario
 
-Las fichas incluyen material del *System Reference Document 5.1* de Wizards
-of the Coast, publicado bajo [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+Las fichas incluyen material del *System Reference Document 5.2.1* (y del 5.1
+para las cuatro de 2014) de Wizards of the Coast, publicado bajo [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 Los retratos son iconos de [game-icons.net](https://game-icons.net) (Lorc,
 Delapouite y otros autores), bajo [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/),
 recoloreados para la mesa con `tools/retratos-bestiario.mjs`. El detalle está
@@ -816,7 +849,7 @@ Vienen **cuatro libros de serie**, que no se pueden quitar:
 - **Manual del jugador**: una sección por clase (rasgos básicos, progresión de
   los 20 niveles, rasgos, la subclase del SRD, el resto de subclases y qué
   cambia en 2024), más especies y trasfondos.
-- **Compendio de conjuros**: los 316 conjuros del SRD 5.1, por nivel (trucos y
+- **Compendio de conjuros**: los 339 conjuros del SRD 5.2.1 (reglas de 2024), por nivel (trucos y
   niveles 1 a 9) con su ficha completa, más índices por clase y por escuela.
   Las fórmulas se tiran con un clic, como en el resto de Mesa.
 - **Bestiario**: las criaturas de Mesa y las tuyas, por tipo (aberraciones,
@@ -871,10 +904,14 @@ que es donde se gasta el espacio de conjuro.
 
 Cada personaje, y cada monstruo que los tenga, lleva su **lista de conjuros**
 (botón **Conjuros** en la ficha). Se añaden desde una **biblioteca de 39
-conjuros del SRD** ya preparados, de trucos a nivel 5: Rayo de fuego, Llama
+conjuros del SRD** ya preparados con **el texto de 2024**, de trucos a nivel 5: Rayo de fuego, Llama
 sagrada, Descarga sobrenatural, Proyectil mágico, Dormir, Curar heridas,
 Inmovilizar persona, Bola de fuego, Relámpago, Espíritus guardianes, Cono de
-frío… La característica de lanzamiento se adivina por la clase y se puede
+frío… Los que cambiaron en 2024 llevan su versión nueva (Curar heridas 2d8,
+Palabra curativa 2d4, Dormir con salvación de Sabiduría, Arma espiritual con
+concentración, Toque helado cuerpo a cuerpo…), y las copias que ya estaban en
+las fichas sin retocar se ponen al día solas; las retocadas se respetan. La
+característica de lanzamiento se adivina por la clase y se puede
 cambiar; la CD y el bonificador de ataque salen solos de la ficha, y el DM
 puede fijarlos a mano para un monstruo.
 
@@ -892,7 +929,8 @@ directamente a quien quede dentro. Después **el servidor lo resuelve todo**:
 - **Curas**: suman la característica de lanzamiento y levantan a quien
   estaba en el suelo.
 - **Dormir**: tira la reserva y duerme de menos a más vida.
-- **Concentración**: si el conjuro la pide, el personaje queda concentrado; si
+- **Concentración**: si el conjuro la pide, el personaje queda concentrado (la
+  salvación al recibir daño es CD 10 o la mitad del daño, como mucho 30); si
   ya lo estaba en otro, ese se pierde y se dice en el registro. Los estados
   que pone duran lo que dura el conjuro y se quitan solos.
 
@@ -1054,13 +1092,18 @@ medio deslizar.
 ### Movimiento
 
 Las animaciones son pocas y con intención: solo se mueve lo que acaba de
-cambiar. Las fichas **se deslizan** de casilla a casilla (y la cámara que sigue
+cambiar. **La tirada** es el momento de la mesa: en el registro y en la tele el
+número cae girando y se asienta; un **crítico** suelta un aro verde y brilla, y
+una **pifia** tiembla en rojo. Solo se anima la entrada que acaba de llegar,
+nunca las anteriores al repintar. Las fichas **se deslizan** de casilla a casilla (y la cámara que sigue
 a un personaje lo acompaña sin saltos); al empezar un turno, un **aro dorado**
 se abre una vez desde la ficha de quien actúa; un golpe deja un **halo rojo** y
 una cura uno verde, en el mapa y en su carta, y las barras de vida bajan
 deslizándose. Las ventanas, el bestiario y las pestañas entran con un fundido
 corto. Nada se anima en bucle, así que la tele no gasta de más, y quien tenga
-activado «reducir movimiento» en su sistema no ve ninguna animación.
+activado «reducir movimiento» en su sistema no ve nada que se desplace, gire
+o tiemble: lo nuevo aparece con un fundido y los colores (el verde del
+crítico, el rojo del golpe) siguen diciendo qué ha pasado.
 
 Una criatura que sale de la niebla aparece sin deslizarse: si lo hiciera,
 enseñaría por dónde ha venido.
@@ -1116,6 +1159,8 @@ public/
     schema.js          forma de los datos y migración (lo usan servidor y navegador)
     los.js             muros, luz, visión, distancias y plantillas (compartido)
     attacks.js         leer y lanzar ataques
+    chips.js           indicadores con icono de ataques y conjuros (alcance, área, estado…)
+    bestiario-datos.js las 115 fichas del bestiario (reglas de 2024), con su inglés
     chars-io.js        exportar e importar personajes entre campañas
     forja.js           la forja de mapas: el editor a pantalla completa
     forja-core.js      la forja: geometría del plano, paredes, puertas y generador
@@ -1172,7 +1217,8 @@ data/                  la partida y las imágenes (se crea al arrancar)
 - Un PDF escaneado (páginas que son fotos) no tiene texto que buscar: se lee
   con «Ver original», pero el buscador no lo encuentra.
 
-- Los conjuros de la biblioteca son los del SRD hasta nivel 5. Los que no
+- Los conjuros lanzables de la biblioteca son 39 del SRD hasta nivel 5 (el
+  compendio trae los 339, para leer). Los que no
   hacen daño ni ponen un estado (Escudo de fe, Bendecir, Revivificar…) se
   anotan en el registro y el efecto lo aplicas tú.
 - La voz no tiene servidor de retransmisión: en redes que no dejan conectar
