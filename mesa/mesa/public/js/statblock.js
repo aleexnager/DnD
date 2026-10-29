@@ -9,7 +9,7 @@
    así que la traducción sigue funcionando. */
 
 import { esc, lines, sign } from "./util.js";
-import { ABILITIES, modOf } from "./schema.js";
+import { ABILITIES, modOf, initBonus } from "./schema.js";
 import { rollable } from "./rollable.js";
 
 /* Tras el nombre va punto, así que el texto sigue en mayúscula */
@@ -26,33 +26,53 @@ const prop = (label, value) => value === "" || value === undefined || value === 
 
 /* b: una criatura del bestiario o un monstruo de la mesa.
    opts.hp: lo que pone en «Puntos de golpe» (por defecto, la media y sus dados).
-   opts.act: si se da, cada característica es un botón con ese data-act. */
+   opts.act: si se da, cada característica es un botón con ese data-act.
+   Sigue la ficha de 2024: CA e iniciativa en la misma línea, cada
+   característica con su modificador y su salvación, defensas por separado y
+   una sección por tipo de acción. */
 export function statBlockHTML(b, opts = {}) {
   const hp = opts.hp ?? `${b.hpAvg}${b.hpDice ? ` (${b.hpDice})` : ""}`;
+  const pb = b.pb || b.proficiency || 2;
+  const saves = b.saves || [];
+  const init = initBonus(b);
   const abil = ([k, l]) => {
-    const inner = `<span>${l}</span><b class="tnum">${b[k]} (${sign(modOf(b[k]))})</b>`;
+    const mod = modOf(b[k]), save = mod + (saves.includes(k) ? pb : 0);
+    const inner = `<span>${l}</span><b class="tnum">${b[k]}</b><small class="tnum" title="Modificador">${sign(mod)}</small><small class="tnum ${save !== mod ? "prof" : ""}" title="Salvación">${sign(save)}</small>`;
     return opts.act
       ? `<button class="mon-abil" data-act="${opts.act}" data-ability="${k}">${inner}</button>`
       : `<div class="mon-abil">${inner}</div>`;
   };
+  const section = (title, text) => {
+    const list = lines(text);
+    return list.length ? `<h4 class="mon-head">${title}</h4>${list.map(l => trait(l, b.name)).join("")}` : "";
+  };
+  const skills = typeof b.skillsText === "string" && b.skillsText ? b.skillsText : typeof b.skills === "string" ? b.skills : "";
   const traits = lines(b.traits);
-  const actions = lines(b.actions);
+  const meta = [b.sizeType, b.alignment].filter(Boolean).join(", ");
   return `
   <div class="statblock">
     <h3 class="mon-name">${esc(b.name)}</h3>
-    ${b.sizeType ? `<p class="mon-meta">${esc(b.sizeType)}</p>` : ""}
+    ${meta ? `<p class="mon-meta">${esc(meta)}</p>` : ""}
+    ${b.edition === "2024" ? `<span class="mon-ed" title="Ficha de las reglas de 2024 (SRD 5.2.1)${b.srd ? " · " + esc(b.srd) : ""}">Reglas 2024</span>`
+      : b.edition === "2014" ? `<span class="mon-ed old" title="Esta criatura no está en el SRD de 2024: su ficha es la de 2014">Ficha 2014</span>` : ""}
     <i class="mon-rule"></i>
-    ${prop("Clase de armadura", b.ac)}
+    <p class="mon-prop mon-ac"><b>CA</b> ${esc(b.ac)} <b>Iniciativa</b> ${sign(init)} (${10 + init})</p>
     ${prop("Puntos de golpe", hp)}
-    ${prop("Velocidad", b.speed + " pies")}
-    <i class="mon-rule"></i>
+    ${prop("Velocidad", b.speedText || b.speed + " pies")}
     <div class="mon-abils">${ABILITIES.map(abil).join("")}</div>
-    <i class="mon-rule"></i>
+    <p class="mon-abil-key"><span>mod.</span><span>salv.</span></p>
+    ${prop("Habilidades", skills)}
+    ${prop("Equipo", b.gear)}
+    ${prop("Vulnerabilidades", b.vulnerabilities)}
     ${prop("Resistencias", b.resistances)}
+    ${prop("Inmunidades", b.immunities)}
     ${prop("Sentidos", b.senses)}
     ${prop("Idiomas", b.languages)}
-    ${b.cr !== undefined && b.cr !== "" ? `<p class="mon-prop"><b>Desafío</b> ${esc(b.cr)} (${b.xp || 0} PX)</p>` : ""}
-    ${traits.length ? `<i class="mon-rule"></i>${traits.map(l => trait(l, b.name)).join("")}` : ""}
-    ${actions.length ? `<h4 class="mon-head">Acciones</h4>${actions.map(l => trait(l, b.name)).join("")}` : ""}
+    ${b.cr !== undefined && b.cr !== "" ? `<p class="mon-prop"><b>VD</b> ${esc(b.cr)} (${b.xp || 0} PX; BC ${sign(pb)})</p>` : ""}
+    ${traits.length ? `<h4 class="mon-head">Rasgos</h4>${traits.map(l => trait(l, b.name)).join("")}` : ""}
+    ${section("Acciones", b.actions)}
+    ${section("Acciones adicionales", b.bonus)}
+    ${section("Reacciones", b.reactions)}
+    ${section("Acciones legendarias", b.legendary)}
   </div>`;
 }

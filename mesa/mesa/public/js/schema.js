@@ -17,22 +17,23 @@ export function uid() {
 
 /* ---------- Estados ---------- */
 export const CONDITIONS = [
-  { id: "agarrado", name: "Agarrado", hint: "Velocidad 0. Termina si quien agarra queda incapacitado." },
-  { id: "apresado", name: "Apresado", hint: "Velocidad 0, desventaja al atacar, ventaja para quien le ataque." },
-  { id: "asustado", name: "Asustado", hint: "Desventaja mientras vea la fuente del miedo. No puede acercarse a ella." },
-  { id: "aturdido", name: "Aturdido", hint: "Incapacitado, no se mueve, habla a duras penas. Falla salvaciones de FUE y DES." },
-  { id: "cegado", name: "Cegado", hint: "Falla lo que exija vista. Desventaja al atacar, ventaja para quien le ataque." },
-  { id: "derribado", name: "Derribado", hint: "Solo se arrastra. Desventaja al atacar. Ventaja al atacarle en cuerpo a cuerpo." },
-  { id: "encantado", name: "Encantado", hint: "No puede atacar a quien le encanta; el otro tiene ventaja en trato social." },
+  /* Los estados de las reglas de 2024, resumidos */
+  { id: "agarrado", name: "Agarrado", hint: "Velocidad 0. Desventaja al atacar a cualquiera que no sea quien le agarra. Quien le agarra puede moverlo." },
+  { id: "apresado", name: "Apresado", hint: "Velocidad 0. Sus ataques con desventaja y los que recibe con ventaja. Desventaja en las salvaciones de DES." },
+  { id: "asustado", name: "Asustado", hint: "Desventaja en pruebas y ataques mientras vea la fuente del miedo. No puede acercarse a ella por voluntad propia." },
+  { id: "aturdido", name: "Aturdido", hint: "Incapacitado. Falla las salvaciones de FUE y DES. Los ataques contra él tienen ventaja." },
+  { id: "cegado", name: "Cegado", hint: "No ve: falla lo que exija vista. Sus ataques con desventaja y los que recibe con ventaja." },
+  { id: "derribado", name: "Derribado", hint: "Se arrastra o se levanta gastando la mitad de su velocidad. Desventaja al atacar. Contra él, ventaja a 5 pies y desventaja más lejos." },
+  { id: "encantado", name: "Encantado", hint: "No puede atacar ni dañar a quien le encanta, que tiene ventaja en las pruebas sociales con él." },
   { id: "ensordecido", name: "Ensordecido", hint: "No oye y falla lo que exija oído." },
-  { id: "envenenado", name: "Envenenado", hint: "Desventaja en ataques y pruebas de característica." },
-  { id: "incapacitado", name: "Incapacitado", hint: "Sin acciones ni reacciones." },
-  { id: "invisible", name: "Invisible", hint: "Ventaja al atacar, desventaja para quien le ataque." },
-  { id: "paralizado", name: "Paralizado", hint: "Incapacitado, inmóvil. Golpes a 5 pies son críticos." },
-  { id: "petrificado", name: "Petrificado", hint: "Convertido en piedra: incapacitado, resistente a todo el daño." },
-  { id: "inconsciente", name: "Inconsciente", hint: "Derribado, incapacitado, sin conciencia de su entorno." },
-  { id: "agotamiento", name: "Agotamiento", hint: "Acumulativo: desventaja, velocidad reducida y peor a cada nivel." },
-  { id: "concentrado", name: "Concentrado", hint: "Al recibir daño, salvación de CON: CD 10 o la mitad del daño." }
+  { id: "envenenado", name: "Envenenado", hint: "Desventaja en las tiradas de ataque y en las pruebas de característica." },
+  { id: "incapacitado", name: "Incapacitado", hint: "Sin acciones, acciones adicionales ni reacciones. No se concentra ni habla. Iniciativa con desventaja." },
+  { id: "invisible", name: "Invisible", hint: "Ventaja en la iniciativa. Sus ataques con ventaja y los que recibe con desventaja, salvo que le vean." },
+  { id: "paralizado", name: "Paralizado", hint: "Incapacitado y velocidad 0. Falla las salvaciones de FUE y DES. Ataques con ventaja; a 5 pies, críticos." },
+  { id: "petrificado", name: "Petrificado", hint: "Convertido en piedra: incapacitado, velocidad 0, falla FUE y DES, resiste todo el daño e inmune al veneno." },
+  { id: "inconsciente", name: "Inconsciente", hint: "Incapacitado y derribado; suelta lo que lleve. Falla FUE y DES. Ataques con ventaja; a 5 pies, críticos." },
+  { id: "agotamiento", name: "Agotamiento", hint: "Acumulativo: −2 a las pruebas de d20 y −5 pies de velocidad por nivel. Con 6, muere. El descanso largo quita uno." },
+  { id: "concentrado", name: "Concentrado", hint: "Al recibir daño, salvación de CON: CD 10 o la mitad del daño (hasta 30). Se pierde si queda incapacitado." }
 ];
 export const conditionName = id => (CONDITIONS.find(c => c.id === id) || { name: id }).name;
 
@@ -65,6 +66,11 @@ const CHAR_DEFAULTS = {
   features: [],         // rasgos y aptitudes: { name, source, text }
   monsterKey: "", size: "Mediano", sizeType: "", cr: "", xp: 0,
   senses: "", languages: "", resistances: "", traits: "", actions: "",
+  /* La ficha de criatura de 2024: iniciativa propia (null = la de Destreza),
+     habilidades y equipo en texto, defensas por separado, velocidades de más
+     y las secciones de acciones adicionales, reacciones y legendarias */
+  init: null, skillsText: "", gear: "", vulnerabilities: "", immunities: "", speedText: "",
+  bonus: "", reactions: "", legendary: "", edition: "",
   hidden: false, discovered: false, lastSeen: null, mapId: "", mx: null, my: null,
   /* Nuevo en 2.1 */
   vision: 0,            // visión en la oscuridad, en casillas (0 = solo ve lo iluminado)
@@ -138,7 +144,8 @@ export function normalizeChar(raw = {}) {
   c.conditions = Array.isArray(c.conditions)
     ? c.conditions.filter(x => typeof x === "string")
     : String(c.conditions || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
-  c.saves = Array.isArray(c.saves) ? c.saves : [];
+  c.saves = Array.isArray(c.saves) ? c.saves.filter(k => ABILITY_KEYS.includes(k)) : [];
+  c.init = c.init === null || c.init === "" || c.init === undefined || !Number.isFinite(+c.init) ? null : clamp(Math.trunc(+c.init), -10, 30);
   c.skills = Array.isArray(c.skills) ? c.skills : [];
   c.resources = Array.isArray(c.resources)
     ? c.resources.map(r => ({ name: String(r.name || ""), uses: num(r.uses), max: num(r.max) })).filter(r => r.name)
@@ -151,7 +158,7 @@ export function normalizeChar(raw = {}) {
   c.light = clamp(Math.trunc(num(c.light)), 0, 40);
   c.reach = clamp(Math.trunc(num(c.reach, 1)), 1, 6);
   c.attacks = Array.isArray(c.attacks) ? c.attacks.map(normalizeAttack).filter(a => a.name) : [];
-  c.spellbook = Array.isArray(c.spellbook) ? c.spellbook.map(normalizeSpell).slice(0, 80) : [];
+  c.spellbook = Array.isArray(c.spellbook) ? c.spellbook.map(normalizeSpell).map(sp => upgradeSpell(sp)).slice(0, 80) : [];
   c.items = Array.isArray(c.items) ? c.items.map(normalizeItem).filter(x => x.name).slice(0, 200) : [];
   c.features = Array.isArray(c.features) ? c.features.map(normalizeFeature).filter(x => x.name).slice(0, 100) : [];
   c.buffs = Array.isArray(c.buffs) ? c.buffs.map(normalizeBuff).filter(x => x.name).slice(0, 12) : [];
@@ -198,9 +205,11 @@ export const BUFF_PRESETS = [
 /* Lo que suman los efectos encendidos a un tipo de tirada: "+1d4+2" y quiénes */
 export function buffsFor(c, kind) {
   const on = ((c && c.buffs) || []).filter(b => b.on && b[kind]);
+  /* Agotamiento (2024): −2 por nivel a todas las pruebas de d20 */
+  const ex = c && ["attack", "save", "check"].includes(kind) ? clamp(Math.trunc(+c.exhaustion || 0), 0, 6) : 0;
   return {
-    add: on.map(b => (/^[+-]/.test(b[kind]) ? "" : "+") + b[kind]).join(""),
-    names: on.map(b => b.name)
+    add: on.map(b => (/^[+-]/.test(b[kind]) ? "" : "+") + b[kind]).join("") + (ex ? `-${2 * ex}` : ""),
+    names: [...on.map(b => b.name), ...(ex ? [`Agotamiento ${ex}`] : [])]
   };
 }
 /* Una fórmula con sus efectos y la etiqueta con sus nombres */
@@ -269,6 +278,9 @@ function itemFromLine(line) {
    se apunta aquí cuando carga, en vez de importarla y crear un ciclo. */
 const SPELL_LIB = [];
 export function registerSpellLibrary(list) { SPELL_LIB.push(...list); }
+/* spells.js apunta aquí cómo pasar una copia de 2014 a la de 2024 */
+let upgradeSpell = sp => sp;
+export function registerSpellUpgrade(fn) { upgradeSpell = fn; }
 const fold = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
 function fromText(c) {
@@ -381,7 +393,8 @@ export function normalizeSpell(raw = {}) {
     name: str(raw.name, 48) || "Conjuro",
     level: clamp(Math.trunc(num(raw.level)), 0, 9),
     school: str(raw.school, 24), time: str(raw.time, 40), range: str(raw.range, 40),
-    duration: str(raw.duration, 48), conc: !!raw.conc, desc: str(raw.desc, 400),
+    duration: str(raw.duration, 48), conc: !!raw.conc, desc: str(raw.desc, 900),
+    components: str(raw.components, 100),
     mode: SPELL_MODES.includes(raw.mode) ? raw.mode : "none",
     save: ABILITY_KEYS.includes(raw.save) ? raw.save : "",
     half: !!raw.half,
@@ -390,8 +403,10 @@ export function normalizeSpell(raw = {}) {
     rays: clamp(Math.trunc(num(raw.rays, 1)), 1, 10), raysUp: clamp(Math.trunc(num(raw.raysUp)), 0, 3),
     darts: clamp(Math.trunc(num(raw.darts)), 0, 12),
     heal: str(raw.heal, 20), healMod: !!raw.healMod,
+    dmgMod: !!raw.dmgMod,                  // suma la característica de lanzamiento al daño (Arma espiritual)
+    summon: !!raw.summon,                  // crea o invoca algo que se queda en el tablero
     cond: str(raw.cond, 24), condRounds: clamp(Math.trunc(num(raw.condRounds)), 0, 1000),
-    failText: str(raw.failText, 80),
+    failText: str(raw.failText, 160),
     targets: clamp(Math.trunc(num(raw.targets, 1)), 1, 20), targetsUp: clamp(Math.trunc(num(raw.targetsUp)), 0, 3),
     shape: SHAPE_KINDS.includes(raw.shape) ? raw.shape : "",
     size: clamp(num(raw.size, 0), 0, 300), width: clamp(num(raw.width, 5), 1, 60),
@@ -418,11 +433,23 @@ export const SHAPE_NAMES = [
 
 /* ---------- Bestiario ---------- */
 const BEAST_DEFAULTS = {
-  id: "", name: "", sizeType: "", cr: "1", xp: 0, ac: 12, hpAvg: 10, hpDice: "",
-  speed: 30, str: 10, dex: 14, con: 10, int: 6, wis: 10, cha: 6,
-  senses: "", languages: "", resistances: "", traits: "", actions: "",
-  color: "#8a5a3b", custom: false, avatarId: "", size: "Mediano"
+  id: "", name: "", sizeType: "", alignment: "", cr: "1", xp: 0, pb: 0, ac: 12, init: null, hpAvg: 10, hpDice: "",
+  speed: 30, speedText: "", str: 10, dex: 14, con: 10, int: 6, wis: 10, cha: 6, saves: [],
+  skills: "", gear: "", vulnerabilities: "", immunities: "",
+  senses: "", languages: "", resistances: "", traits: "", actions: "", bonus: "", reactions: "", legendary: "",
+  edition: "", srd: "", color: "#8a5a3b", custom: false, avatarId: "", size: "Mediano"
 };
+/* Bonificador por competencia según el valor de desafío (reglas de 2024) */
+export function pbForCR(cr) {
+  const s = String(cr || "0");
+  const v = s.includes("/") ? 0 : Number(s) || 0;
+  return v >= 29 ? 9 : v >= 25 ? 8 : v >= 21 ? 7 : v >= 17 ? 6 : v >= 13 ? 5 : v >= 9 ? 4 : v >= 5 ? 3 : 2;
+}
+/* Iniciativa: las criaturas de 2024 traen la suya (con competencia si la
+   tienen); el resto, la de Destreza. */
+export const initBonus = c => Number.isFinite(c && c.init) && c.init !== null ? c.init : modOf((c && c.dex) || 10);
+/* Salvación de una característica, con la competencia si la tiene */
+export const saveBonus = (c, k) => modOf(c[k]) + ((c.saves || []).includes(k) ? (c.proficiency || c.pb || 2) : 0);
 export function normalizeBeast(raw = {}) {
   const { en, ...rest } = raw;   // la traducción vive en el catálogo, no en la partida
   const b = { ...BEAST_DEFAULTS, ...rest };
@@ -430,6 +457,9 @@ export function normalizeBeast(raw = {}) {
   b.size = sizeFromText(raw.size) || sizeFromText(b.sizeType) || "Mediano";
   ["xp", "ac", "hpAvg", "speed", "str", "dex", "con", "int", "wis", "cha"].forEach(k => { b[k] = num(b[k]); });
   b.hpAvg = Math.max(1, b.hpAvg);
+  b.pb = num(b.pb) || pbForCR(b.cr);
+  b.init = b.init === null || b.init === "" || b.init === undefined || !Number.isFinite(+b.init) ? null : Math.trunc(+b.init);
+  b.saves = Array.isArray(b.saves) ? b.saves.filter(k => ABILITY_KEYS.includes(k)) : [];
   b.custom = !!b.custom;
   return b;
 }

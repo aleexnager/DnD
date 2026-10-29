@@ -272,7 +272,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       let rest = Math.trunc(damage);
       if (c.tempHp > 0) { const used = Math.min(c.tempHp, rest); c.tempHp -= used; rest -= used; }
       c.hp = Math.max(0, c.hp - rest);
-      if (c.concentration && c.hp > 0) out.concentrationCheck = Math.max(10, Math.floor(damage / 2));
+      if (c.concentration && c.hp > 0) out.concentrationCheck = Math.min(30, Math.max(10, Math.floor(damage / 2)));   // 2024: con un tope de CD 30
       if (c.hp === 0 && before > 0) {
         out.dropped = true;
         c.concentration = "";
@@ -415,6 +415,8 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
     };
     let damage = sp.damage ? (sp.scale && !sp.scaleRays ? scaleDice(sp.damage, tier) : sp.damage) : "";
     if (damage && sp.upcast && sp.mode !== "heal") damage = addDice(damage, sp.upcast, extra);
+    /* Arma espiritual y compañía: el modificador se suma al daño (no se duplica en un crítico) */
+    if (damage && sp.dmgMod && mod) damage += signed(mod);
     const typeText = sp.type ? " " + sp.type : "";
 
     if (sp.mode === "attack") {

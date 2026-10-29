@@ -18,7 +18,9 @@ export function attacksOf(c) {
   const saved = (c.attacks || []).map(normalizeAttack);
   const seen = new Set(saved.map(a => a.name.toLowerCase()));
   const found = [];
-  for (const text of [c.actions, c.weapons]) {
+  /* Las criaturas de 2024 también atacan con acciones adicionales, reacciones
+     y acciones legendarias (Pisotear, Latigazo…) */
+  for (const text of [c.actions, c.bonus, c.reactions, c.legendary, c.weapons]) {
     for (const line of String(text || "").split("\n")) {
       const a = parseAttackLine(line);
       if (a && a.name && !seen.has(a.name.toLowerCase())) { seen.add(a.name.toLowerCase()); found.push(a); }

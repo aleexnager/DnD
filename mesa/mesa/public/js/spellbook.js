@@ -211,12 +211,14 @@ export function openSpellEditor(sp, { title, note = "", onSave, sync = 0, extra 
       ${f("Nombre", inp("name", sp.name, 'maxlength="48"'))}
       ${f("Nivel", sel("level", sp.level, [[0, "Truco"], ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => [n, "Nivel " + n])]))}
       ${f("Escuela", inp("school", sp.school, 'placeholder="Evocación"'))}
-      ${f("Tiempo", inp("time", sp.time, 'placeholder="1 acción"'))}
+      ${f("Tiempo", inp("time", sp.time, 'placeholder="Acción"'))}
       ${f("Alcance", inp("range", sp.range, 'placeholder="120 pies"'))}
-      ${f("Duración", inp("duration", sp.duration, 'placeholder="Concentración, 1 minuto"'))}
+      ${f("Duración", inp("duration", sp.duration, 'placeholder="Concentración, hasta 1 minuto"'))}
+      ${f("Componentes", inp("components", sp.components, 'placeholder="V, S, M (un pellizco de azufre)" maxlength="100"'))}
     </div>
     ${chk("conc", sp.conc, "Necesita concentración")}
-    ${f("Descripción", `<textarea name="desc" rows="3" maxlength="400">${esc(sp.desc)}</textarea>`)}
+    ${chk("summon", sp.summon, "Crea o invoca algo que se queda en el tablero")}
+    ${f("Descripción", `<textarea name="desc" rows="4" maxlength="900">${esc(sp.desc)}</textarea>`)}
     <h4 class="menu-sec">Cómo se resuelve</h4>
     <div class="cols2">
       ${f("Modo", sel("mode", sp.mode, MODE_NAMES))}
@@ -234,6 +236,7 @@ export function openSpellEditor(sp, { title, note = "", onSave, sync = 0, extra 
     ${chk("scale", sp.scale, "Truco que sube de daño con el nivel (5, 11 y 17)", "attack save auto")}
     ${chk("scaleRays", sp.scaleRays, "Truco que suma rayos con el nivel (como Descarga sobrenatural)", "attack")}
     ${chk("healMod", sp.healMod, "Suma la característica de lanzamiento a la cura", "heal")}
+    ${chk("dmgMod", sp.dmgMod, "Suma la característica de lanzamiento al daño (como Arma espiritual)", "attack save")}
     <div class="cols2">
       ${f("Estado que pone", sel("cond", sp.cond, [["", "Ninguno"], ...CONDITIONS.map(x => [x.id, x.name])]), "attack save none")}
       ${f("Rondas que dura el estado (0: hasta quitarlo)", num("condRounds", sp.condRounds, 0, 1000), "attack save none sleep")}
@@ -263,7 +266,7 @@ export function openSpellEditor(sp, { title, note = "", onSave, sync = 0, extra 
       { label: "Guardar", tone: "primary", run: host => {
         const v = k => host.querySelector(`[name="${k}"]`);
         const val = k => v(k) ? (v(k).type === "checkbox" ? v(k).checked : v(k).type === "number" || k === "level" ? +v(k).value : v(k).value.trim()) : sp[k];
-        const keys = ["name", "level", "school", "time", "range", "duration", "conc", "desc", "mode", "save", "half", "damage", "type", "upcast", "scale", "scaleRays", "rays", "raysUp", "darts", "heal", "healMod", "cond", "condRounds", "failText", "targets", "targetsUp", "shape", "size", "width", "melee"];
+        const keys = ["name", "level", "school", "time", "range", "duration", "components", "conc", "summon", "dmgMod", "desc", "mode", "save", "half", "damage", "type", "upcast", "scale", "scaleRays", "rays", "raysUp", "darts", "heal", "healMod", "cond", "condRounds", "failText", "targets", "targetsUp", "shape", "size", "width", "melee"];
         const next = normalizeSpell({ ...sp, ...Object.fromEntries(keys.map(k => [k, val(k)])), id: sp.id });
         if (!next.name.trim()) { toast("Ponle un nombre", "bad"); return false; }
         if (next.mode === "save" && !next.save) next.save = "dex";

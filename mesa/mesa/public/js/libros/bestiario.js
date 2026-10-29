@@ -14,7 +14,7 @@ const INTRO = {
   "Constructo": "Hechos, no nacidos: gólems, armaduras animadas, centinelas mágicos.",
   "Dragón": "Reptiles alados de enorme poder, astucia y codicia; cuanto más viejos, más temibles.",
   "Elemental": "Seres de aire, tierra, fuego o agua pura, de los planos elementales.",
-  "Hada": "Criaturas mágicas del Feywild, caprichosas y ligadas a la naturaleza.",
+  "Feérico": "Criaturas mágicas del Feywild, caprichosas y ligadas a la naturaleza; en 2024 también los goblins y sus parientes.",
   "Infernal": "Demonios y diablos de los planos inferiores, la maldad hecha carne.",
   "Gigante": "Humanoides enormes: ogros, trolls, gigantes de las colinas o de las tormentas.",
   "Humanoide": "Gentes de todas las especies: bandidos, guardias, cultistas, magos.",
@@ -25,7 +25,7 @@ const INTRO = {
 };
 const PLURAL = {
   "Aberración": "Aberraciones", "Bestia": "Bestias", "Celestial": "Celestiales", "Constructo": "Constructos", "Dragón": "Dragones",
-  "Elemental": "Elementales", "Hada": "Hadas", "Infernal": "Infernales", "Gigante": "Gigantes", "Humanoide": "Humanoides",
+  "Elemental": "Elementales", "Feérico": "Feéricos", "Infernal": "Infernales", "Gigante": "Gigantes", "Humanoide": "Humanoides",
   "Monstruosidad": "Monstruosidades", "Cieno": "Cienos", "Planta": "Plantas", "Muerto viviente": "Muertos vivientes"
 };
 
@@ -60,5 +60,9 @@ export function bestiaryBook(own = []) {
         .map(b => `<li><b>${esc(b.name)}</b> <small>VD ${esc(b.cr || "0")} · ${esc(typeOf(b.sizeType) || "")}</small></li>`).join("")}</ul>`
     }))
   });
+  sections.push({ id: "licencia", title: "Créditos", entries: [{ id: "lic", title: "", html:
+    "<p>Las fichas salen del <i>System Reference Document 5.2.1</i> (las reglas de 2024) de Wizards of the Coast LLC, con licencia Creative Commons Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/legalcode), traducidas para Mesa. " +
+    "El orco, el drow, el hombre lagarto y la banshee no tienen versión en ese documento: conservan la del SRD 5.1 (2014) y lo dicen en su ficha.</p>" +
+    "<p>Los retratos son iconos de game-icons.net (CC BY 3.0).</p>" }] });
   return { sections };
 }

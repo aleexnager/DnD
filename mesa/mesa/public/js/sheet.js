@@ -59,8 +59,10 @@ export function attackTableHTML(c) {
 export function spellRollOf(c, sp) {
   const st = castStats(c);
   const times = sp.level === 0 && sp.scale ? cantripTier(c.level || 1) : 1;
-  const dmg = sp.damage ? (times > 1 ? scaleDice(sp.damage, times) : sp.damage) : "";
-  return { st, dmg, heal: sp.heal ? sp.heal + (sp.healMod ? (modOf(c[st.ability]) >= 0 ? "+" : "") + modOf(c[st.ability]) : "") : "" };
+  const m = modOf(c[st.ability]), withMod = f => f + (m >= 0 ? "+" : "") + m;
+  let dmg = sp.damage ? (times > 1 ? scaleDice(sp.damage, times) : sp.damage) : "";
+  if (dmg && sp.dmgMod && m) dmg = withMod(dmg);
+  return { st, dmg, heal: sp.heal ? (sp.healMod ? withMod(sp.heal) : sp.heal) : "" };
 }
 export function spellTableHTML(c, { cast = true } = {}) {
   const list = (c.spellbook || []).slice().sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));

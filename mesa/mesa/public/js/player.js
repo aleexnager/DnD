@@ -5,7 +5,7 @@ import { exportChars, importChars } from "./chars-io.js";
 import { afterMove } from "./portals.js";
 import { voiceWidget } from "./voice.js";
 import { $, el, on, esc, lines, sign, pct, hpTone, hpBar, tweenBars, initials, imgURL, toast, modal, clamp } from "./util.js";
-import { ABILITIES, SKILLS, CONDITIONS, conditionName, modOf, acOf, acParts } from "./schema.js";
+import { ABILITIES, SKILLS, CONDITIONS, conditionName, modOf, acOf, acParts, initBonus } from "./schema.js";
 import { store, onState, onStatus, onPresence, op, patchChar, leave } from "./net.js";
 import { dicePanel, renderLog, throwDice, tellTable } from "./dice-panel.js";
 import { openAttacks, areaAttacks, slotsLeft, shapeLabel } from "./attacks.js";
@@ -654,7 +654,7 @@ function bindActions(root) {
         return throwDice("1d20" + sign(modOf(c[k])), { label: `${c.name} · ${ABILITIES.find(a => a[0] === k)[1]}`, char: c, kind: "check" });
       }
       case "initiative": {
-        const r = throwDice("1d20" + sign(modOf(c.dex)), { label: c.name + " · iniciativa", char: c, kind: "check" });
+        const r = throwDice("1d20" + sign(initBonus(c)), { label: c.name + " · iniciativa", char: c, kind: "check" });
         if (r) patchChar(c.id, { initiative: r.total });
         return;
       }

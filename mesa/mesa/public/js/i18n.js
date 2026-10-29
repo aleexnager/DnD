@@ -473,6 +473,19 @@ const EN = {
   "Solo cambia en este aparato": "Only changes on this device", "Vuelves a la pantalla de entrada": "Back to the entry screen",
   "Una hora. Cada personaje decide cuántos dados de golpe gasta desde su ficha.": "One hour. Each character decides how many hit dice to spend from their sheet.",
   "Ocho horas. Vida, espacios de conjuro y recursos al máximo; baja un nivel de agotamiento.": "Eight hours. Hit points, spell slots and resources to full; one level of exhaustion less.",
+  "Ocho horas. Vida, dados de golpe, espacios de conjuro y recursos al máximo; baja un nivel de agotamiento.": "Eight hours. Hit points, hit dice, spell slots and resources to full; one level of exhaustion less.",
+  "Descanso largo: la party recupera toda la vida, todos los dados de golpe, los espacios de conjuro y los recursos, y baja un nivel de agotamiento. Los monstruos no se enteran.": "Long rest: the party regains all hit points, all hit dice, spell slots and resources, and loses one level of exhaustion. Monsters are unaffected.",
+  "No le quedan dados de golpe": "No hit dice left",
+  /* Editor del bestiario, ficha de 2024 */
+  "Añadir acción adicional": "Add bonus action", "Añadir acción legendaria": "Add legendary action", "Añadir reacción": "Add reaction",
+  "Bonificador por competencia": "Proficiency bonus", "Iniciativa (en blanco: la de Destreza)": "Initiative (blank: from Dexterity)",
+  "Velocidad a pie (pies)": "Walking speed (feet)", "Velocidades (texto)": "Speeds (text)",
+  "Competente en las salvaciones de": "Proficient in saving throws of",
+  "Desencadenante: le impacta un ataque cuerpo a cuerpo. Respuesta: +2 a la CA.": "Trigger: a melee attack hits it. Response: +2 AC.",
+  "Un ataque se escribe así para poder tirarlo: «+4 al ataque — 1d6+2 cortante · alcance 5 pies», y una salvación, «CD 13 de Destreza — … Fallo: 6d6 fuego».": "Write an attack like this so it can be rolled: «+4 al ataque — 1d6+2 cortante · alcance 5 pies», and a save, «CD 13 de Destreza — … Fallo: 6d6 fuego».",
+  /* Editor de conjuros */
+  "Componentes": "Components", "Crea o invoca algo que se queda en el tablero": "Creates or summons something that stays on the board",
+  "Suma la característica de lanzamiento al daño (como Arma espiritual)": "Adds the spellcasting modifier to damage (like Spiritual Weapon)",
   "Tu personaje": "Your character", "ocupado": "taken", "Escribe tu nombre para entrar.": "Type your name to join.",
   "Cómo entras": "How you join",
   "Tu DNS (el del router, el operador o el antivirus) bloquea los túneles de Cloudflare. Cambia el DNS a 1.1.1.1: la ventana del servidor explica cómo.":
@@ -630,6 +643,90 @@ const EN = {
   "Columna de 10 pies de radio. Salvación de Destreza: completo si falla, la mitad si la supera.": "10-foot-radius column. Dexterity save: full damage on a failure, half on a success.",
   "Hasta seis criaturas recuperan 3d8 más tu característica de lanzamiento.": "Up to six creatures regain 3d8 plus your spellcasting modifier.",
   "Como Inmovilizar persona, pero sirve con cualquier criatura.": "Like Hold Person, but works on any creature.",
+  /* Conjuros de la biblioteca, reglas de 2024 */
+  "Ataque de conjuro a distancia contra una criatura u objeto. Un objeto inflamable que impacte y que nadie lleve puesto ni cargue empieza a arder. Sube 1d10 a los niveles 5, 11 y 17.": "Ranged spell attack against a creature or object. A flammable object it hits that isn't worn or carried starts burning. Increases by 1d10 at levels 5, 11 and 17.",
+  "120 pies": "120 feet", "90 pies": "90 feet", "150 pies": "150 feet", "300 pies": "300 feet", "V, S": "V, S", "V": "V", "Toque": "Touch",
+  "Instantáneo": "Instantaneous", "1 asalto": "1 round", "1 minuto": "1 minute", "1 hora": "1 hour",
+  "Acción adicional": "Bonus Action", "Concentración, hasta 1 minuto": "Concentration, up to 1 minute",
+  "Concentración, hasta 10 minutos": "Concentration, up to 10 minutes", "Concentración, hasta 1 hora": "Concentration, up to 1 hour",
+  "Transmutación": "Transmutation",
+  "Personal (cono de 15 pies)": "Self (15-foot cone)", "Personal (cubo de 15 pies)": "Self (15-foot cube)",
+  "Personal (línea de 100 pies)": "Self (100-foot line)", "Personal (cono de 30 pies)": "Self (30-foot cone)",
+  "Personal (emanación de 15 pies)": "Self (15-foot emanation)", "Personal (cono de 60 pies)": "Self (60-foot cone)",
+  "Ataque de conjuro a distancia. Si impacta, su velocidad baja 10 pies hasta el principio de tu siguiente turno. Sube 1d8 a los niveles 5, 11 y 17.": "Ranged spell attack. On a hit, its speed drops by 10 feet until the start of your next turn. Increases by 1d8 at levels 5, 11 and 17.",
+  "Una criatura que veas hace una salvación de Destreza o recibe el daño. La cobertura media o de tres cuartos no le sirve. Sube 1d8 a los niveles 5, 11 y 17.": "A creature you can see makes a Dexterity save or takes the damage. Half and three-quarters cover give no benefit. Increases by 1d8 at levels 5, 11 and 17.",
+  "Una criatura que veas u oigas hace una salvación de Sabiduría o recibe el daño y tiene desventaja en la próxima tirada de ataque que haga antes del final de su siguiente turno. Sube 1d6 a los niveles 5, 11 y 17.": "A creature you can see or hear makes a Wisdom save or takes the damage and has disadvantage on the next attack roll it makes before the end of its next turn. Increases by 1d6 at levels 5, 11 and 17.",
+  "desventaja en su próxima tirada de ataque antes del final de su siguiente turno": "disadvantage on its next attack roll before the end of its next turn",
+  "Ataque de conjuro cuerpo a cuerpo contra un objetivo a tu alcance. Si impacta, no puede recuperar puntos de golpe hasta el final de tu siguiente turno. Sube 1d10 a los niveles 5, 11 y 17.": "Melee spell attack against a target within reach. On a hit, it can't regain hit points until the end of your next turn. Increases by 1d10 at levels 5, 11 and 17.",
+  "Ataque de conjuro a distancia contra una criatura u objeto. Crea dos rayos a nivel 5, tres a nivel 11 y cuatro a nivel 17, contra el mismo objetivo o contra varios, con una tirada de ataque por rayo.": "Ranged spell attack against a creature or object. Two beams at level 5, three at 11 and four at 17, at the same target or different ones, with one attack roll per beam.",
+  "Ataque de conjuro a distancia con una niebla tóxica. Sube 1d12 a los niveles 5, 11 y 17.": "Ranged spell attack with a toxic mist. Increases by 1d12 at levels 5, 11 and 17.",
+  "Una burbuja de ácido estalla en una esfera de 5 pies de radio: cada criatura dentro hace una salvación de Destreza o recibe el daño. Sube 1d6 a los niveles 5, 11 y 17.": "A bubble of acid bursts in a 5-foot-radius sphere: each creature inside makes a Dexterity save or takes the damage. Increases by 1d6 at levels 5, 11 and 17.",
+  "Tres dardos de fuerza que impactan siempre a criaturas que veas, todos a la vez y repartidos como quieras. Un dardo más por cada nivel de espacio por encima del 1.": "Three force darts that always hit creatures you can see, all at once and split as you like. One more dart per slot level above 1st.",
+  "Cada criatura en un cono de 15 pies hace una salvación de Destreza: daño completo si falla, la mitad si la supera. Los objetos inflamables del cono que nadie lleve empiezan a arder. +1d6 por nivel de espacio por encima del 1.": "Each creature in a 15-foot cone makes a Dexterity save: full damage on a failure, half on a success. Flammable objects in the cone that aren't worn or carried start burning. +1d6 per slot level above 1st.",
+  "Cada criatura en un cubo de 15 pies que sale de ti hace una salvación de Constitución: si falla, recibe el daño y sale empujada 10 pies; si la supera, solo la mitad del daño. Los objetos sueltos también salen empujados y el estruendo se oye a 300 pies. +1d8 por nivel de espacio por encima del 1.": "Each creature in a 15-foot cube originating from you makes a Constitution save: on a failure, it takes the damage and is pushed 10 feet; on a success, only half the damage. Loose objects are pushed too and the boom is heard 300 feet away. +1d8 per slot level above 1st.",
+  "sale empujada 10 pies": "is pushed 10 feet",
+  "Una criatura que toques recupera 2d8 más tu modificador de característica de lanzamiento. +2d8 por nivel de espacio por encima del 1.": "A creature you touch regains 2d8 plus your spellcasting modifier. +2d8 per slot level above 1st.",
+  "Una criatura que veas recupera 2d4 más tu modificador de característica de lanzamiento. +2d4 por nivel de espacio por encima del 1.": "A creature you can see regains 2d4 plus your spellcasting modifier. +2d4 per slot level above 1st.",
+  "Ataque de conjuro a distancia. Si impacta, la siguiente tirada de ataque contra el objetivo antes del final de tu siguiente turno tiene ventaja. +1d6 por nivel de espacio por encima del 1.": "Ranged spell attack. On a hit, the next attack roll against the target before the end of your next turn has advantage. +1d6 per slot level above 1st.",
+  "Una criatura que toques hace una salvación de Constitución: daño completo si falla, la mitad si la supera. +1d10 por nivel de espacio por encima del 1.": "A creature you touch makes a Constitution save: full damage on a failure, half on a success. +1d10 per slot level above 1st.",
+  "Cada criatura que elijas en una esfera de 5 pies de radio hace una salvación de Sabiduría o queda incapacitada hasta el final de su siguiente turno; entonces repite la salvación y, si falla, queda inconsciente mientras dure. Termina en ella si recibe daño o alguien a 5 pies la despierta con una acción. Quien no duerme (como los elfos) o es inmune al agotamiento la supera sin tirar.": "Each creature you choose in a 5-foot-radius sphere makes a Wisdom save or is incapacitated until the end of its next turn; then it repeats the save and, on a failure, falls unconscious for the duration. It ends on a creature that takes damage or that someone within 5 feet wakes with an action. Creatures that don't sleep (like elves) or are immune to exhaustion succeed automatically.",
+  "al final de su siguiente turno repite la salvación; si vuelve a fallar, queda inconsciente mientras dure": "at the end of its next turn it repeats the save; if it fails again, it falls unconscious for the duration",
+  "V, S, M (un pellizco de arena o pétalos de rosa)": "V, S, M (a pinch of sand or rose petals)",
+  "Un humanoide que veas hace una salvación de Sabiduría, con ventaja si tú o tus aliados estáis luchando contra él. Si falla, queda encantado hasta que acabe o hasta que le hagáis daño, y es amistoso contigo. Al acabar sabe que lo encantaste. Un objetivo más por nivel de espacio por encima del 1.": "A humanoid you can see makes a Wisdom save, with advantage if you or your allies are fighting it. On a failure, it is charmed until the spell ends or you damage it, and it is friendly to you. When it ends, it knows you charmed it. One more target per slot level above 1st.",
+  "Una criatura que veas hace una salvación de Sabiduría o cumple en su siguiente turno una orden de una palabra: Acércate (va hacia ti por la ruta más directa), Suelta (suelta lo que lleva y acaba el turno), Huye (se aleja de ti lo más rápido que pueda), Al suelo (queda derribada y acaba el turno) o Alto (no se mueve ni hace acciones ni acciones adicionales). Una criatura más por nivel de espacio por encima del 1.": "A creature you can see makes a Wisdom save or follows a one-word command on its next turn: Approach (moves toward you by the most direct route), Drop (drops what it holds and ends its turn), Flee (moves away from you as fast as it can), Grovel (falls prone and ends its turn) or Halt (doesn't move or take actions or bonus actions). One more creature per slot level above 1st.",
+  "obedece la orden en su siguiente turno": "obeys the command on its next turn",
+  "Brotan plantas en un cuadrado de 20 pies que se vuelve terreno difícil. Cada criatura dentro al lanzarlo (salvo tú) hace una salvación de Fuerza o queda apresada mientras dure. Con una acción puede hacer una prueba de Fuerza (Atletismo) contra tu CD de conjuros para soltarse.": "Grasping plants sprout in a 20-foot square that becomes difficult terrain. Each creature inside when you cast it (other than you) makes a Strength save or is restrained for the duration. As an action it can make a Strength (Athletics) check against your spell save DC to break free.",
+  "Hasta tres criaturas suman 1d4 a sus tiradas de ataque y salvaciones mientras dure. Un objetivo más por nivel de espacio por encima del 1.": "Up to three creatures add 1d4 to their attack rolls and saving throws for the duration. One more target per slot level above 1st.",
+  "V, S, M (un símbolo sagrado de 5 po o más)": "V, S, M (a holy symbol worth 5+ GP)",
+  "Una criatura que elijas gana +2 a la CA mientras dure.": "A creature of your choice gains +2 AC for the duration.",
+  "V, S, M (un pergamino con una plegaria)": "V, S, M (a prayer scroll)",
+  "Un humanoide que veas hace una salvación de Sabiduría o queda paralizado mientras dure. Al final de cada uno de sus turnos repite la salvación y, si la supera, se libra. Un humanoide más por nivel de espacio por encima del 2.": "A humanoid you can see makes a Wisdom save or is paralysed for the duration. At the end of each of its turns it repeats the save, ending the effect on a success. One more humanoid per slot level above 2nd.",
+  "V, S, M (una pieza recta de hierro)": "V, S, M (a straight piece of iron)",
+  "Tres rayos contra uno o varios objetivos, con un ataque de conjuro a distancia por rayo. Un rayo más por nivel de espacio por encima del 2.": "Three rays at one or more targets, with a ranged spell attack per ray. One more ray per slot level above 2nd.",
+  "Un cubo de 20 pies de telarañas: terreno difícil y poco oscuro. Si no está anclada entre dos superficies o sobre una, se desploma al principio de tu siguiente turno. La primera vez en un turno que una criatura entra o empieza su turno en ella, hace una salvación de Destreza o queda apresada mientras siga dentro; con una acción y una prueba de Fuerza (Atletismo) contra tu CD se suelta. Arde: cada cubo de 5 pies expuesto al fuego se quema en un asalto y hace 2d4 fuego a quien empiece el turno allí.": "A 20-foot cube of webs: difficult terrain and lightly obscured. If it isn't anchored between two surfaces or layered over one, it collapses at the start of your next turn. The first time on a turn a creature enters it or starts its turn there, it makes a Dexterity save or is restrained while in the webs; an action and a Strength (Athletics) check against your DC frees it. It burns: each 5-foot cube exposed to fire burns away in a round, dealing 2d4 fire to anyone starting its turn there.",
+  "V, S, M (un trozo de telaraña)": "V, S, M (a bit of spiderweb)",
+  "Una criatura que veas hace una salvación de Constitución o queda cegada o ensordecida (a tu elección) mientras dure. Al final de cada uno de sus turnos repite la salvación y, si la supera, se libra. Un objetivo más por nivel de espacio por encima del 2.": "A creature you can see makes a Constitution save or is blinded or deafened (your choice) for the duration. At the end of each of its turns it repeats the save, ending the effect on a success. One more target per slot level above 2nd.",
+  "Cada criatura en una esfera de 10 pies de radio hace una salvación de Constitución: daño completo si falla, la mitad si la supera. Los constructos tienen desventaja. Los objetos no mágicos que nadie lleve también reciben el daño. +1d8 por nivel de espacio por encima del 2.": "Each creature in a 10-foot-radius sphere makes a Constitution save: full damage on a failure, half on a success. Constructs have disadvantage. Nonmagical objects that aren't worn or carried take the damage too. +1d8 per slot level above 2nd.",
+  "V, S, M (una lasca de mica)": "V, S, M (a chip of mica)",
+  "Creas una fuerza espectral con forma de arma que flota a tu elección y haces un ataque de conjuro cuerpo a cuerpo contra una criatura a 5 pies de ella: 1d8 más tu modificador de característica de lanzamiento de daño de fuerza. En tus turnos siguientes, con una acción adicional la mueves hasta 20 pies y repites el ataque. +1d8 por nivel de espacio por encima del 2.": "You create a floating spectral force shaped like a weapon and make a melee spell attack against a creature within 5 feet of it: 1d8 plus your spellcasting modifier force damage. On later turns, as a bonus action you move it up to 20 feet and repeat the attack. +1d8 per slot level above 2nd.",
+  "Cada criatura en una esfera de 20 pies de radio hace una salvación de Destreza: daño completo si falla, la mitad si la supera. Los objetos inflamables que nadie lleve empiezan a arder. +1d6 por nivel de espacio por encima del 3.": "Each creature in a 20-foot-radius sphere makes a Dexterity save: full damage on a failure, half on a success. Flammable objects that aren't worn or carried start burning. +1d6 per slot level above 3rd.",
+  "V, S, M (una bola de guano de murciélago y azufre)": "V, S, M (a ball of bat guano and sulfur)",
+  "Cada criatura en una línea de 100 pies de largo y 5 de ancho hace una salvación de Destreza: daño completo si falla, la mitad si la supera. +1d6 por nivel de espacio por encima del 3.": "Each creature in a 100-foot-long, 5-foot-wide line makes a Dexterity save: full damage on a failure, half on a success. +1d6 per slot level above 3rd.",
+  "V, S, M (un poco de pelaje y una varilla de cristal)": "V, S, M (a bit of fur and a crystal rod)",
+  "Cada criatura en un cono de 30 pies hace una salvación de Sabiduría o suelta lo que lleve y queda asustada mientras dure: en cada turno usa la acción de Correr para alejarse de ti por la ruta más segura. Si acaba su turno sin línea de visión hacia ti, repite la salvación y, si la supera, se libra.": "Each creature in a 30-foot cone makes a Wisdom save or drops what it holds and is frightened for the duration: on each turn it takes the Dash action to move away from you by the safest route. If it ends its turn without line of sight to you, it repeats the save, ending the effect on a success.",
+  "suelta lo que lleve y huye de ti con la acción de Correr": "drops what it holds and flees from you with the Dash action",
+  "V, S, M (una pluma blanca)": "V, S, M (a white feather)",
+  "Espíritus en una emanación de 15 pies alrededor de ti. Las criaturas que no excluyas tienen la velocidad a la mitad dentro y, cuando la emanación entra en su espacio o ellas entran o acaban el turno dentro, hacen una salvación de Sabiduría (una vez por turno): 3d8 radiante (necrótico si eres malvado) si fallan, la mitad si la superan. +1d8 por nivel de espacio por encima del 3.": "Spirits fill a 15-foot emanation around you. Creatures you don't exclude have their speed halved inside and, when the emanation enters their space or they enter or end their turn inside, make a Wisdom save (once per turn): 3d8 radiant (necrotic if you're evil) on a failure, half on a success. +1d8 per slot level above 3rd.",
+  "Hasta seis criaturas que veas recuperan 2d4 más tu modificador de característica de lanzamiento. +1d4 por nivel de espacio por encima del 3.": "Up to six creatures you can see regain 2d4 plus your spellcasting modifier. +1d4 per slot level above 3rd.",
+  "Una criatura que haya muerto en el último minuto revive con 1 punto de golpe. No sirve si murió de vejez ni devuelve partes del cuerpo perdidas.": "A creature that died within the last minute returns to life with 1 hit point. It doesn't work on death from old age and doesn't restore missing body parts.",
+  "V, S, M (un diamante de 300 po o más, que se consume)": "V, S, M (a diamond worth 300+ GP, which the spell consumes)",
+  "Granizo en un cilindro de 20 pies de radio y 40 de alto: cada criatura dentro hace una salvación de Destreza; si falla, 2d10 contundente y 4d6 frío, y si la supera, la mitad. El suelo es terreno difícil hasta el final de tu siguiente turno. El daño contundente sube 1d10 por nivel de espacio por encima del 4.": "Hail in a 20-foot-radius, 40-foot-high cylinder: each creature inside makes a Dexterity save; on a failure, 2d10 bludgeoning and 4d6 cold, on a success half. The ground is difficult terrain until the end of your next turn. The bludgeoning damage increases by 1d10 per slot level above 4th.",
+  "V, S, M (una manopla)": "V, S, M (a mitten)",
+  "Una criatura que veas hace una salvación de Carisma o va a un semiplano inofensivo mientras dure, donde está incapacitada. Al acabar vuelve a su sitio, salvo que sea una aberración, un celestial, un elemental, un feérico o un infernal y el conjuro dure el minuto entero: entonces va a un plano de su tipo. Un objetivo más por nivel de espacio por encima del 4.": "A creature you can see makes a Charisma save or is sent to a harmless demiplane for the duration, where it is incapacitated. When it ends it returns to its place, unless it is an aberration, celestial, elemental, fey or fiend and the spell lasted the full minute: then it goes to a plane of its kind. One more target per slot level above 4th.",
+  "queda desterrada a un semiplano inofensivo": "is banished to a harmless demiplane",
+  "V, S, M (un pentáculo)": "V, S, M (a pentacle)",
+  "Cada criatura en un cono de 60 pies hace una salvación de Constitución: daño completo si falla, la mitad si la supera. Quien muera por él se convierte en una estatua helada hasta que se descongele. +1d8 por nivel de espacio por encima del 5.": "Each creature in a 60-foot cone makes a Constitution save: full damage on a failure, half on a success. A creature killed by it becomes a frozen statue until it thaws. +1d8 per slot level above 5th.",
+  "V, S, M (un pequeño cono de cristal o vidrio)": "V, S, M (a small crystal or glass cone)",
+  "Una columna de fuego en un cilindro de 10 pies de radio y 40 de alto: cada criatura dentro hace una salvación de Destreza; si falla, 5d6 fuego y 5d6 radiante, y si la supera, la mitad. Cada uno de los dos daños sube 1d6 por nivel de espacio por encima del 5.": "A column of fire in a 10-foot-radius, 40-foot-high cylinder: each creature inside makes a Dexterity save; on a failure, 5d6 fire and 5d6 radiant, on a success half. Each of the two damages increases by 1d6 per slot level above 5th.",
+  "V, S, M (un pellizco de azufre)": "V, S, M (a pinch of sulfur)",
+  "Elige hasta seis criaturas en una esfera de 30 pies de radio: cada una recupera 5d8 más tu modificador de característica de lanzamiento. +1d8 por nivel de espacio por encima del 5.": "Choose up to six creatures in a 30-foot-radius sphere: each regains 5d8 plus your spellcasting modifier. +1d8 per slot level above 5th.",
+  "Una criatura que veas hace una salvación de Sabiduría o queda paralizada mientras dure. Al final de cada uno de sus turnos repite la salvación y, si la supera, se libra. Un objetivo más por nivel de espacio por encima del 5.": "A creature you can see makes a Wisdom save or is paralysed for the duration. At the end of each of its turns it repeats the save, ending the effect on a success. One more target per slot level above 5th.",
+  /* Estados, con el texto de 2024 */
+  "Velocidad 0. Desventaja al atacar a cualquiera que no sea quien le agarra. Quien le agarra puede moverlo.": "Speed 0. Disadvantage on attacks against anyone but the grappler. The grappler can drag it.",
+  "Velocidad 0. Sus ataques con desventaja y los que recibe con ventaja. Desventaja en las salvaciones de DES.": "Speed 0. Its attacks have disadvantage and attacks against it have advantage. Disadvantage on DEX saves.",
+  "Desventaja en pruebas y ataques mientras vea la fuente del miedo. No puede acercarse a ella por voluntad propia.": "Disadvantage on checks and attacks while it can see the source of fear. It can't willingly move closer to it.",
+  "Incapacitado. Falla las salvaciones de FUE y DES. Los ataques contra él tienen ventaja.": "Incapacitated. Fails STR and DEX saves. Attacks against it have advantage.",
+  "No ve: falla lo que exija vista. Sus ataques con desventaja y los que recibe con ventaja.": "Can't see: fails anything that needs sight. Its attacks have disadvantage and attacks against it have advantage.",
+  "Se arrastra o se levanta gastando la mitad de su velocidad. Desventaja al atacar. Contra él, ventaja a 5 pies y desventaja más lejos.": "Crawls, or stands up using half its speed. Disadvantage on attacks. Against it: advantage within 5 feet, disadvantage farther away.",
+  "No puede atacar ni dañar a quien le encanta, que tiene ventaja en las pruebas sociales con él.": "Can't attack or harm the charmer, who has advantage on social checks with it.",
+  "Desventaja en las tiradas de ataque y en las pruebas de característica.": "Disadvantage on attack rolls and ability checks.",
+  "Sin acciones, acciones adicionales ni reacciones. No se concentra ni habla. Iniciativa con desventaja.": "No actions, bonus actions or reactions. Can't concentrate or speak. Disadvantage on initiative.",
+  "Ventaja en la iniciativa. Sus ataques con ventaja y los que recibe con desventaja, salvo que le vean.": "Advantage on initiative. Its attacks have advantage and attacks against it disadvantage, unless it can be seen.",
+  "Incapacitado y velocidad 0. Falla las salvaciones de FUE y DES. Ataques con ventaja; a 5 pies, críticos.": "Incapacitated and speed 0. Fails STR and DEX saves. Attacks have advantage; within 5 feet, they crit.",
+  "Convertido en piedra: incapacitado, velocidad 0, falla FUE y DES, resiste todo el daño e inmune al veneno.": "Turned to stone: incapacitated, speed 0, fails STR and DEX saves, resists all damage and is immune to poison.",
+  "Incapacitado y derribado; suelta lo que lleve. Falla FUE y DES. Ataques con ventaja; a 5 pies, críticos.": "Incapacitated and prone; drops what it holds. Fails STR and DEX saves. Attacks have advantage; within 5 feet, they crit.",
+  "Acumulativo: −2 a las pruebas de d20 y −5 pies de velocidad por nivel. Con 6, muere. El descanso largo quita uno.": "Cumulative: −2 to d20 tests and −5 feet of speed per level. At 6, it dies. A long rest removes one.",
+  "Al recibir daño, salvación de CON: CD 10 o la mitad del daño (hasta 30). Se pierde si queda incapacitado.": "When it takes damage, CON save: DC 10 or half the damage (up to 30). Lost if incapacitated.",
 
   /* Voz */
   "Voz": "Voice", "Hablar por voz con la mesa": "Voice chat with the table", "Activar el micro": "Unmute mic",
@@ -1110,7 +1207,11 @@ const EN = {
   "La mazmorra nueva sustituye al plano de ahora. Se puede volver atrás con Deshacer.": "The new dungeon replaces the current plan. You can go back with Undo.",
   "¿Empezar un plano en blanco? Lo de ahora se puede recuperar con Deshacer.": "Start a blank plan? The current one can be recovered with Undo.",
   "Que las luces del plano alumbren en Mesa (casillas de luz fija)": "Make the plan's lights shine in Mesa (fixed lit squares)",
-  "Elige una clase para ver qué la hace especial.": "Pick a class to see what makes it special.", "Casillas": "Squares", "Capa:": "Layer:", "(cámbiala en «Capas»).": "(change it in “Layers”).", "Clase de armadura": "Armour class",
+  "Elige una clase para ver qué la hace especial.": "Pick a class to see what makes it special.",
+  "Reglas 2024": "2024 rules", "Ficha 2014": "2014 stat block", "Vulnerabilidades": "Vulnerabilities",
+  "Inmunidades": "Immunities", "VD": "CR", "Acciones adicionales": "Bonus Actions", "Reacciones": "Reactions",
+  "Acciones legendarias": "Legendary Actions", "mod.": "mod.", "salv.": "save", "Modificador": "Modifier", "Salvación": "Saving throw",
+  "Habilidades": "Skills", "Casillas": "Squares", "Capa:": "Layer:", "(cámbiala en «Capas»).": "(change it in “Layers”).", "Clase de armadura": "Armour class",
   "Escudo": "Shield", "Quitar": "Remove", "Lanzar": "Cast", "Conjuros": "Spells",
 };
 
@@ -1120,8 +1221,10 @@ const EN = {
 for (const b of CATALOG) {
   const pair = (es, en) => { if (es && en && !(es in EN)) EN[es] = en; };
   pair(b.name, b.en.name);
-  for (const k of ["sizeType", "senses", "languages", "resistances"]) pair(b[k], b.en[k]);
-  for (const k of ["traits", "actions"]) {
+  for (const k of ["sizeType", "alignment", "senses", "languages", "resistances", "vulnerabilities", "immunities", "skills", "gear", "speedText"]) pair(b[k], b.en[k]);
+  /* «Feérico pequeño (goblinoide), caótico neutral» va en una sola línea */
+  if (b.sizeType && b.alignment && b.en.sizeType && b.en.alignment) pair(`${b.sizeType}, ${b.alignment}`, `${b.en.sizeType}, ${b.en.alignment}`);
+  for (const k of ["traits", "actions", "bonus", "reactions", "legendary"]) {
     const es = String(b[k] || "").split("\n"), en = String(b.en[k] || "").split("\n");
     es.forEach((line, i) => {
       pair(line, en[i]);
@@ -1177,6 +1280,10 @@ const SPELL_PARTS = [
   [/^(\d+) puntos de sueño$/, "$1 points of sleep"]
 ];
 const PATTERNS = [
+  /* La ficha de criatura de 2024 */
+  [/^(\S+) \(([\d.,]+) PX; BC ([+−-]\d+)\)$/, "$1 (XP $2; PB $3)"],
+  [/^Ficha de las reglas de 2024 \(SRD 5\.2\.1\)(?: · (.+))?$/, (m, n) => "2024 rules stat block (SRD 5.2.1)" + (n ? " · " + n : "")],
+  [/^Esta criatura no está en el SRD de 2024: su ficha es la de 2014$/, "This creature isn't in the 2024 SRD: its stat block is the 2014 one"],
   /* Ronda 6 */
   [/^Se descarga como PNG\. (\d+) × (\d+) casillas\.$/, "Downloads as PNG. $1 × $2 squares."],
   [/^(.+) \(([A-Z]|Supr)\)$/, (m, a, k) => EN[a] ? `${EN[a]} (${k === "Supr" ? "Del" : k})` : m],

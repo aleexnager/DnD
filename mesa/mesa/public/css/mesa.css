@@ -2953,3 +2953,18 @@ button.ac-shield:hover::before { background: var(--stone-2); }
 .ac-shield .ac-extra { z-index: 1; box-shadow: 0 1px 4px rgba(0, 0, 0, .45); }
 .qs.ac-shield .ac-extra { right: 18%; top: 2px; font-size: 11px; }
 .coords:empty { display: none; }
+
+/* ---------- Ficha de criatura de 2024 ---------- */
+.statblock { position: relative; }
+.mon-ed {
+  position: absolute; top: 10px; right: 12px; font: 700 9.5px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase;
+  padding: 3px 6px; border-radius: 999px; color: #fff7e8; background: var(--parch-head);
+}
+.mon-ed.old { background: #8b7b62; }
+.mon-ac b + b, .mon-ac b:nth-of-type(2) { margin-left: 10px; }
+.mon-abils { margin-top: 6px; gap: 3px; }
+.mon-abil { background: rgba(130, 32, 0, .06); padding: 4px 0 3px; grid-template-rows: auto auto auto; }
+.mon-abil b { font-weight: 700; font-size: 14px; }
+.mon-abil small { font-size: 11.5px; color: var(--parch-ink); opacity: .78; }
+.mon-abil small.prof { opacity: 1; font-weight: 700; color: var(--parch-head); }
+.mon-abil-key { display: flex; justify-content: flex-end; gap: 10px; font-size: 10px; font-style: italic; opacity: .6; margin: 1px 0 4px !important; }
