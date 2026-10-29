@@ -1566,6 +1566,8 @@ function placeTokenMenu() {
     if (bar) { bar.style.width = pct(c) + "%"; bar.className = hpTone(pct(c)); }
     const acb = tokenPop.node.querySelector(".tk-ac b");
     if (acb) acb.textContent = acOf(c);
+    const hpb = tokenPop.node.querySelector(".tk-hp b");
+    if (hpb) hpb.textContent = c.hp;
   }
   const n = tokenPop.node, w = n.offsetWidth, h = n.offsetHeight, gap = 10, pad = 8;
   const minX = Math.max(pad, at.board.left + pad), maxX = Math.min(innerWidth - pad, at.board.right - pad);
@@ -1599,10 +1601,11 @@ function tokenMenu(id) {
       </div>
     </div>
     <div class="tk-quick">
-      <div class="tk-hp">
-        <button type="button" class="btn sm bad" data-tkq="dmg" title="Restar vida">${icon("minus", 15)}</button>
-        <input type="number" min="0" max="999" placeholder="0" data-tk-amount aria-label="Cantidad de vida" inputmode="numeric">
-        <button type="button" class="btn sm good" data-tkq="heal" title="Sumar vida">${icon("plus", 15)}</button>
+      <div class="tk-hp" title="Vida: cada toque resta o suma 1">
+        <span>PV</span>
+        <button type="button" class="btn sm bad" data-tkq="dmg" aria-label="Restar 1 de vida">−</button>
+        <b class="tnum">${c.hp}</b>
+        <button type="button" class="btn sm good" data-tkq="heal" aria-label="Sumar 1 de vida">+</button>
       </div>
       <div class="tk-ac" title="CA temporal: Escudo, cobertura…">
         <span>CA</span>
@@ -1642,20 +1645,19 @@ function tokenMenu(id) {
   const first = node.querySelector(".tk-item");
   if (first) first.focus({ preventScroll: true });
 
-  /* Vida y CA al momento, sin cerrar el globo: para encajar tres golpes
-     seguidos o el Escudo de un mago */
-  const amount = node.querySelector("[data-tk-amount]");
-  amount.addEventListener("keydown", e => {
-    if (e.key === "Enter") { e.preventDefault(); node.querySelector(`[data-tkq="${e.shiftKey ? "heal" : "dmg"}"]`).click(); }
-  });
+  /* Vida y CA al momento, sin cerrar el globo, de uno en uno como la CA:
+     para encajar tres golpes seguidos o el Escudo de un mago */
   on(node, "click", "[data-tkq]", (e, b) => {
     const now = byId(id);
     if (!now) return;
-    const what = b.dataset.tkq, n = Math.max(0, Math.trunc(+amount.value || 0));
+    const what = b.dataset.tkq;
     if (what === "dmg" || what === "heal") {
-      if (!n) { amount.focus(); return toast("Escribe cuánta vida", "bad"); }
-      op("hp.apply", { id, [what === "dmg" ? "damage" : "heal"]: n });
-      amount.value = "";
+      const shown = node.querySelector(".tk-hp b");
+      const cur = +shown.textContent;
+      if (what === "heal" && cur >= now.maxHp) return;
+      if (what === "dmg" && cur <= 0) return;
+      op("hp.apply", { id, [what === "dmg" ? "damage" : "heal"]: 1 });
+      shown.textContent = Math.max(0, Math.min(now.maxHp, cur + (what === "dmg" ? -1 : 1)));
       return;
     }
     const next = Math.max(-20, Math.min(30, (now.tempAc || 0) + (what === "acUp" ? 1 : -1)));

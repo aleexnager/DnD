@@ -1112,6 +1112,7 @@ const EN = {
   "Cobertura de tres cuartos": "Three-quarters cover", "Escudo de fe": "Shield of Faith", "CA temporal: Escudo, cobertura…": "Temporary AC: Shield, cover…",
   "Bajar la CA temporal": "Lower the temporary AC", "Subir la CA temporal": "Raise the temporary AC", "Sumar vida": "Add hit points",
   "Escribe cuánta vida": "Type how many hit points",
+  "Vida: cada toque resta o suma 1": "Hit points: each tap takes or adds 1", "Restar 1 de vida": "Take 1 hit point", "Sumar 1 de vida": "Add 1 hit point",
   "Imagen del DM": "DM's image", "Volver a ver la imagen que enseña el DM": "See the image the DM is showing again",
   "Puedes cerrarla para mirar el mapa: mientras el DM la enseñe, el botón «Imagen del DM» de arriba la vuelve a abrir.": "You can close it to look at the map: while the DM keeps showing it, the “DM's image” button at the top opens it again.",
   "Mi personaje": "My character", "La cámara sigue la acción": "The camera follows the action", "La cámara sigue a tu personaje": "The camera follows your character",
