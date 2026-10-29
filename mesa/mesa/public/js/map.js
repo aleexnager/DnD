@@ -6,7 +6,7 @@
    party solo recibe lo que su personaje alcanza a ver. */
 
 import { cellKey, edgeKey, clamp, footprint, conditionName } from "./schema.js";
-import { visibleCells, reachableCells, shapeCells, gridDistance, occupied, fits, nextRoomId } from "./los.js";
+import { visibleCells, reachableCells, shapeCells, shapeOutline, gridDistance, occupied, fits, nextRoomId } from "./los.js";
 import { initials, imgURL, pct, hpTone, reducedMotion } from "./util.js";
 import { drawGlyph } from "./icons.js";
 
@@ -196,6 +196,12 @@ export class MapView {
       cropW = map.cols / this.zoom;
       focus = this.center || { x: map.cols / 2, y: map.rows / 2 };
       fill = true;
+    } else if (this.followMe && this.data.you && this.data.chars.some(c => c.id === this.data.you && c.mapId === map.id && c.mx !== null)) {
+      /* El jugador ha pedido que la cámara siga a su personaje */
+      const me = this.data.chars.find(c => c.id === this.data.you);
+      cropW = Math.min(map.cols, map.followSpan || 18) / (map.partyZoom || 1);
+      focus = this.smoothCam({ x: me.mx + 0.5, y: me.my + 0.5 });
+      fill = true;
     } else if (map.roomFrame) {
       /* La party está en una sala: se ve entera, con una casilla de aire */
       room = map.roomFrame;
@@ -349,6 +355,12 @@ export class MapView {
   /* ---------- Interacción ---------- */
   bind() {
     const cv = this.canvas;
+    /* El polígono de una plantilla se cierra con Intro y se deja con Esc */
+    document.addEventListener("keydown", e => {
+      if (!cv.isConnected || !this.pending || this.pending.kind !== "poly") return;
+      if (e.key === "Enter") { e.preventDefault(); this.finishPoly(); }
+      if (e.key === "Escape") { this.pending = null; this.draw(); }
+    });
     cv.style.touchAction = "none";
     this.touches = new Map();
 
@@ -374,6 +386,17 @@ export class MapView {
       if (!inside) return;
 
       /* Plantilla pendiente de colocar */
+      if (this.pending && this.pending.kind === "poly") {
+        const pt = [this.snap(p.fx), this.snap(p.fy)];
+        const pd = this.pending;
+        if (!pd.started) { this.pending = { ...pd, started: true, x: pt[0], y: pt[1], points: [[0, 0]] }; return this.draw(); }
+        const rel = [pt[0] - pd.x, pt[1] - pd.y];
+        const closing = pd.points.length > 2 && Math.hypot(rel[0], rel[1]) < 0.4;
+        if (closing || e.detail >= 2) return this.finishPoly();
+        const last = pd.points[pd.points.length - 1];
+        if (last[0] !== rel[0] || last[1] !== rel[1]) pd.points = [...pd.points, rel];
+        return this.draw();
+      }
       if (this.pending) {
         this.pending = { ...this.pending, x: this.snap(p.fx), y: this.snap(p.fy) };
         this.placing = true;
@@ -507,7 +530,7 @@ export class MapView {
       }
       if (this.placing) {
         const dx = p.fx - this.pending.x, dy = p.fy - this.pending.y;
-        if (Math.hypot(dx, dy) > 0.3 && this.pending.kind !== "circle" && this.pending.kind !== "square") {
+        if (Math.hypot(dx, dy) > 0.3 && !["circle", "square", "ring"].includes(this.pending.kind)) {
           this.pending.angle = Math.atan2(dy, dx);
         }
         return this.draw();
@@ -567,6 +590,11 @@ export class MapView {
           this.draw();
         }
         return;
+      }
+      /* El polígono: el lado que falta sigue al puntero */
+      if (this.pending && this.pending.kind === "poly") {
+        if (this.pending.started) this.pending.hover = [this.snap(p.fx) - this.pending.x, this.snap(p.fy) - this.pending.y];
+        return this.draw();
       }
       /* La plantilla va pegada al cursor hasta que se suelta con un clic */
       if (this.pending) {
@@ -1412,7 +1440,6 @@ export class MapView {
 
   shape(ctx, g, s, X, Y, ghost = false) {
     const step = this.data.map.feet || 5;
-    const r = (s.size / step) * g.cell;
     const ox = X(s.x), oy = Y(s.y);
     ctx.save();
     ctx.globalAlpha = ghost ? 0.55 : 0.85;
@@ -1421,25 +1448,20 @@ export class MapView {
     ctx.lineWidth = 2;
     if (s.local) ctx.setLineDash([7, 5]);
     ctx.beginPath();
-    if (s.kind === "circle") ctx.arc(ox, oy, r, 0, Math.PI * 2);
-    else if (s.kind === "square") ctx.rect(ox - r, oy - r, r * 2, r * 2);
-    else if (s.kind === "cone") {
-      const half = Math.PI / 6;
-      ctx.moveTo(ox, oy);
-      ctx.arc(ox, oy, r, s.angle - half, s.angle + half);
-      ctx.closePath();
-    } else {
-      const w = (s.width / step) * g.cell / 2;
-      const ca = Math.cos(s.angle), sa = Math.sin(s.angle);
-      ctx.moveTo(ox - sa * w, oy + ca * w);
-      ctx.lineTo(ox + ca * r - sa * w, oy + sa * r + ca * w);
-      ctx.lineTo(ox + ca * r + sa * w, oy + sa * r - ca * w);
-      ctx.lineTo(ox + sa * w, oy - ca * w);
-      ctx.closePath();
+    /* El mismo contorno que decide a quién coge (shapeOutline) */
+    let pts = shapeOutline(s, step);
+    if (s.kind === "poly" && s.hover && ghost) pts = [...pts, s.hover];
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(ox + x * g.cell, oy + y * g.cell) : ctx.moveTo(ox + x * g.cell, oy + y * g.cell)));
+    if (s.kind !== "poly" || pts.length > 2) ctx.closePath();
+    if (s.kind === "ring" && s.inner > 0) {
+      const ri = Math.min(s.inner, s.size - 1) / step * g.cell;
+      ctx.moveTo(ox + ri, oy);
+      ctx.arc(ox, oy, ri, 0, Math.PI * 2, true);
     }
-    ctx.fill();
+    ctx.fill("evenodd");
     ctx.stroke();
     ctx.setLineDash([]);
+    if (s.kind === "poly" && ghost) for (const [x, y] of s.points || []) { ctx.beginPath(); ctx.arc(ox + x * g.cell, oy + y * g.cell, 4, 0, Math.PI * 2); ctx.fillStyle = s.color; ctx.fill(); }
     if (s.label && g.cell > 14) {
       ctx.fillStyle = "#f2f3f4";
       ctx.font = `600 ${Math.max(10, Math.round(g.cell * 0.24))}px Roboto, system-ui, sans-serif`;
@@ -1447,6 +1469,20 @@ export class MapView {
       ctx.fillText(s.label, ox, oy - 4);
     }
     ctx.restore();
+  }
+
+  /* Cerrar el polígono de una plantilla libre y dejarlo puesto */
+  finishPoly() {
+    const pd = this.pending;
+    if (!pd || pd.kind !== "poly") return;
+    this.pending = null;
+    if (pd.points && pd.points.length >= 3) {
+      const shape = { ...pd };
+      delete shape.started; delete shape.hover;
+      if (shape.local) { this.localShapes = [...this.localShapes.slice(-5), shape]; this.opts.onLocalShape && this.opts.onLocalShape(shape); }
+      else this.opts.onShape && this.opts.onShape(shape);
+    }
+    this.draw();
   }
 
   ruler(ctx, g, from, to, X, Y, range) {

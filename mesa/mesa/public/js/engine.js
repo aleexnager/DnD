@@ -11,7 +11,7 @@
      absorbImages(d) saca las imágenes incrustadas de una copia antigua
      onPresence()    avisa de que ha cambiado quién está conectado */
 
-import { normalizeLibraryItem, MAX_LIBRARY, emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier, withBuffs, canSneak, canSmite, sneakDice, smiteDice, smiteFoe } from "./schema.js";
+import { acOf, normalizeSpell, normalizeLibraryItem, MAX_LIBRARY, emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier, withBuffs, canSneak, canSmite, sneakDice, smiteDice, smiteFoe } from "./schema.js";
 import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells, partyRoomFrame } from "./los.js";
 import { roll, detail } from "./dice.js";
 import { cutWalls, doorAt } from "./freewalls.js";
@@ -207,6 +207,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       version: doc.version,
       chars,
       bestiary: [],
+      spellLib: doc.spellLib || [],
       maps,
       session: { ...doc.session, notes: "", alert: null, activeMapId: showMap ? map.id : "" }
     };
@@ -349,6 +350,14 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
     return gone.length;
   }
 
+  /* Pone la versión nueva de un conjuro en las fichas que ya lo tienen */
+  function syncSpell(sp) {
+    for (const c of doc.chars) {
+      if (!(c.spellbook || []).some(x => x.id === sp.id)) continue;
+      c.spellbook = c.spellbook.map(x => x.id === sp.id ? { ...sp } : x);
+    }
+  }
+
   function castSpell(client, op) {
     const caster = findChar(op.casterId);
     if (!caster) return "No existe esa ficha";
@@ -414,7 +423,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       for (let i = 0; i < rays; i++) {
         const t = targets[i % targets.length];
         const atk = roll(withBuffs(caster, "attack", "1d20" + signed(atkBonus)).formula, op.mode === "adv" || op.mode === "dis" ? op.mode : "normal");
-        const hit = atk.crit || (!atk.fumble && atk.total >= (t.ac || 10));
+        const hit = atk.crit || (!atk.fumble && atk.total >= (acOf(t) || 10));
         let text = `${t.name}: ${atk.total}${atk.crit ? " · ¡CRÍTICO!" : atk.fumble ? " · pifia" : hit ? " · impacta" : " · falla"}`;
         if (hit && damage) {
           const d = roll(atk.crit ? critDamage(damage) : damage);
@@ -514,7 +523,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
     const toHit = withBuffs(attacker, "attack", "1d20" + (a.atk >= 0 ? "+" : "") + a.atk);
     const atk = roll(toHit.formula, mode);
     if (!atk) return "Ese ataque no tiene una fórmula válida";
-    const ac = target ? target.ac : null;
+    const ac = target ? acOf(target) : null;
     /* Sin objetivo no se sabe si entra: se tira el daño igual, para quien lo quiera */
     const hit = atk.crit || (!atk.fumble && ac !== null && atk.total >= ac);
     const lands = hit || (!target && !atk.fumble);
@@ -1074,6 +1083,24 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         const at = list.findIndex(x => x.id === item.id);
         if (at < 0 && list.length >= MAX_LIBRARY) return `La biblioteca ya tiene ${MAX_LIBRARY} libros`;
         doc.library = at < 0 ? [...list, item] : list.map(x => x.id === item.id ? item : x);
+        break;
+      }
+      /* La biblioteca de conjuros: el DM retoca uno de serie o crea uno suyo.
+         Con «sync», las fichas que ya lo tienen reciben el cambio. */
+      case "spellLib.set": {
+        if (!dm) return "Solo el DM";
+        const sp = normalizeSpell(op.spell || {});
+        const list = doc.spellLib || [];
+        if (!list.some(x => x.id === sp.id) && list.length >= 400) return "La biblioteca de conjuros está llena";
+        doc.spellLib = list.some(x => x.id === sp.id) ? list.map(x => x.id === sp.id ? sp : x) : [...list, sp];
+        if (op.sync) syncSpell(sp);
+        break;
+      }
+      case "spellLib.remove": {
+        if (!dm) return "Solo el DM";
+        doc.spellLib = (doc.spellLib || []).filter(x => x.id !== op.id);
+        /* Al restaurar el de serie, quien lo tenga vuelve a la versión de serie */
+        if (op.sync && op.restore) syncSpell(normalizeSpell({ ...op.restore, id: op.id }));
         break;
       }
       case "library.remove":

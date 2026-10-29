@@ -53,7 +53,7 @@ const CHAR_DEFAULTS = {
   id: "", kind: "pc", name: "", claimedBy: "",
   className: "", race: "", level: 1, background: "", alignment: "", player: "",
   color: "#c89b4a", avatarId: "",
-  hp: 10, maxHp: 10, tempHp: 0, ac: 10, initiative: 0, speed: 30, proficiency: 2,
+  hp: 10, maxHp: 10, tempHp: 0, ac: 10, tempAc: 0, initiative: 0, speed: 30, proficiency: 2,
   str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10,
   saves: [], skills: [], passivePerception: 0,
   conditions: [], exhaustion: 0, concentration: "", inspiration: false,
@@ -111,14 +111,23 @@ const asArray = (v, n, fill = 0) => {
   return out;
 };
 
+/* La CA que cuenta: la de la ficha más la temporal (Escudo, cobertura…) */
+export const acOf = c => (+c.ac || 0) + (+c.tempAc || 0);
+/* La CA para enseñar: el total, y la parte temporal aparte para que se vea */
+export function acParts(c) {
+  const base = +c.ac || 0, extra = +c.tempAc || 0;
+  return { total: base + extra, base, extra, title: extra ? `Clase de armadura: ${base} de base ${extra > 0 ? "+" : "−"} ${Math.abs(extra)} temporal` : "Clase de armadura" };
+}
+
 export function normalizeChar(raw = {}) {
   const c = { ...CHAR_DEFAULTS, ...raw };
   c.id = raw.id || uid();
   c.kind = c.kind === "monster" ? "monster" : "pc";
-  ["level", "hp", "maxHp", "tempHp", "ac", "initiative", "speed", "proficiency",
+  ["level", "hp", "maxHp", "tempHp", "ac", "tempAc", "initiative", "speed", "proficiency",
     "str", "dex", "con", "int", "wis", "cha", "deathOk", "deathFail", "xp", "exhaustion", "hitDiceUsed"]
     .forEach(k => { c[k] = num(c[k], CHAR_DEFAULTS[k]); });
   c.maxHp = Math.max(1, c.maxHp);
+  c.tempAc = clamp(Math.trunc(c.tempAc), -20, 30);
   c.level = clamp(c.level, 1, 20);
   c.hp = clamp(c.hp, 0, Math.max(c.maxHp, c.hp));
   c.deathOk = clamp(c.deathOk, 0, 3);
@@ -331,7 +340,7 @@ export function parseAttackLine(line) {
 }
 
 
-export const SHAPE_KINDS = ["circle", "cone", "line", "square"];
+export const SHAPE_KINDS = ["circle", "cone", "line", "square", "ring", "rect", "poly"];
 
 export function normalizeAttack(raw = {}) {
   return {
@@ -404,7 +413,7 @@ export const scaleDice = (formula, times) => String(formula).replace(/^(\d*)d(\d
 
 export const SHAPE_NAMES = [
   ["", "Sin área"], ["circle", "Esfera o ráfaga"], ["cone", "Cono"],
-  ["line", "Línea"], ["square", "Cubo"]
+  ["line", "Línea"], ["square", "Cubo"], ["ring", "Anillo"], ["rect", "Rectángulo"]
 ];
 
 /* ---------- Bestiario ---------- */
@@ -456,8 +465,8 @@ const MAP_DEFAULTS = {
   id: "", name: "Mazmorra", imageId: "", imageW: 0, imageH: 0,
   lockRatio: true, cols: 28, rows: 18, grid: true,
   radius: 5, remember: true,
-  camera: "full", followSpan: 14, partyZoom: 1,
-  roomCamera: false,    // al entrar la party en una sala, la cámara la encuadra entera
+  camera: "follow", followSpan: 18, partyZoom: 1,
+  roomCamera: true,     // al entrar la party en una sala, la cámara la encuadra entera
   explored: [], edges: {}, notes: "",
   /* Nuevo en 2.1 */
   dark: false,          // si está a oscuras, solo se ve lo que alumbran las antorchas
@@ -486,7 +495,7 @@ export function normalizeMap(raw = {}) {
   m.cols = clamp(Math.trunc(num(m.cols, 28)), 5, MAX_COLS);
   m.rows = clamp(Math.trunc(num(m.rows, 18)), 5, MAX_ROWS);
   m.radius = clamp(Math.trunc(num(m.radius, 5)), 1, 40);
-  m.followSpan = clamp(Math.trunc(num(m.followSpan, 14)), 4, 60);
+  m.followSpan = clamp(Math.trunc(num(m.followSpan, 18)), 4, 60);
   m.partyZoom = clamp(num(m.partyZoom, 1), 1, 8);
   m.imageW = Math.max(0, Math.trunc(num(m.imageW)));
   m.imageH = Math.max(0, Math.trunc(num(m.imageH)));
@@ -580,9 +589,15 @@ export function normalizeShape(raw = {}) {
     size: clamp(num(raw.size, 20), 1, 300),  // radio o longitud en pies
     width: clamp(num(raw.width, 5), 1, 60),  // ancho de la línea, en pies
     angle: num(raw.angle),                   // dirección en radianes
-    color: String(raw.color || "#8878d8"),
+    color: /^#[0-9a-f]{6}$/i.test(String(raw.color || "")) ? String(raw.color) : "#8878d8",
     label: String(raw.label || "").slice(0, 40),
-    party: raw.party !== false               // ¿la ve la party?
+    party: raw.party !== false,              // ¿la ve la party?
+    /* Formas a medida */
+    coneAngle: clamp(num(raw.coneAngle, 60), 10, 360),   // abertura del cono, en grados
+    inner: clamp(num(raw.inner, 0), 0, 300),             // radio de dentro del anillo, en pies
+    points: (Array.isArray(raw.points) ? raw.points : []).slice(0, 40)   // polígono: casillas respecto al origen
+      .filter(p => Array.isArray(p) && Number.isFinite(+p[0]) && Number.isFinite(+p[1]))
+      .map(p => [Math.round(+p[0] * 100) / 100, Math.round(+p[1] * 100) / 100])
   };
 }
 /* Sonido ambiente en el mapa (sound-core.js explica cómo se oye) */
@@ -638,7 +653,7 @@ const SESSION_DEFAULTS = {
   locked: false,
   activeMapId: "", focusId: "",
   combat: { on: false, round: 1, index: 0, order: [] },
-  showMapToParty: true, revealAll: false, allowPlayerMove: true, showPartyHP: true,
+  showMapToParty: true, revealAll: false, allowPlayerMove: false, showPartyHP: true,
   notes: "",
   /* Nuevo en 2.1 */
   ping: null,           // señal efímera en el mapa
@@ -647,8 +662,8 @@ const SESSION_DEFAULTS = {
   requests: [],         // tiradas pedidas a los jugadores
   showFoeHP: false,     // ¿enseñar a la party la vida de los enemigos?
   showMoveRange: true,  // pintar el alcance al arrastrar
-  allowPlayerDraw: true,   // ¿los jugadores pueden dibujar en el mapa?
-  showWallsToParty: true,  // ¿la party ve los muros y las puertas dibujados?
+  allowPlayerDraw: false,  // ¿los jugadores pueden dibujar en el mapa?
+  showWallsToParty: false, // ¿la party ve los muros y las puertas dibujados?
   autoSkipDown: true    // saltar en la iniciativa a los que están fuera de combate
 };
 
@@ -661,7 +676,8 @@ export function emptyDoc() {
     maps: [map],
     session: { ...SESSION_DEFAULTS, combat: { ...SESSION_DEFAULTS.combat, order: [] }, activeMapId: map.id },
     log: [],
-    library: []
+    library: [],
+    spellLib: []          // conjuros de la biblioteca retocados o creados por el DM
   };
 }
 
@@ -738,7 +754,8 @@ export function migrate(raw) {
     maps,
     session,
     log: Array.isArray(src.log) ? src.log.slice(-150) : [],
-    library: Array.isArray(src.library) ? src.library.slice(0, MAX_LIBRARY).map(normalizeLibraryItem) : []
+    library: Array.isArray(src.library) ? src.library.slice(0, MAX_LIBRARY).map(normalizeLibraryItem) : [],
+    spellLib: Array.isArray(src.spellLib) ? src.spellLib.slice(0, 400).map(normalizeSpell) : []
   };
 }
 

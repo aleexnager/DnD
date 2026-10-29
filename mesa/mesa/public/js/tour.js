@@ -74,6 +74,8 @@ function findTarget(sel) {
   if (!sel) return null;
   for (const s of [].concat(sel)) {
     for (const node of document.querySelectorAll(s)) {
+      /* Si está dentro de una sección plegada (la barra del mapa), se abre */
+      for (let d = node.closest("details:not([open])"); d; d = d.parentElement && d.parentElement.closest("details:not([open])")) d.open = true;
       const r = node.getBoundingClientRect();
       if (r.width < 2 || r.height < 2) continue;
       const st = getComputedStyle(node);
