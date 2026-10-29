@@ -340,6 +340,9 @@ export function parseAttackLine(line) {
   const name = (text.split(/\s[—–]\s|[.:]/)[0] || "Ataque").trim().slice(0, 48);
   const type = DAMAGE_WORDS.find(w => new RegExp("\\b" + w + "\\b", "i").test(text)) || "";
   const range = (text.match(/(alcance[^,.;]*|distancia[^,.;]*|reach[^,.;]*|range[^,.;]*)/i) || [""])[0].trim();
+  /* Lo que se ve en sus indicadores: el estado que puede poner y el área */
+  const cond = text.match(COND_RE);
+  const area = text.match(/\b(cono|l[ií]nea|esfera|emanaci[oó]n|cubo|cilindro) de (\d+) pies(?: de radio)?/i);
 
   return normalizeAttack({
     name,
@@ -347,9 +350,18 @@ export function parseAttackLine(line) {
     damage: dice ? dice[1].replace(/\s+/g, "") : "",
     type,
     range: range.slice(0, 40),
-    save: save ? `${ABILITY_WORDS[save[2].toLowerCase()] || "dex"} ${save[1]}` : ""
+    save: save ? `${ABILITY_WORDS[save[2].toLowerCase()] || "dex"} ${save[1]}` : "",
+    cond: cond ? COND_STEMS[cond[1].toLowerCase()] : "",
+    area: area ? area[0] : ""
   });
 }
+/* «queda derribado», «apresada», «Agarrado (CD 13 para escapar)» -> id del estado */
+const COND_STEMS = {
+  agarrad: "agarrado", apresad: "apresado", asustad: "asustado", aturdid: "aturdido", cegad: "cegado",
+  derribad: "derribado", encantad: "encantado", ensordecid: "ensordecido", envenenad: "envenenado",
+  incapacitad: "incapacitado", paralizad: "paralizado", petrificad: "petrificado", inconscient: "inconsciente"
+};
+const COND_RE = new RegExp(`\\b(${Object.keys(COND_STEMS).join("|")})(?:[oa]s?|es?)\\b`, "i");
 
 
 export const SHAPE_KINDS = ["circle", "cone", "line", "square", "ring", "rect", "poly"];
@@ -363,6 +375,8 @@ export function normalizeAttack(raw = {}) {
     range: String(raw.range || ""),          // "alcance 5 pies", "alcance 80/320"
     save: String(raw.save || ""),            // "dex 13" -> salvación en vez de ataque
     note: String(raw.note || ""),
+    cond: String(raw.cond || "").slice(0, 24),   // estado que puede poner (para sus indicadores)
+    area: String(raw.area || "").slice(0, 40),   // «cono de 15 pies», si lo dice el texto
     /* Conjuros: qué espacio gasta y qué forma tiene su área */
     level: clamp(Math.trunc(num(raw.level)), 0, 9),   // 0 = no es un conjuro con espacio
     shape: SHAPE_KINDS.includes(raw.shape) ? raw.shape : "",

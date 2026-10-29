@@ -5,8 +5,9 @@
 
 import { esc, lines, sign, el, on, modal, toast } from "./util.js";
 import { FEATURE_SOURCES, BUFF_PRESETS, BUFF_KINDS, normalizeBuff, cantripTier, scaleDice, modOf, conditionName } from "./schema.js";
-import { attacksOf, shapeLabel } from "./attacks.js";
-import { castStats, spellTags, openCast } from "./spellbook.js";
+import { attacksOf } from "./attacks.js";
+import { castStats, openCast } from "./spellbook.js";
+import { spellChips, attackChips, chipsHTML } from "./chips.js";
 import { throwDice } from "./dice-panel.js";
 import { patchChar } from "./net.js";
 import { icon } from "./icons.js";
@@ -41,10 +42,11 @@ export function attackTableHTML(c) {
       <div class="st-head"><span>Ataque</span><span>Alcance</span><span>Golpe/CD</span><span>Daño</span></div>
       ${list.map((a, i) => {
         const [ab, dc] = a.save ? a.save.split(" ") : [];
-        const sub = [a.type, a.level ? `nivel ${a.level}` : "", a.shape ? shapeLabel(a) : "", a.note].filter(Boolean).join(" · ");
+        const sub = [a.type, a.level ? `nivel ${a.level}` : "", a.note].filter(Boolean).join(" · ");
+        const chips = attackChips(a), reach = chips.filter(x => x.kind === "reach");
         return `<div class="st-row">
-          <span class="st-name"><b>${esc(a.name)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</span>
-          <span class="st-range">${esc(a.range || "—")}</span>
+          <span class="st-name"><b>${esc(a.name)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}${chipsHTML(chips.filter(x => x.kind !== "reach"))}</span>
+          <span class="st-range">${reach.length ? chipsHTML(reach, "reach") : esc(a.range || "—")}</span>
           ${a.save ? `<span class="st-pill dc"><b>CD ${esc(dc)}</b><small>${SAVE_ABBR[ab] || ""}</small></span>`
             : `<button class="st-pill" data-act="atkHit" data-i="${i}" title="Tirar el ataque"><b>${sign(a.atk)}</b></button>`}
           ${a.damage ? `<button class="st-pill dmg" data-act="atkDmg" data-i="${i}" title="Tirar el daño"><b>${esc(a.damage)}</b></button>` : "<span class=\"st-range\">—</span>"}
@@ -59,7 +61,7 @@ export function attackTableHTML(c) {
 export function spellRollOf(c, sp) {
   const st = castStats(c);
   const times = sp.level === 0 && sp.scale ? cantripTier(c.level || 1) : 1;
-  const m = modOf(c[st.ability]), withMod = f => f + (m >= 0 ? "+" : "") + m;
+  const m = modOf(c[st.ability]), withMod = f => m ? f + (m > 0 ? "+" : "") + m : f;
   let dmg = sp.damage ? (times > 1 ? scaleDice(sp.damage, times) : sp.damage) : "";
   if (dmg && sp.dmgMod && m) dmg = withMod(dmg);
   return { st, dmg, heal: sp.heal ? (sp.healMod ? withMod(sp.heal) : sp.heal) : "" };
@@ -71,15 +73,16 @@ export function spellTableHTML(c, { cast = true } = {}) {
       <div class="st-head"><span>Conjuro</span><span>Alcance</span><span>Golpe/CD</span><span>Efecto</span></div>
       ${list.map(sp => {
         const { st, dmg, heal } = spellRollOf(c, sp);
-        const sub = [sp.level ? `nivel ${sp.level}` : "truco", sp.time, sp.conc ? "concentración" : "", sp.shape ? `${sp.size} pies` : ""].filter(Boolean).join(" · ");
+        const sub = [sp.level ? `nivel ${sp.level}` : "truco", sp.time].filter(Boolean).join(" · ");
+        const chips = spellChips(sp), reach = chips.filter(x => x.kind === "reach");
         const hit = sp.mode === "attack" ? `<button class="st-pill" data-act="spHit" data-spell="${esc(sp.id)}" title="Tirar el ataque de conjuro"><b>${sign(st.atk)}</b></button>`
           : sp.mode === "save" ? `<span class="st-pill dc"><b>CD ${st.dc}</b><small>${SAVE_ABBR[sp.save] || "DES"}</small></span>` : `<span class="st-range">—</span>`;
         const eff = heal ? `<button class="st-pill heal" data-act="spDmg" data-spell="${esc(sp.id)}" title="Tirar la cura"><b>${esc(heal)}</b></button>`
           : dmg ? `<button class="st-pill dmg" data-act="spDmg" data-spell="${esc(sp.id)}" title="Tirar el daño"><b>${esc(sp.mode === "auto" ? sp.darts + "×" + dmg : dmg)}</b>${sp.type ? `<small>${esc(sp.type)}</small>` : ""}</button>`
           : `<span class="st-range">${esc(sp.cond ? conditionName(sp.cond) : "efecto")}</span>`;
         return `<div class="st-row">
-          <span class="st-name"><b>${esc(sp.name)}</b><small>${esc(sub)}</small></span>
-          <span class="st-range">${esc(sp.range || "—")}</span>
+          <span class="st-name"><b>${esc(sp.name)}</b><small>${esc(sub)}</small>${chipsHTML(chips.filter(x => x.kind !== "reach" && !(x.kind === "roll" && x.ico !== "zap")))}</span>
+          <span class="st-range">${reach.length ? chipsHTML(reach, "reach") : esc(sp.range || "—")}</span>
           ${hit}${eff}
           ${cast ? `<button class="btn sm st-cast" data-act="castSpell" data-spell="${esc(sp.id)}">Lanzar</button>` : ""}
         </div>`;
@@ -173,7 +176,7 @@ function spellsHTML(c) {
           (_, j) => `<i class="${j < c.slotsUsed[l - 1] ? "used" : ""}"></i>`).join("")}</span>` : ""}</h4>
         ${by[l].map(sp => `<div class="spell-row">
           <span class="st-name"><b>${esc(sp.name)}</b><small>${esc([sp.time, sp.range].filter(Boolean).join(" · "))}</small>
-            ${spellTags(sp) ? `<small>${esc(spellTags(sp))}</small>` : ""}</span>
+            ${chipsHTML(spellChips(sp))}</span>
           <button class="btn sm" data-act="castSpell" data-spell="${esc(sp.id)}">Lanzar</button>
         </div>`).join("")}
       </div>`).join("")

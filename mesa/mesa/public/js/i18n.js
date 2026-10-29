@@ -483,6 +483,11 @@ const EN = {
   "Competente en las salvaciones de": "Proficient in saving throws of",
   "Desencadenante: le impacta un ataque cuerpo a cuerpo. Respuesta: +2 a la CA.": "Trigger: a melee attack hits it. Response: +2 AC.",
   "Un ataque se escribe así para poder tirarlo: «+4 al ataque — 1d6+2 cortante · alcance 5 pies», y una salvación, «CD 13 de Destreza — … Fallo: 6d6 fuego».": "Write an attack like this so it can be rolled: «+4 al ataque — 1d6+2 cortante · alcance 5 pies», and a save, «CD 13 de Destreza — … Fallo: 6d6 fuego».",
+  /* Indicadores de ataques y conjuros */
+  "Cuerpo a cuerpo": "Melee", "Personal": "Self", "Hay que tocar al objetivo": "You must touch the target",
+  "Sale de quien lo lanza": "Originates from the caster", "Impacta": "Hits", "Cura": "Heals", "Sueño": "Sleep",
+  "Invoca": "Summons", "Conc.": "Conc.", "Pide concentración": "Requires concentration",
+  "Recupera puntos de golpe": "Restores hit points", "Duerme a las criaturas": "Puts creatures to sleep",
   /* Editor de conjuros */
   "Componentes": "Components", "Crea o invoca algo que se queda en el tablero": "Creates or summons something that stays on the board",
   "Suma la característica de lanzamiento al daño (como Arma espiritual)": "Adds the spellcasting modifier to damage (like Spiritual Weapon)",
@@ -645,7 +650,7 @@ const EN = {
   "Como Inmovilizar persona, pero sirve con cualquier criatura.": "Like Hold Person, but works on any creature.",
   /* Conjuros de la biblioteca, reglas de 2024 */
   "Ataque de conjuro a distancia contra una criatura u objeto. Un objeto inflamable que impacte y que nadie lleve puesto ni cargue empieza a arder. Sube 1d10 a los niveles 5, 11 y 17.": "Ranged spell attack against a creature or object. A flammable object it hits that isn't worn or carried starts burning. Increases by 1d10 at levels 5, 11 and 17.",
-  "120 pies": "120 feet", "90 pies": "90 feet", "150 pies": "150 feet", "300 pies": "300 feet", "V, S": "V, S", "V": "V", "Toque": "Touch",
+  "Toque": "Touch",
   "Instantáneo": "Instantaneous", "1 asalto": "1 round", "1 minuto": "1 minute", "1 hora": "1 hour",
   "Acción adicional": "Bonus Action", "Concentración, hasta 1 minuto": "Concentration, up to 1 minute",
   "Concentración, hasta 10 minutos": "Concentration, up to 10 minutes", "Concentración, hasta 1 hora": "Concentration, up to 1 hour",
@@ -1261,6 +1266,7 @@ const word = s => EN[String(s).trim()] || s;
 const SAVE_EN = { FUE: "STR", DES: "DEX", CON: "CON", INT: "INT", SAB: "WIS", CAR: "CHA" };
 const ABIL_EN = { Fuerza: "Strength", Destreza: "Dexterity", "Constitución": "Constitution", Inteligencia: "Intelligence", "Sabiduría": "Wisdom", Carisma: "Charisma" };
 const SHAPE_EN = { esfera: "sphere", cono: "cone", "línea": "line", cubo: "cube" };
+const CHIP_SHAPE = { ...SHAPE_EN, anillo: "ring", "rectángulo": "rectangle", "emanación": "emanation", cilindro: "cylinder", "área": "area", linea: "line", emanacion: "emanation" };
 const level = l => l === "truco" ? "cantrip" : l.replace(/^nivel (\d+)$/, "level $1");
 const dmgTail = t => t ? " " + t.trim().split(" y ").map(w => word(w)).join(" and ") : "";
 function spellPart(rest) {
@@ -1284,6 +1290,20 @@ const PATTERNS = [
   [/^(\S+) \(([\d.,]+) PX; BC ([+−-]\d+)\)$/, "$1 (XP $2; PB $3)"],
   [/^Ficha de las reglas de 2024 \(SRD 5\.2\.1\)(?: · (.+))?$/, (m, n) => "2024 rules stat block (SRD 5.2.1)" + (n ? " · " + n : "")],
   [/^Esta criatura no está en el SRD de 2024: su ficha es la de 2014$/, "This creature isn't in the 2024 SRD: its stat block is the 2014 one"],
+  /* Indicadores de ataques y conjuros (chips.js) */
+  [/^(FUE|DES|CON|INT|SAB|CAR) ½$/, (m, ab) => (EN[ab] || ab) + " ½"],
+  [/^Ataque ×(\d+)$/, "Attack ×$1"],
+  [/^(esfera|cono|línea|cubo|anillo|rectángulo|emanación|cilindro|área) (\d+) pies$/, (m, sh, n) => `${n} ft ${CHIP_SHAPE[sh]}`],
+  [/^Cuerpo a cuerpo, alcance (\d+) pies$/, "Melee, reach $1 feet"],
+  [/^A distancia: hasta (\d+) pies normal y (\d+) como máximo, con desventaja$/, "Ranged: up to $1 feet normally, $2 at most with disadvantage"],
+  [/^Alcance máximo: (\d+) pies$/, "Maximum range: $1 feet"],
+  [/^Alcance: (.+)$/, (m, r) => "Range: " + (EN[r] || r)],
+  [/^De área: (\S+) de (\d+) pies( de radio)?$/, (m, sh, n, rad) => `Area: ${n}-foot${rad ? "-radius" : ""} ${CHIP_SHAPE[sh.toLowerCase()] || sh}`],
+  [/^Tirada de ataque de conjuro (cuerpo a cuerpo|a distancia)(?:, (\d+) rayos)?$/, (m, k, n) => `${k === "a distancia" ? "Ranged" : "Melee"} spell attack roll${n ? `, ${n} rays` : ""}`],
+  [/^Salvación de (Fuerza|Destreza|Constitución|Inteligencia|Sabiduría|Carisma)(; si la supera, la mitad del daño)?$/, (m, ab, half) => `${EN[ab] || ab} saving throw${half ? "; half damage on a success" : ""}`],
+  [/^Salvación de (Fuerza|Destreza|Constitución|Inteligencia|Sabiduría|Carisma) CD (\d+)$/, (m, ab, dc) => `DC ${dc} ${EN[ab] || ab} saving throw`],
+  [/^Impacta siempre(?:: (\d+) dardos)?$/, (m, n) => "Always hits" + (n ? `: ${n} darts` : "")],
+  [/^Puede dejarlo (.+)$/, (m, c) => "Can leave it " + (EN[c] || c)],
   /* Ronda 6 */
   [/^Se descarga como PNG\. (\d+) × (\d+) casillas\.$/, "Downloads as PNG. $1 × $2 squares."],
   [/^(.+) \(([A-Z]|Supr)\)$/, (m, a, k) => EN[a] ? `${EN[a]} (${k === "Supr" ? "Del" : k})` : m],

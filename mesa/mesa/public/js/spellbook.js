@@ -4,15 +4,15 @@
 
 import { el, on, esc, toast, modal, confirmBox } from "./util.js";
 import { op, patchChar, store } from "./net.js";
-import { normalizeSpell, modOf, conditionName, CONDITIONS, SHAPE_NAMES, uid } from "./schema.js";
+import { normalizeSpell, modOf, CONDITIONS, SHAPE_NAMES, uid } from "./schema.js";
 import { guessAbility, libraryOf, isBuiltinSpell, builtinSpell } from "./spells.js";
 import { icon, withIcon } from "./icons.js";
 import { keyMods } from "./dice-panel.js";
 import { rollable } from "./rollable.js";
+import { spellChips, chipsHTML } from "./chips.js";
 
 const ABIL = { int: "Inteligencia", wis: "Sabiduría", cha: "Carisma" };
 const SAVE = { str: "FUE", dex: "DES", con: "CON", int: "INT", wis: "SAB", cha: "CAR" };
-const SHAPES = { circle: "esfera", cone: "cono", line: "línea", square: "cubo", ring: "anillo", rect: "rectángulo" };
 const levelName = n => n === 0 ? "Trucos" : `Nivel ${n}`;
 
 export function castStats(c) {
@@ -22,7 +22,8 @@ export function castStats(c) {
   return { ability, dc: c.spellDC || 8 + prof + mod, atk: c.spellAtk || prof + mod };
 }
 
-/* Resumen de una línea: qué hace */
+/* Resumen de una línea: qué tira y cuánto (el alcance, el área, el estado y
+   la concentración van en sus indicadores, chips.js) */
 export function spellTags(sp) {
   const t = [];
   if (sp.mode === "attack") t.push(sp.melee ? "ataque cuerpo a cuerpo" : "ataque a distancia");
@@ -31,9 +32,6 @@ export function spellTags(sp) {
   if (sp.mode === "heal") t.push(`cura ${sp.heal}${sp.healMod ? " + car." : ""}`);
   if (sp.mode === "sleep") t.push(`sueño ${sp.damage}`);
   if (sp.damage && sp.mode !== "sleep") t.push(`${sp.damage}${sp.type ? " " + sp.type : ""}`);
-  if (sp.cond) t.push(conditionName(sp.cond).toLowerCase());
-  if (sp.shape) t.push(`${SHAPES[sp.shape]} de ${sp.shape === "square" ? sp.size * 2 : sp.size} pies`);
-  if (sp.conc) t.push("concentración");
   return t.join(" · ");
 }
 
@@ -65,7 +63,7 @@ export function openSpellbook(c, ctx = {}) {
         <div class="sb-list">${byLevel[lv].map(sp => {
           const dry = sp.level > 0 && ch.slots.some(n => n) && !ch.slots.some((n, i) => i + 1 >= sp.level && slotsLeft(ch, i + 1) > 0);
           return `<div class="sb-spell ${dry ? "dry" : ""}">
-            <div class="sb-text"><b>${esc(sp.name)}</b><small>${esc(spellTags(sp))}</small></div>
+            <div class="sb-text"><b>${esc(sp.name)}</b>${chipsHTML(spellChips(sp))}</div>
             <button class="icon-btn" data-sb-edit="${esc(sp.id)}" title="Retocar este conjuro en esta ficha" aria-label="Retocar el conjuro">${icon("pencil", 15)}</button>
             <button class="icon-btn" data-sb-remove="${esc(sp.id)}" title="Quitar de la lista" aria-label="Quitar de la lista">${icon("close", 15)}</button>
             <button class="btn sm primary" data-sb-cast="${esc(sp.id)}" ${dry ? "disabled" : ""}>${withIcon("wand", "Lanzar", 15)}</button>
@@ -142,7 +140,7 @@ function openLibrary(c, done, ctx = {}) {
       <div class="lib-row ${known.has(sp.id) ? "known" : ""}">
         <label class="lib-pick"><input type="checkbox" value="${sp.id}" ${known.has(sp.id) ? "checked disabled" : ""}>
         <span class="lv">${sp.level === 0 ? "T" : sp.level}</span>
-        <span class="sb-text"><b>${esc(sp.name)}${sp.edited ? ' <i class="lib-tag">retocado</i>' : sp.custom ? ' <i class="lib-tag own">propio</i>' : ""}</b><small>${esc(spellTags(sp))}</small></span></label>
+        <span class="sb-text"><b>${esc(sp.name)}${sp.edited ? ' <i class="lib-tag">retocado</i>' : sp.custom ? ' <i class="lib-tag own">propio</i>' : ""}</b>${chipsHTML(spellChips(sp))}</span></label>
         ${isDM ? `<button type="button" class="icon-btn" data-lib-edit="${esc(sp.id)}" title="Retocar en la biblioteca" aria-label="Retocar en la biblioteca">${icon("pencil", 15)}</button>` : ""}
       </div>`).join("") || `<p class="prose small"><span>Nada con ese nombre.</span></p>`;
   };
@@ -289,6 +287,7 @@ export function openCast(c, sp, ctx = {}) {
   const needsTarget = sp.mode !== "none";
 
   const body = el(`<div class="cast">
+    ${chipsHTML(spellChips(sp), "cast-chips")}
     <p class="cast-what">${esc(spellTags(sp))}${sp.mode === "save" ? ` · CD ${st.dc}` : sp.mode === "attack" ? ` · ${st.atk >= 0 ? "+" : ""}${st.atk} al ataque` : ""}</p>
     ${sp.desc ? `<p class="prose small"><span>${rollable(sp.desc, `${c.name} · ${sp.name}`)}</span></p>` : ""}
     ${levels.length ? `<label class="field"><span>Espacio</span><select id="castSlot">${levels.map(l =>

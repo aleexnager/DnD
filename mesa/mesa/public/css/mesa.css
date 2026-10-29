@@ -2968,3 +2968,30 @@ button.ac-shield:hover::before { background: var(--stone-2); }
 .mon-abil small { font-size: 11.5px; color: var(--parch-ink); opacity: .78; }
 .mon-abil small.prof { opacity: 1; font-weight: 700; color: var(--parch-head); }
 .mon-abil-key { display: flex; justify-content: flex-end; gap: 10px; font-size: 10px; font-style: italic; opacity: .6; margin: 1px 0 4px !important; }
+
+/* ---------- Indicadores de ataques y conjuros (chips.js) ----------
+   Una familia, un color: alcance en piedra, área en ámbar, tirada en dorado,
+   cura en verde, estado en arcano, invocación en turquesa y concentración en
+   azul. El icono dice qué es; el texto, cuánto. */
+.fx-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; min-width: 0; }
+.fx-chips.reach { justify-content: center; margin-top: 0; }
+.fx {
+  --fx: var(--dim);
+  display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px 0 5px;
+  border-radius: 999px; border: 1px solid color-mix(in srgb, var(--fx) 45%, transparent);
+  background: color-mix(in srgb, var(--fx) 12%, transparent); color: color-mix(in srgb, var(--fx) 80%, white);
+  font: 600 11px/1 var(--sans); letter-spacing: .01em; white-space: nowrap; cursor: help;
+  transition: background-color .15s ease, border-color .15s ease, transform .15s ease;
+}
+.fx .ico { flex: none; }
+.fx:hover { background: color-mix(in srgb, var(--fx) 22%, transparent); border-color: var(--fx); }
+.fx-reach { --fx: #a9b7c2; }
+.fx-area { --fx: var(--amber); }
+.fx-roll { --fx: var(--accent); }
+.fx-heal { --fx: var(--moss); }
+.fx-cond { --fx: var(--arcane); }
+.fx-summon { --fx: #3fb8a6; }
+.fx-conc { --fx: #6f9be0; }
+.cast-chips { margin: 0 0 6px; }
+.atk .fx-chips { margin-top: 5px; }
+.sb-text .fx-chips, .bd-spell-text .fx-chips { margin-top: 5px; }

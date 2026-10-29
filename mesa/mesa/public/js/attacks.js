@@ -11,6 +11,7 @@ import { acOf, normalizeAttack, modOf, parseAttackLine, canSneak, canSmite, snea
 import { critDamage } from "./attacks-core.js";
 import { keyMods } from "./dice-panel.js";
 import { icon } from "./icons.js";
+import { attackChips, chipsHTML } from "./chips.js";
 
 /* Todo lo que una ficha sabe hacer: lo que tenga guardado más lo que se pueda
    leer de sus acciones y de su lista de armas. */
@@ -32,8 +33,7 @@ export function attacksOf(c) {
 export const attackLabel = a => [
   a.save ? "CD " + a.save.split(" ")[1] : (a.atk >= 0 ? "+" : "") + a.atk,
   a.damage, a.type,
-  a.level ? "nivel " + a.level : "",
-  a.shape ? shapeLabel(a) : ""
+  a.level ? "nivel " + a.level : ""
 ].filter(Boolean).join(" · ");
 
 export const shapeLabel = a => ({
@@ -125,7 +125,7 @@ export function openAttacks(attacker, { targets = [], preselect = null, secret =
         const dry = left === 0;
         return `<button class="atk ${dry ? "dry" : ""}" data-i="${i}" ${dry ? "disabled" : ""}>
           <b>${esc(a.name)}</b>
-          <small>${esc(attackLabel(a))}${a.range ? " · " + esc(a.range) : ""}</small>
+          <small>${esc(attackLabel(a))}</small>${chipsHTML(attackChips(a))}
           ${left !== null ? `<span class="slots-left">${dry ? "sin espacios" : left + " de nivel " + a.level}</span>` : ""}
         </button>`;
       }).join("")}
