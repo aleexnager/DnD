@@ -1244,9 +1244,9 @@ body.screen { background: var(--pitch); overflow: hidden; }
 /* Entre medias, la fila entera cabe en una línea: botones y cantidad más justos
    (si no, el botón de apuntar se quedaba solo en una segunda fila) */
 @container (max-width: 520px) {
-  .dealer { gap: 4px; }
-  .dealer .btn { padding: 7px 8px; }
-  .dealer input { flex-basis: 44px; min-width: 44px; padding: 7px 4px; }
+  .card .dealer { gap: 4px; }
+  .card .dealer .btn { padding: 7px 8px; }
+  .card .dealer input { flex-basis: 44px; min-width: 44px; padding: 7px 4px; }
 }
 @container (max-width: 400px) {
   .dealer .btn .lbl { display: none; }
