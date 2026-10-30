@@ -1086,7 +1086,15 @@ const EN = {
   "Elemental": "Elemental", "Constructo": "Construct", "Cieno": "Ooze", "Planta": "Plant", "Celestial": "Celestial",
 
   /* La biblioteca del DM (el texto de los libros va en español) */
-  "Buscar en toda la biblioteca": "Search the whole library", "Añadir un documento o un cuaderno": "Add a document or a notebook",
+  "Buscar en toda la biblioteca": "Search the whole library",
+  "Enseñar a la party a quién se apunta al atacar (tú lo ves siempre)": "Show the party who is being targeted in an attack (you always see it)",
+  "Buscar por nombre (también en inglés) o escuela": "Search by name (Spanish or English) or school", "Todas las clases": "All classes",
+  "Control del campo": "Battlefield control", "Defensa y mejoras": "Defense and buffs", "Invocación": "Summoning",
+  "Información": "Information", "Utilidad": "Utility", "Curación": "Healing", "Movimiento": "Movement", "Categoría": "Category",
+  "Artífice": "Artificer", "Directo": "Direct", "PG temp.": "Temp HP", "Da puntos de golpe temporales": "Grants temporary hit points",
+  "Daño directo (tras impactar)": "Direct damage (after a hit)", "Ninguna": "None", "Puntos de golpe temporales": "Temporary hit points",
+  "Vida temporal: se gasta antes que la vida y no se suma a la máxima": "Temporary hit points: spent before hit points and not added to the maximum",
+  "Restar 1 de vida temporal": "Remove 1 temporary hit point", "Sumar 1 de vida temporal": "Add 1 temporary hit point", "Temp.": "Temp.",
   "Guardar la biblioteca": "Put the library away", "Reglas de D&D": "D&D Rules", "Ediciones, versiones y reglas para jugar": "Editions, versions and rules of play",
   "Manual del jugador": "Player's manual", "Clases, subclases, especies y trasfondos": "Classes, subclasses, species and backgrounds",
   "Compendio de conjuros": "Spell compendium", "Todos los conjuros por nivel": "Every spell, by level",
@@ -1319,7 +1327,8 @@ const SPELL_PARTS = [
   [/^salvación de (\S+) CD (\d+)$/, (m, a, dc) => `${ABIL_EN[a] || a} save DC ${dc}`],
   [/^(\d+) dardos que no fallan$/, "$1 darts that never miss"],
   [/^cura (.+)$/, "heals $1"],
-  [/^(\d+) puntos de sueño$/, "$1 points of sleep"]
+  [/^(\d+) puntos de sueño$/, "$1 points of sleep"],
+  [/^(\S+) de vida temporal$/, "$1 temporary hit points"]
 ];
 const PATTERNS = [
   /* La ficha de criatura de 2024 */
@@ -1425,11 +1434,29 @@ const PATTERNS = [
   [/^(\d+d\d+(?:[+-]\d+(?:d\d+)?)*)( .+)?$/, (m, d, t) => `${d}${dmgTail(t)}`],
   [/^(esfera|cono|línea|cubo) de (\d+) pies$/, (m, sh, n) => `${n}-foot ${SHAPE_EN[sh]}`],
   [/^(\d+) dardos$/, "$1 darts"],
+  /* Rasgos de clase del creador: «Crítico brutal (1 dado)», «Destruir muertos vivientes (VD 1/2)», listas con comas */
+  [/^Rasgo de (\S+) de nivel (\d+)\.$/, (m, c, n) => `${word(c[0].toUpperCase() + c.slice(1))} feature at level ${n}.`],
+  [/^([^(),]+) \((\d+) dados?\)$/, (m, f, n) => `${word(f)} (${n} ${n === "1" ? "die" : "dice"})`],
+  [/^([^(),]+) \(VD ([\d/]+)\)$/, (m, f, n) => `${word(f)} (CR ${n})`],
+  [/^([^(),]+) \(nivel (\d)\)$/, (m, f, n) => `${word(f)} (level ${n})`],
+  [/^([^(),]+) \((d\d+|\d+|\d+d\d+)\)$/, (m, f, d) => EN[f.trim()] ? `${word(f)} (${d})` : m],
+  /* Biblioteca de conjuros (filtros) y los modos de daño directo y vida temporal */
+  [/^Nv (\d)$/, "Lv $1"],
+  [/^(\d+) conjuros$/, "$1 spells"], [/^1 conjuro$/, "1 spell"],
+  [/^daño directo(?:, salvación de (FUE|DES|CON|INT|SAB|CAR))?$/, (m, a) => `direct damage${a ? `, ${SAVE_EN[a]} save` : ""}`],
+  [/^vida temporal (\S+)(?: \(\+(\S+) por nivel\))?$/, (m, f, up) => `temp HP ${f}${up ? ` (+${up} per level)` : ""}`],
+  [/^Directo · (FUE|DES|CON|INT|SAB|CAR)$/, (m, a) => `Direct · ${SAVE_EN[a]}`],
+  [/^El daño entra sin tirar \(se lanza tras impactar\)(?:; salvación de (\S+) para el estado)?$/,
+    (m, a) => `The damage lands without a roll (cast after a hit)${a ? `; ${ABIL_EN[a] || a} save against the condition` : ""}`],
+  [/^salvación de (Fuerza|Destreza|Constitución|Inteligencia|Sabiduría|Carisma) CD (\d+)$/, (m, a, dc) => `${ABIL_EN[a]} save DC ${dc}`],
+  [/^(.+?) gana (\d+) de vida temporal$/, "$1 gains $2 temporary hit points"],
   [/^cura (\S+)( \+ car\.)?$/, (m, d, mod) => `heals ${d}${mod ? " + mod" : ""}`],
   [/^sueño (\S+)$/, "sleep $1"],
   /* Lo que escribe el servidor al lanzar */
   [/^((?:(?! contra )[^:·])+): (salvación \d+|\d+) · (.+)$/,
     (m, who, first, rest) => `${who}: ${first.replace("salvación", "save")} · ${pieces(rest)}`],
+  [/^((?:(?! contra )[^:·])+): (\d+ de daño[^·]*(?: · .+)?)$/, (m, who, rest) => `${who}: ${pieces(rest)}`],
+  [/^((?:(?! contra )[^:·])+): sin efecto$/, "$1: no effect"],
   [/^(.+?) \((truco|nivel \d+)\)(?: sobre ([^:·]+))?(?:: (.+))?$/,
     (m, sp, l, on, rest) => `${word(sp)} (${level(l)})${on ? " on " + on : ""}${rest ? ": " + spellPart(rest) : ""}`],
   [/^(\d+) de daño( (?!y cae$)[^()]+?)?( \(la mitad si la supera\))?( y cae)?$/,
@@ -1553,7 +1580,10 @@ const PATTERNS = [
     .replace("· ¡CRÍTICO!", "· CRITICAL!").replace("· impacta", "· hits").replace("· falla", "· misses")
     .replace("· pifia", "· fumble").replace(/(\d+) de daño( [^\s·]+)?/, (m, n, t) => `${n} ${t ? word(t.trim()) + " " : ""}damage`)}`],
   /* «Engaño +4»: una habilidad o característica con su modificador */
-  [/^([^\d+−-][^+]*?) ([+-]\d+)$/, (m, what, mod) => EN[what.trim()] ? `${EN[what.trim()]} ${mod}` : m]
+  [/^([^\d+−-][^+]*?) ([+-]\d+)$/, (m, what, mod) => EN[what.trim()] ? `${EN[what.trim()]} ${mod}` : m],
+  /* Lo último: una lista con comas («Furia, Defensa sin armadura»), trozo a trozo,
+     solo si todos los trozos se traducen */
+  [/^[^,]+(?:, [^,]+)+$/, s => { const parts = s.split(", ").map(p => { const o = translateOne(p); return o && o !== p ? o : null; }); return parts.every(Boolean) ? parts.join(", ") : s; }]
 ];
 
 /* ---------- Aplicación ---------- */
@@ -1638,8 +1668,18 @@ function sweep(root) {
 
 /* Se vigila el documento entero: las ventanas y los avisos se cuelgan del
    body, no de la vista. */
+/* Los textos de los conjuros (casi 300 KB) y los rasgos de clase solo se cargan en inglés */
+let spellsEn = null;
+export function loadSpellTexts() {
+  if (lang !== "en") return Promise.resolve();
+  return spellsEn || (spellsEn = Promise.all([import("./libros/conjuros-en.js"), import("./libros/jugador-en.js")]).then(([c, j]) => {
+    for (const list of [c.CONJUROS_EN, j.JUGADOR_EN]) for (const [k, v] of Object.entries(list)) if (!EN[k]) EN[k] = v;
+    sweep(document.body);
+  }).catch(() => {}));
+}
 export function startI18n() {
   document.documentElement.lang = lang;
+  loadSpellTexts();
   observer = new MutationObserver(records => {
     if (working || lang === "es") return;
     for (const r of records) {
@@ -1664,3 +1704,5 @@ export function startI18n() {
 /* Para los textos que se arman en JavaScript y no llegan al DOM (avisos, el
    lienzo del mapa). */
 export const t = s => (lang === "en" && EN[s]) || s;
+/* Una línea entera como la traduce el documento (diccionario y patrones): para las pruebas */
+export const translateLine = s => lang === "en" ? (translateOne(String(s)) ?? s) : s;

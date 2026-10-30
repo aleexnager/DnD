@@ -23,7 +23,7 @@ test("la biblioteca tiene los 391 del Manual del Jugador, cada uno con clases y 
   const per = Array.from({ length: 10 }, (_, l) => SPELL_LIBRARY.filter(s => s.level === l).length);
   assert.deepEqual(per, [34, 64, 63, 52, 41, 48, 34, 21, 18, 16]);
   /* Los que no son del SRD también están */
-  for (const id of ["maleficio", "armadura-de-agathys", "doblar-por-los-muertos", "invocar-bestia", "golpe-atronador", "estatica-sinaptica"]) assert.ok(byId(id), id);
+  for (const id of ["maleficio", "armadura-de-agathys", "doblar-por-los-muertos", "invocar-bestia", "castigo-atronador", "estatica-sinaptica"]) assert.ok(byId(id), id);
   assert.ok(SPELL_CLASSES.get("palmada-atronadora").includes("Artífice"));
 });
 
@@ -44,7 +44,7 @@ test("cada conjuro cae al menos en una categoría, y las de daño, cura y estado
 });
 
 test("los datos de los conjuros nuevos coinciden con las reglas de 2024", () => {
-  const sp = byId("golpe-atronador");
+  const sp = byId("castigo-atronador");
   assert.deepEqual([sp.level, sp.mode, sp.damage, sp.type, sp.save, sp.cond, sp.upcast], [1, "hit", "2d6", "trueno", "str", "derribado", "1d6"]);
   const ss = byId("estatica-sinaptica");
   assert.deepEqual([ss.level, ss.mode, ss.save, ss.damage, ss.half, ss.shape, ss.size], [5, "save", "int", "8d6", true, "circle", 20]);
@@ -62,7 +62,7 @@ const pl2 = { id: "p2", name: "Mo", role: "player", charId: "pc2" };
 
 test("daño directo de un castigo y vida temporal, gastando el espacio", async () => {
   const eng = createEngine({ rid });
-  const smite = normalizeSpell({ ...byId("golpe-atronador"), id: "s1" });
+  const smite = normalizeSpell({ ...byId("castigo-atronador"), id: "s1" });
   const fv = normalizeSpell({ ...byId("falsa-vida"), id: "s2" });
   await eng.run(dm, [{ type: "char.add", chars: [
     { id: "pc1", kind: "pc", name: "Aria", claimedBy: "Lu", wis: 14, cha: 16, castAbility: "cha", slots: [2, 0, 0, 0, 0, 0, 0, 0, 0], spellbook: [smite, fv] },

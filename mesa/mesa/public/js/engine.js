@@ -492,16 +492,18 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
          salvación, el estado solo a quien la falle */
       head(`${sp.name} (${lvlText}): ${damage || "efecto"}${typeText}${sp.save ? ` · salvación de ${ABILITY_ES[sp.save] || "Destreza"} CD ${dc}` : ""}`);
       for (const t of targets) {
-        let text = t.name;
-        if (damage) { const d = rollT(damage); const r = hurt(t, d.total); text += `: ${d.total} de daño${typeText}${r.dropped ? " y cae" : ""}`; }
+        /* «Orco: salvación 12 · falla · 7 de daño trueno · queda derribado» */
+        const parts = [];
+        if (damage) { const d = rollT(damage); const r = hurt(t, d.total); parts.push(`${d.total} de daño${typeText}${r.dropped ? " y cae" : ""}`); }
+        let passed = false;
         if (sp.save) {
           const sv = rollSave(t, sp.save);
-          const passed = sv.total >= dc;
-          text += ` · salvación ${sv.total} · ${passed ? "la supera" : "falla"}`;
-          if (!passed && sp.cond) { setCondition(t, sp.cond, sp.condRounds); text += ` · queda ${sp.cond}`; }
-          if (!passed && sp.failText) text += ` · ${sp.failText}`;
-        } else if (sp.cond) { setCondition(t, sp.cond, sp.condRounds); text += ` · queda ${sp.cond}`; }
-        push({ kind: "event", secret, text });
+          passed = sv.total >= dc;
+          parts.unshift(`salvación ${sv.total}`, passed ? "la supera" : "falla");
+        }
+        if (!passed && sp.cond) { setCondition(t, sp.cond, sp.condRounds); parts.push(`queda ${sp.cond}`); }
+        if (!passed && sp.save && sp.failText) parts.push(sp.failText);
+        push({ kind: "event", secret, text: `${t.name}: ${parts.join(" · ") || "sin efecto"}` });
       }
     } else if (sp.mode === "temp") {
       const formula = addDice(sp.temp || "5", sp.upcast, extra) + (sp.healMod ? signed(mod) : "");
