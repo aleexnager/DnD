@@ -3476,3 +3476,7 @@ body.screen .dice3d-result small { font-size: 16px; }
   .lib-filter { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
   .lib-chip { flex: none; }
 }
+/* Una ventana nunca más ancha que la pantalla: un hijo que no parte línea
+   (los filtros en el móvil) la ensanchaba, porque en flex el mínimo es el
+   contenido. Lo que no cabe se desplaza dentro de su fila. */
+.modal, .modal-body, .lib { min-width: 0; }

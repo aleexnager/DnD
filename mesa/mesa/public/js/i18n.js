@@ -88,7 +88,7 @@ const EN = {
   "Salvación de concentración": "Concentration save", "Tirar iniciativa": "Roll initiative",
   "Sentidos": "Senses", "Idiomas": "Languages", "Resistencias": "Resistances", "Rasgos": "Traits",
   "Acciones": "Actions", "Ataques": "Attacks", "Conjuros": "Spells", "Equipo": "Inventory", "Notas": "Notes",
-  "Daño": "Damage", "Curación": "Healing", "Temp": "Temp", "CA": "AC", "Editar": "Edit",
+  "Daño": "Damage", "Curación": "Healing", "Temp": "Temp", "CA": "AC", "PV": "HP", "Editar": "Edit",
   "Te toca": "Your turn", "Es tu turno": "It's your turn", "ronda": "round", "Ronda": "Round",
   "turno de": "turn of", "después": "next", "después:": "next:",
   "Todavía no tienes personaje": "You don't have a character yet",
@@ -1088,13 +1088,13 @@ const EN = {
   /* La biblioteca del DM (el texto de los libros va en español) */
   "Buscar en toda la biblioteca": "Search the whole library",
   "Enseñar a la party a quién se apunta al atacar (tú lo ves siempre)": "Show the party who is being targeted in an attack (you always see it)",
-  "Buscar por nombre (también en inglés) o escuela": "Search by name (Spanish or English) or school", "Todas las clases": "All classes",
+  "Buscar por nombre (también en inglés) o escuela": "Search by name (Spanish or English) or school", "Todas las clases": "All classes", "Todos los niveles": "All levels",
   "Control del campo": "Battlefield control", "Defensa y mejoras": "Defense and buffs", "Invocación": "Summoning",
   "Información": "Information", "Utilidad": "Utility", "Curación": "Healing", "Movimiento": "Movement", "Categoría": "Category",
   "Artífice": "Artificer", "Directo": "Direct", "PG temp.": "Temp HP", "Da puntos de golpe temporales": "Grants temporary hit points",
   "Daño directo (tras impactar)": "Direct damage (after a hit)", "Ninguna": "None", "Puntos de golpe temporales": "Temporary hit points",
   "Vida temporal: se gasta antes que la vida y no se suma a la máxima": "Temporary hit points: spent before hit points and not added to the maximum",
-  "Restar 1 de vida temporal": "Remove 1 temporary hit point", "Sumar 1 de vida temporal": "Add 1 temporary hit point", "Temp.": "Temp.",
+  "Restar 1 de vida temporal": "Remove 1 temporary hit point", "Sumar 1 de vida temporal": "Add 1 temporary hit point",
   "Guardar la biblioteca": "Put the library away", "Reglas de D&D": "D&D Rules", "Ediciones, versiones y reglas para jugar": "Editions, versions and rules of play",
   "Manual del jugador": "Player's manual", "Clases, subclases, especies y trasfondos": "Classes, subclasses, species and backgrounds",
   "Compendio de conjuros": "Spell compendium", "Todos los conjuros por nivel": "Every spell, by level",
@@ -1429,6 +1429,7 @@ const PATTERNS = [
   [/^\(hasta (\d+)\)$/, "(up to $1)"],
   [/^No le quedan espacios de nivel (\d+)$/, "No level $1 slots left"],
   [/^CD (\d+)$/, "DC $1"],
+  [/^CD (\d+) (FUE|DES|CON|INT|SAB|CAR)$/, (m, dc, a) => `DC ${dc} ${SAVE_EN[a]}`],
   [/^([+-]\d+) al ataque$/, "$1 to hit"],
   [/^salvación de (FUE|DES|CON|INT|SAB|CAR)( \(mitad\))?$/, (m, a, h) => `${SAVE_EN[a]} save${h ? " (half)" : ""}`],
   [/^(\d+d\d+(?:[+-]\d+(?:d\d+)?)*)( .+)?$/, (m, d, t) => `${d}${dmgTail(t)}`],
@@ -1595,7 +1596,9 @@ function translate(text) {
   const raw = text.trim();
   if (!raw) return null;
   const whole = translateOne(raw);
-  if (whole !== null) return text.replace(raw, whole);
+  /* Si la «traducción» deja el texto igual no hay nada que hacer: devolverlo
+     haría que el observador lo reescribiera y se disparase otra vez, sin fin */
+  if (whole !== null && whole !== undefined && whole !== raw) return text.replace(raw, whole);
   /* Una lista en varias líneas (quién está conectado): línea a línea */
   if (raw.includes("\n")) {
     const lines = raw.split("\n").map(l => translate(l) ?? l);
@@ -1690,9 +1693,9 @@ export function startI18n() {
         if (out !== null && out !== undefined && out !== v) { working = true; r.target.setAttribute(r.attributeName, out); working = false; }
         continue;
       }
-      if (r.type === "characterData") { const out = translate(r.target.nodeValue); if (out !== null) { working = true; r.target.nodeValue = out; working = false; } }
+      if (r.type === "characterData") { const out = translate(r.target.nodeValue); if (out !== null && out !== r.target.nodeValue) { working = true; r.target.nodeValue = out; working = false; } }
       for (const node of r.addedNodes) {
-        if (node.nodeType === 3) { const out = translate(node.nodeValue); if (out !== null) { working = true; node.nodeValue = out; working = false; } }
+        if (node.nodeType === 3) { const out = translate(node.nodeValue); if (out !== null && out !== node.nodeValue) { working = true; node.nodeValue = out; working = false; } }
         else if (node.nodeType === 1) sweep(node);
       }
     }

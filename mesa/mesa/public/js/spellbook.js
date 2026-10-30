@@ -149,7 +149,7 @@ export function openLibrary(c, done, ctx = {}) {
       <input type="search" id="libSearch" placeholder="Buscar por nombre (también en inglés) o escuela" aria-label="Buscar conjuro">
       <select id="libClass" aria-label="Clase"><option value="">Todas las clases</option>${[...new Set(Object.values(CLS))].sort((a, b) => a.localeCompare(b, "es")).map(k => `<option value="${k}">${k}</option>`).join("")}</select>
     </div>
-    ${chipRow("level", [["", "Todos"], ["0", "Trucos"], ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => [String(n), "Nv " + n])], "Nivel")}
+    ${chipRow("level", [["", "Todos los niveles"], ["0", "Trucos"], ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => [String(n), "Nv " + n])], "Nivel")}
     ${chipRow("cat", [["", "Todo"], ...SPELL_CATS], "Categoría")}
     <p class="lib-count" id="libCount" aria-live="polite"></p>
     <div class="lib-list" id="libList"></div>
