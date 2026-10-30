@@ -68,3 +68,55 @@ test("los datos son coherentes con el resto de la aplicación", () => {
   assert.deepEqual(STANDARD_ARRAY, [15, 14, 13, 12, 10, 8]);
   assert.equal(POINT_COST[15] * 3 + POINT_COST[8] * 3, POINTS);      // tres 15 y tres 8 gastan justo los 27
 });
+
+/* ---------- Personajes de nivel alto ---------- */
+import { slotsFor, spellPicks, spellOptions, asiLevels, subclassOf, classFeaturesUpTo, maxSpellLevel } from "../public/js/creador-datos.js";
+const base15 = { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 };
+
+test("nivel alto: vida media por nivel, competencia, dados de golpe y espacios", () => {
+  const ch = buildCharacter({ classId: "guerrero", speciesId: "humano", bgId: "soldado", level: 9, base: base15, asi: [["str", "str"], ["con", "dex"], ["str", "con"]] });
+  assert.equal(ch.level, 9);
+  assert.equal(ch.proficiency, 4);
+  assert.equal(ch.hitDice, "9d10");
+  /* Humano +1 a todo: FUE 16 +2 +1 = 19; CON 14 +1 +1 = 16 (+3) */
+  assert.equal(ch.str, 19);
+  assert.equal(ch.con, 16);
+  assert.equal(ch.maxHp, 10 + 3 + 8 * (6 + 3));
+  assert.deepEqual(asiLevels(CLASSES.find(c => c.id === "guerrero"), 9), [4, 6, 8], "el guerrero tiene mejoras de más");
+  assert.equal(ch.subclass, "Campeón");
+  assert.ok(ch.features.some(f => f.name === "Crítico mejorado"));
+  assert.equal(ch.attacks.find(a => a.name === "Espada larga").atk, 4 + 4, "FUE +4 y la competencia de su nivel, +4");
+});
+
+test("las tablas de espacios: completo, medio lanzador y pacto del brujo", () => {
+  const C = id => CLASSES.find(c => c.id === id);
+  assert.deepEqual(slotsFor(C("mago"), 20), [4, 3, 3, 3, 3, 2, 2, 1, 1]);
+  assert.deepEqual(slotsFor(C("paladin"), 1), [2, 0, 0, 0, 0, 0, 0, 0, 0], "en 2024 el paladín lanza desde nivel 1");
+  assert.deepEqual(slotsFor(C("paladin"), 9), [4, 3, 2, 0, 0, 0, 0, 0, 0]);
+  assert.deepEqual(slotsFor(C("brujo"), 11), [0, 0, 0, 0, 3, 0, 0, 0, 0]);
+  assert.deepEqual(slotsFor(C("picaro"), 20), [0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  assert.equal(maxSpellLevel(C("mago"), 5), 3);
+  assert.equal(spellPicks(C("mago"), 1), 3 + 4);
+  assert.equal(spellPicks(C("mago"), 10), 5 + 15);
+  assert.ok(spellOptions(C("mago"), 9).some(s => s.level === 5), "a nivel 9 ya elige de nivel 5");
+  assert.ok(spellOptions(C("mago"), 1).every(s => s.level <= 1));
+});
+
+test("la mejora no pasa de 20 y los rasgos no se repiten", () => {
+  const ch = buildCharacter({ classId: "mago", speciesId: "elfo", bgId: "sabio", level: 20, base: { str: 8, dex: 14, con: 13, int: 15, wis: 12, cha: 10 },
+    asi: Array.from({ length: 5 }, () => ["int", "int"]) });
+  assert.equal(ch.int, 20);
+  const names = ch.features.filter(f => f.source === "Clase").map(f => f.name);
+  assert.equal(new Set(names).size, names.length);
+  const mago = CLASSES.find(c => c.id === "mago");
+  assert.equal(subclassOf(mago).name, "Escuela de evocación");
+  assert.ok(classFeaturesUpTo(mago, 20).some(f => f.name === "Sobrecarga"), "trae los rasgos de la subclase hasta su nivel");
+});
+
+test("nivel 1 sigue igual que antes", () => {
+  const ch = buildCharacter({ classId: "mago", speciesId: "humano", bgId: "sabio", base: base15 });
+  assert.equal(ch.level, 1);
+  assert.equal(ch.proficiency, 2);
+  assert.equal(ch.subclass, "");
+  assert.deepEqual(ch.slots, [2, 0, 0, 0, 0, 0, 0, 0, 0]);
+});

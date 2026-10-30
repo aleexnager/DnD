@@ -125,7 +125,9 @@ export function openSpellbook(c, ctx = {}) {
 /* ---------- La biblioteca ----------
    La de serie con los retoques del DM. Cualquiera añade de aquí a su ficha;
    solo el DM retoca, crea o restaura los de la biblioteca. */
-function openLibrary(c, done, ctx = {}) {
+/* ctx.onPick: en vez de guardarlos en la ficha, se los da a quien los pide
+   (la hoja de personaje, que guarda todo junto al final) */
+export function openLibrary(c, done, ctx = {}) {
   const known = new Set(c.spellbook.map(s => s.id));
   let query = "";
   const isDM = !!ctx.isDM;
@@ -162,6 +164,7 @@ function openLibrary(c, done, ctx = {}) {
         const ids = [...host.querySelectorAll("input[type=checkbox]:checked:not([disabled])")].map(i => i.value);
         if (!ids.length) return;
         const add = all().filter(sp => ids.includes(sp.id)).map(sp => normalizeSpell(sp));
+        if (ctx.onPick) { ctx.onPick(add); done && done(); return; }
         patchChar(c.id, { spellbook: [...c.spellbook, ...add], castAbility: c.castAbility || guessAbility(c.className) });
         toast(add.length === 1 ? `${add[0].name} añadido` : `${add.length} conjuros añadidos`, "good");
         done && done();

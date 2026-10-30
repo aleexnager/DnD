@@ -11,7 +11,8 @@ import { acOf, normalizeAttack, modOf, parseAttackLine, canSneak, canSmite, snea
 import { critDamage } from "./attacks-core.js";
 import { keyMods } from "./dice-panel.js";
 import { icon } from "./icons.js";
-import { attackChips, chipsHTML } from "./chips.js";
+import { attackChips, spellChips, chipsHTML } from "./chips.js";
+import { openCast } from "./spellbook.js";
 
 /* Todo lo que una ficha sabe hacer: lo que tenga guardado más lo que se pueda
    leer de sus acciones y de su lista de armas. */
@@ -52,6 +53,13 @@ export function slotsLeft(c, attack) {
   return Math.max(0, (c.slots[i] || 0) - (c.slotsUsed[i] || 0));
 }
 
+/* Para un conjuro: los espacios que quedan de su nivel o mayores (null si la
+   ficha no lleva espacios apuntados, como muchos monstruos) */
+export function spellSlotsLeft(c, level) {
+  if (!(c.slots || []).some(n => n)) return null;
+  return c.slots.reduce((n, total, i) => n + (i + 1 >= level ? Math.max(0, total - (c.slotsUsed[i] || 0)) : 0), 0);
+}
+
 /* Se gasta al lanzarlo. Si no queda ninguno, no se lanza. */
 function spendSlot(c, attack) {
   const left = slotsLeft(c, attack);
@@ -83,9 +91,14 @@ export function resolveAttack({ attacker, attack, target, mode = "normal", secre
 }
 
 /* ---------- Ventana de ataque ---------- */
-export function openAttacks(attacker, { targets = [], preselect = null, secret = false } = {}) {
+/* Los conjuros que sirven para atacar: también salen en la ventana de atacar */
+export const combatSpells = c => (c.spellbook || []).filter(sp => ["attack", "save", "auto", "sleep"].includes(sp.mode))
+  .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name, "es"));
+
+export function openAttacks(attacker, { targets = [], preselect = null, secret = false, spellCtx = null } = {}) {
   const list = attacksOf(attacker);
-  if (!list.length) {
+  const spells = spellCtx ? combatSpells(attacker) : [];
+  if (!list.length && !spells.length) {
     toast(`${attacker.name} no tiene ningún ataque apuntado. Añádelo en su ficha.`, "bad");
     return;
   }
@@ -130,6 +143,16 @@ export function openAttacks(attacker, { targets = [], preselect = null, secret =
         </button>`;
       }).join("")}
     </div>
+    ${spells.length ? `<h4 class="menu-sec atk-sec">${icon("wand", 14)}<span>Conjuros</span></h4>
+    <div class="atk-list">${spells.map(sp => {
+      const left = sp.level ? spellSlotsLeft(attacker, sp.level) : null;
+      const dry = left === 0;
+      return `<button class="atk spell ${dry ? "dry" : ""}" data-sp="${esc(sp.id)}" ${dry ? "disabled" : ""}>
+        <b>${esc(sp.name)}</b><small>${esc([sp.level ? "nivel " + sp.level : "truco", sp.damage ? `${sp.mode === "auto" ? sp.darts + "×" : ""}${sp.damage} ${sp.type}`.trim() : ""].filter(Boolean).join(" · "))}</small>
+        ${chipsHTML(spellChips(sp))}
+        ${left !== null ? `<span class="slots-left">${dry ? "sin espacios" : left + " de nivel " + sp.level + " o más"}</span>` : ""}
+      </button>`;
+    }).join("")}</div>` : ""}
   </div>`);
 
   const m = modal({ title: "Ataques de " + attacker.name, body, wide: true, actions: [{ label: "Cerrar" }] });
@@ -137,6 +160,13 @@ export function openAttacks(attacker, { targets = [], preselect = null, secret =
   on(body, "click", "[data-m]", (e, b) => {
     mode = b.dataset.m;
     body.querySelectorAll("[data-m]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  });
+  /* Un conjuro se lanza en su ventana, con el objetivo de aquí ya marcado */
+  on(body, "click", "[data-sp]", (e, b) => {
+    const sp = spells.find(x => x.id === b.dataset.sp);
+    if (!sp) return;
+    m.close();
+    openCast(attacker, sp, { ...spellCtx, preselect: s => targetId ? [targetId] : (spellCtx.preselect ? spellCtx.preselect(s) : []) });
   });
   on(body, "click", "[data-i]", (e, b) => {
     const target = targets.find(t => t.id === targetId) || null;

@@ -88,10 +88,10 @@ export function toast(message, tone = "") {
 }
 
 /* ---------- Ventanas ---------- */
-export function modal({ title, body, actions = [], wide = false, onOpen, onClose }) {
+export function modal({ title, body, actions = [], wide = false, cls = "", onOpen, onClose }) {
   const back = el(`
     <div class="modal-back">
-      <div class="modal ${wide ? "wide" : ""}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <div class="modal ${wide ? "wide" : ""} ${cls}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
         <header><h2>${esc(title)}</h2><button class="icon-btn" data-close aria-label="Cerrar">${icon("close")}</button></header>
         <div class="modal-body"></div>
         <footer></footer>

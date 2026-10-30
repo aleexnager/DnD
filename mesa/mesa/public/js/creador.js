@@ -10,9 +10,9 @@ import { op, uploadImage, store } from "./net.js";
 import { reachableCells, fits } from "./los.js";
 import { icon, withIcon } from "./icons.js";
 import { spellChips, chipsHTML } from "./chips.js";
-import { SPELL_LIBRARY } from "./spells.js";
 import { CLASSES, SPECIES, BACKGROUNDS, STANDARD_ARRAY, POINT_COST, POINTS, ALIGNMENTS, ARMOR, WEAPONS,
-  ABIL_KEYS, finalScores, armorClass, buildCharacter, randomChoice } from "./creador-datos.js";
+  ABIL_KEYS, finalScores, armorClass, buildCharacter, randomChoice,
+  MAX_LEVEL, asiLevels, subclassOf, classFeaturesUpTo, spellPicks, spellOptions, maxSpellLevel } from "./creador-datos.js";
 
 const ABIL = { str: "Fuerza", dex: "Destreza", con: "Constitución", int: "Inteligencia", wis: "Sabiduría", cha: "Carisma" };
 const ABBR = { str: "FUE", dex: "DES", con: "CON", int: "INT", wis: "SAB", cha: "CAR" };
@@ -56,6 +56,7 @@ export function openBuilder({ onManual, place = false } = {}) {
     classId: "", classSkills: [], speciesId: "", free: [], extraSkills: [],
     method: "estandar", assign: {}, points: Object.fromEntries(ABIL_KEYS.map(k => [k, 8])), rolls: [], manual: Object.fromEntries(ABIL_KEYS.map(k => [k, 10])),
     bgId: "", bgSkills: [], spells: [], spellsFor: "",
+    level: 1, asi: [], subclass: "",
     name: "", alignment: "", color: "", avatarId: "", player: ""
   };
   const cls = () => CLASSES.find(c => c.id === st.classId);
@@ -81,7 +82,18 @@ export function openBuilder({ onManual, place = false } = {}) {
   const spent = () => ABIL_KEYS.reduce((s, k) => s + POINT_COST[st.points[k]], 0);
   const choice = () => ({ name: st.name, classId: st.classId, speciesId: st.speciesId, bgId: st.bgId, base: base(), free: st.free,
     skills: [...st.classSkills, ...st.bgSkills, ...st.extraSkills], spells: st.spells, alignment: st.alignment,
-    color: st.color, avatarId: st.avatarId, player: st.player });
+    color: st.color, avatarId: st.avatarId, player: st.player, level: st.level, asi: asiPairs(), subclass: st.subclass });
+  /* Una mejora por cada nivel que la da: por defecto, a lo que más pide la clase */
+  const asiPairs = () => { const c = cls(); return c ? asiLevels(c, st.level).map((_, i) => st.asi[i] || [c.primary[0], c.primary[0]]) : []; };
+  const picks = () => { const c = cls(); return c ? spellPicks(c, st.level) : 0; };
+  const options = () => { const c = cls(); return c ? spellOptions(c, st.level) : []; };
+  /* Al cambiar de clase o de nivel, los conjuros elegidos que ya no caben se quitan */
+  const fitSpells = (fresh = false) => {
+    const c = cls();
+    if (!c || !c.caster) { st.spells = []; return; }
+    const ok = new Set(options().map(s => s.id));
+    st.spells = (fresh ? [...(c.spells || []), ...options().map(s => s.id)] : st.spells).filter((id, i, a) => ok.has(id) && a.indexOf(id) === i).slice(0, fresh ? Math.min(picks(), (c.spells || []).length + (st.level > 1 ? picks() : 0)) : picks());
+  };
 
   /* Qué falta en cada paso (vacío: se puede seguir) */
   const missing = step => {
@@ -107,7 +119,7 @@ export function openBuilder({ onManual, place = false } = {}) {
       const n = bgPicks() - st.bgSkills.length;
       if (n > 0) return `Elige ${n} habilidad${n > 1 ? "es" : ""} más de tu trasfondo`;
     }
-    if (step === "conjuros" && c && c.pick && st.spells.length < 1) return "Elige al menos un conjuro";
+    if (step === "conjuros" && c && c.caster && st.spells.length < 1) return "Elige al menos un conjuro";
     if (step === "ficha" && !st.name.trim()) return "Ponle nombre a tu personaje";
     return "";
   };
@@ -139,7 +151,22 @@ export function openBuilder({ onManual, place = false } = {}) {
           ${hero(c)}
           ${facts([["Dado de golpe", "d" + c.die], ["Característica principal", c.primary.map(k => `<span>${ABIL[k]}</span>`).join(" <span>o</span> ")],
             ["Salvaciones", c.saves.map(k => `<span>${ABIL[k]}</span>`).join(" <span>y</span> ")], ["Armaduras", esc(c.armor)]])}
+          <div class="bd-level">
+            <span class="bd-level-label"><b>Nivel inicial</b><small>Del 1 al 20: vida, competencia, rasgos, mejoras y conjuros se calculan para ese nivel.</small></span>
+            <div class="bd-stepper"><button type="button" data-lv="-1" aria-label="Bajar de nivel" ${st.level <= 1 ? "disabled" : ""}>−</button>
+              <b class="tnum">${st.level}</b><button type="button" data-lv="1" aria-label="Subir de nivel" ${st.level >= MAX_LEVEL ? "disabled" : ""}>+</button></div>
+          </div>
           <h4 class="bd-sub">Rasgos de nivel 1</h4>${traitList(c.features)}
+          ${st.level > 1 ? (() => {
+            const gained = classFeaturesUpTo(c, st.level, { subclass: !st.subclass || st.subclass === subclassOf(c).name });
+            const sub = subclassOf(c), asis = asiLevels(c, st.level);
+            return `${sub && st.level >= sub.level ? `<label class="field bd-subclass"><span>Subclase (llega a nivel ${sub.level})</span>
+                <input data-sub value="${esc(st.subclass || sub.name)}" maxlength="60">
+                <small>La del SRD trae sus rasgos; si escribes otra, la llevas sin rasgos automáticos y los apuntas en la ficha.</small></label>` : ""}
+              <h4 class="bd-sub">Lo que gana hasta el nivel ${st.level}</h4>
+              <ul class="bd-traits bd-gains">${gained.map(f => `<li><b><i class="tnum">${f.level}</i> ${esc(f.name)}</b><span>${esc(f.text)}</span></li>`).join("")}
+                ${asis.map(L => `<li><b><i class="tnum">${L}</i> Mejora de característica</b><span>La repartes en el paso de características.</span></li>`).join("")}</ul>`;
+          })() : ""}
           <h4 class="bd-sub">Habilidades · elige ${c.choose} <span class="bd-count">${st.classSkills.length}/${c.choose}</span></h4>
           ${skillChips(c.from, st.classSkills, c.choose, "cskill")}`
           : `<div class="bd-empty">${icon("user", 28)}<p>Elige una clase para ver qué la hace especial.</p></div>`}
@@ -164,6 +191,7 @@ export function openBuilder({ onManual, place = false } = {}) {
     },
     caracteristicas() {
       const b = base(), fin = finalScores(choice()), s = sp(), c = cls();
+      const asiBonus = k => asiPairs().flat().filter(x => x === k).length;
       const pool = st.method === "dados" ? st.rolls : STANDARD_ARRAY;
       const used = Object.values(st.assign);
       const box = k => {
@@ -182,7 +210,7 @@ export function openBuilder({ onManual, place = false } = {}) {
         return `<div class="bd-abil ${c && c.primary.includes(k) ? "primary" : ""}">
           <span class="bd-abil-name">${ABIL[k]}</span>
           ${input}
-          <span class="bd-abil-bonus">${bonus ? `${ABBR[k]} +${bonus} por especie` : "Sin bonificador"}</span>
+          <span class="bd-abil-bonus">${bonus ? `${ABBR[k]} +${bonus} por especie` : "Sin bonificador"}${asiBonus(k) ? ` · +${asiBonus(k)} por mejoras` : ""}</span>
           <span class="bd-abil-total"><b class="tnum">${ready ? fin[k] : "—"}</b><small class="tnum">${ready ? sign(modOf(fin[k])) : ""}</small></span>
         </div>`;
       };
@@ -200,6 +228,13 @@ export function openBuilder({ onManual, place = false } = {}) {
         ${st.method === "dados" ? `<div class="bd-rolls"><button type="button" class="btn sm" data-roll>${withIcon("dice", st.rolls.length ? "Volver a tirar" : "Tirar los dados", 15)}</button>
           ${st.rolls.map(v => `<span class="bd-roll tnum">${v}</span>`).join("")}</div>` : ""}
         <div class="bd-abils">${ABIL_KEYS.map(box).join("")}</div>
+        ${c && asiLevels(c, st.level).length ? `<h4 class="bd-sub">Mejoras de característica</h4>
+          <p class="bd-note"><span>En cada una, +1 a dos características o +2 a una (elige la misma dos veces). Ninguna pasa de 20.</span></p>
+          <div class="bd-asi">${asiLevels(c, st.level).map((L, i) => {
+            const pair = asiPairs()[i];
+            const sel = j => `<select data-asi="${i}" data-j="${j}" aria-label="Mejora del nivel ${L}">${ABIL_KEYS.map(k => `<option value="${k}" ${pair[j] === k ? "selected" : ""}>${ABIL[k]} +1</option>`).join("")}</select>`;
+            return `<div class="bd-asi-row"><b>Nivel ${L}</b>${sel(0)}${sel(1)}</div>`;
+          }).join("")}</div>` : ""}
       </div>`;
     },
     trasfondo() {
@@ -220,13 +255,13 @@ export function openBuilder({ onManual, place = false } = {}) {
     },
     conjuros() {
       const c = cls();
-      const list = c.spells.map(id => SPELL_LIBRARY.find(s => s.id === id)).filter(Boolean);
+      const list = options(), max = picks();
       return `<div class="bd-col">
-        <p class="bd-note"><span>Elige hasta</span> <b>${c.pick}</b> <span>conjuros para empezar. Luego puedes cambiarlos desde «Conjuros» en la ficha.</span>
-          <span class="bd-count">${st.spells.length}/${c.pick}</span></p>
+        <p class="bd-note"><span>Elige hasta</span> <b>${max}</b> <span>trucos y conjuros preparados${st.level > 1 ? ` de nivel ${st.level}, hasta conjuros de nivel ${maxSpellLevel(c, st.level)}` : ""}. Luego puedes cambiarlos desde «Conjuros» en la ficha.</span>
+          <span class="bd-count">${st.spells.length}/${max}</span></p>
         <div class="bd-spells">${list.map(s => {
           const on = st.spells.includes(s.id);
-          return `<button type="button" class="bd-spell ${on ? "on" : ""}" data-spell="${s.id}" aria-pressed="${on}" ${!on && st.spells.length >= c.pick ? "disabled" : ""}>
+          return `<button type="button" class="bd-spell ${on ? "on" : ""}" data-spell="${s.id}" aria-pressed="${on}" ${!on && st.spells.length >= max ? "disabled" : ""}>
             <span class="bd-spell-lv">${s.level ? s.level + "º" : "T"}</span>
             <span class="bd-spell-text"><b>${esc(s.name)}</b>${spellChips(s).length ? chipsHTML(spellChips(s)) : `<small>${esc(s.desc)}</small>`}</span>
             <span class="bd-check">${on ? icon("check", 16) : ""}</span></button>`;
@@ -275,7 +310,7 @@ export function openBuilder({ onManual, place = false } = {}) {
         <aside class="bd-summary" style="--tone:${esc(color)}">
           <div class="bd-sum-head">
             ${st.avatarId ? `<img class="avatar" src="${imgURL(st.avatarId)}" alt="">` : `<span class="avatar" style="--tone:${esc(color)}">${initials(st.name || "?")}</span>`}
-            <div><b>${esc(st.name || "Sin nombre")}</b><small>${esc(c.name)} · ${esc(s.name)} · nivel 1</small></div>
+            <div><b>${esc(st.name || "Sin nombre")}</b><small>${esc(c.name)} · ${esc(s.name)} · nivel ${st.level}${ch.subclass ? " · " + esc(ch.subclass) : ""}</small></div>
           </div>
           <div class="bd-statline">
             <span class="bd-stat"><small>PG</small><b class="tnum">${ch.hp}</b></span>
@@ -342,7 +377,9 @@ export function openBuilder({ onManual, place = false } = {}) {
     if ("close" in d) return askClose();
     if ("random" in d) {
       /* Todo elegido de golpe; se va al resumen, que se puede retocar paso a paso */
-      Object.assign(st, randomChoice().state, { avatarId: st.avatarId, player: st.player });
+      const keep = { avatarId: st.avatarId, player: st.player, level: st.level };
+      Object.assign(st, randomChoice().state, keep, { asi: [], subclass: "" });
+      if (st.level > 1) { const pool = options().map(s => s.id).sort(() => Math.random() - .5); st.spells = pool.slice(0, picks()); }
       for (const k of steps()) st.seen.add(k);
       return go("ficha");
     }
@@ -356,10 +393,14 @@ export function openBuilder({ onManual, place = false } = {}) {
     }
     if (d.class) {
       if (d.class !== st.classId) {
-        st.classId = d.class; st.classSkills = [];
-        const c = cls();
-        if (c.spells && st.spellsFor !== c.id) { st.spells = c.spells.slice(0, c.pick); st.spellsFor = c.id; }
+        st.classId = d.class; st.classSkills = []; st.asi = []; st.subclass = "";
+        if (st.spellsFor !== d.class) { fitSpells(true); st.spellsFor = d.class; }
       }
+      return paint(true);
+    }
+    if (d.lv) {
+      st.level = Math.max(1, Math.min(MAX_LEVEL, st.level + Number(d.lv)));
+      fitSpells(st.spells.length === 0);
       return paint(true);
     }
     if (d.cskill) { st.classSkills = toggle(st.classSkills, d.cskill, cls().choose); st.bgSkills = []; return paint(true); }
@@ -382,13 +423,19 @@ export function openBuilder({ onManual, place = false } = {}) {
     }
     if (d.bg) { if (d.bg !== st.bgId) { st.bgId = d.bg; st.bgSkills = []; } return paint(true); }
     if (d.bskill) { st.bgSkills = toggle(st.bgSkills, d.bskill, bgPicks()); return paint(true); }
-    if (d.spell) { st.spells = toggle(st.spells, d.spell, cls().pick); return paint(true); }
+    if (d.spell) { st.spells = toggle(st.spells, d.spell, picks()); return paint(true); }
     if ("portrait" in d) return back.querySelector("[data-portrait-file]").click();
   });
   back.addEventListener("change", async e => {
     const t = e.target, d = t.dataset;
     if (d.assign) { const v = t.value === "" ? undefined : Number(t.value); st.assign = { ...st.assign, [d.assign]: v }; if (v === undefined) delete st.assign[d.assign]; return paint(true); }
     if (d.manual) { st.manual = { ...st.manual, [d.manual]: Math.trunc(Number(t.value) || 0) }; return paint(true); }
+    if (d.asi !== undefined) {
+      const pairs = asiPairs().map(p => p.slice());
+      pairs[+d.asi][+d.j] = t.value;
+      st.asi = pairs;
+      return paint(true);
+    }
     if (d.f === "alignment" || d.f === "color") { st[d.f] = t.value; return paint(true); }
     if ("portraitFile" in d && t.files[0]) {
       try {
@@ -400,6 +447,7 @@ export function openBuilder({ onManual, place = false } = {}) {
   });
   back.addEventListener("input", e => {
     const d = e.target.dataset;
+    if ("sub" in d) { const sub = cls() && subclassOf(cls()); st.subclass = e.target.value.trim() === (sub && sub.name) ? "" : e.target.value.trim(); return; }
     if (d.f === "name" || d.f === "player") {
       st[d.f] = e.target.value;
       const why = missing(st.step);

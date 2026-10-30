@@ -84,8 +84,20 @@ const CHAR_DEFAULTS = {
   spellbook: [],        // conjuros que conoce, ya listos para lanzar
   castAbility: "",      // característica de lanzamiento (int, wis, cha)
   spellDC: 0,           // CD fija (0 = 8 + competencia + característica)
-  spellAtk: 0           // ataque fijo (0 = competencia + característica)
+  spellAtk: 0,          // ataque fijo (0 = competencia + característica)
+  /* La hoja de 2024: lo que trae la hoja oficial y Mesa no tenía */
+  subclass: "",
+  shieldOn: false,      // lleva escudo (el rombo de la CA)
+  armorTraining: [],    // light, medium, heavy, shields
+  weaponProf: "", toolProf: "",
+  appearance: "", backstory: "",
+  attune: ["", "", ""], // objetos mágicos sintonizados
+  coins: { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 }
 };
+export const ARMOR_TRAINING = [["light", "Ligeras"], ["medium", "Medias"], ["heavy", "Pesadas"], ["shields", "Escudos"]];
+export const COINS = [["cp", "PC", "cobre"], ["sp", "PP", "plata"], ["ep", "PE", "electro"], ["gp", "PO", "oro"], ["pp", "PPT", "platino"]];
+/* Competencia por nivel (2024): +2 hasta el 4, +3 hasta el 8… */
+export const profForLevel = lv => 2 + Math.floor((clamp(Math.trunc(+lv || 1), 1, 20) - 1) / 4);
 
 /* Cuántas casillas ocupa cada tamaño, como en el manual: lo diminuto y lo
    pequeño comparten casilla con lo mediano, y de ahí para arriba el cuadrado
@@ -164,6 +176,12 @@ export function normalizeChar(raw = {}) {
   c.buffs = Array.isArray(c.buffs) ? c.buffs.map(normalizeBuff).filter(x => x.name).slice(0, 12) : [];
   fromText(c);
   c.castAbility = ["int", "wis", "cha"].includes(c.castAbility) ? c.castAbility : "";
+  c.shieldOn = !!c.shieldOn;
+  c.armorTraining = Array.isArray(c.armorTraining) ? c.armorTraining.filter(k => ARMOR_TRAINING.some(([id]) => id === k)) : [];
+  for (const k of ["subclass", "weaponProf", "toolProf", "appearance", "backstory", "languages", "alignment"]) c[k] = String(c[k] ?? "").slice(0, k === "backstory" || k === "appearance" ? 4000 : 400);
+  c.attune = [0, 1, 2].map(i => String((Array.isArray(c.attune) ? c.attune[i] : "") || "").slice(0, 80));
+  const coins = c.coins && typeof c.coins === "object" ? c.coins : {};
+  c.coins = Object.fromEntries(COINS.map(([k]) => [k, clamp(Math.trunc(num(coins[k])), 0, 9999999)]));
   c.spellDC = clamp(Math.trunc(num(c.spellDC)), 0, 30);
   c.spellAtk = clamp(Math.trunc(num(c.spellAtk)), 0, 20);
   c.condMeta = c.condMeta && typeof c.condMeta === "object" && !Array.isArray(c.condMeta) ? { ...c.condMeta } : {};

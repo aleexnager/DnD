@@ -5,6 +5,7 @@
 import { ambientToggle } from "./ambient.js";
 import { $, esc, pct, hpTone, initials, imgURL, hpBar, tweenBars, reducedMotion } from "./util.js";
 import { store, onState, onStatus, leave } from "./net.js";
+import { startDice3D } from "./dice3d.js";
 import { conditionName, acOf, acParts } from "./schema.js";
 import { MapView } from "./map.js";
 import { icon } from "./icons.js";
@@ -45,6 +46,7 @@ export function mountScreen(root) {
 
   mapView = new MapView($("#scanvas", root), { mode: "party" });
   onState(render);
+  startDice3D({ role: "screen" });
   onStatus(ok => $("#sdot", root).classList.toggle("off", !ok));
   $("#slang", root).appendChild(langPicker());
   $("#stour", root).replaceWith(tourButton("screen"));

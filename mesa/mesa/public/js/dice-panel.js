@@ -4,12 +4,17 @@
 
 import { el, on, esc, hhmm, toast, modal } from "./util.js";
 import { icon, withIcon } from "./icons.js";
-import { roll, detail } from "./dice.js";
+import { roll, detail, diceOf } from "./dice.js";
 import { store, addLog, op } from "./net.js";
 import { withBuffs } from "./schema.js";
 
 let mode = "normal";
 let secret = false;
+/* El DM puede pedir que las tiradas de los jugadores no le salten en su
+   pantalla con los dados en 3D (siguen en la tele y en el registro) */
+let quiet = false;
+try { quiet = localStorage.getItem("mesa.dice3d.quiet") === "1"; } catch {}
+export const isQuiet = () => quiet;
 let filter = "todo";
 let whisperTo = [];      // identificadores de ficha, y "dm" para el máster
 
@@ -54,7 +59,8 @@ export function throwDice(formula, { label = "", mode: m = mode, secret: s = fal
     detail: detail(result),
     crit: result.crit,
     fumble: result.fumble,
-    secret: !!s
+    secret: !!s,
+    dice: diceOf(result)
   });
   return result;
 }
@@ -105,6 +111,9 @@ export function dicePanel({ isDM = false } = {}) {
         <p class="hint-keys"><kbd>Mayús</kbd> <span>ventaja</span> · <kbd>Ctrl</kbd> <span>desventaja</span> · <kbd>Alt</kbd> <span>${isDM ? "en secreto" : "solo al DM"}</span></p>
         ${isDM ? `<button class="secret-toggle" data-secret aria-pressed="false" title="En secreto: nadie más lo ve">
           ${icon("eyeOff", 16)}<span class="secret-text"><b>Tirada secreta</b><small>Solo la ves tú</small></span>
+          <span class="switch"><i></i></span></button>
+        <button class="secret-toggle" data-quiet aria-pressed="${quiet}" title="Los dados 3D de los jugadores solo salen en la pantalla de la mesa">
+          ${icon("tv", 16)}<span class="secret-text"><b>Dados de los jugadores solo en la tele</b><small>No te saltan en tu pantalla</small></span>
           <span class="switch"><i></i></span></button>` : ""}
       </div>
       <form class="dice-form">
@@ -171,6 +180,12 @@ export function dicePanel({ isDM = false } = {}) {
     renderLog(node.querySelector("#log"), { toEnd: true });
   });
 
+  const quietBtn = node.querySelector("[data-quiet]");
+  if (quietBtn) quietBtn.addEventListener("click", () => {
+    quiet = !quiet;
+    quietBtn.setAttribute("aria-pressed", String(quiet));
+    try { localStorage.setItem("mesa.dice3d.quiet", quiet ? "1" : "0"); } catch {}
+  });
   const secretBtn = node.querySelector("[data-secret]");
   if (secretBtn) secretBtn.addEventListener("click", () => {
     secret = !secret;
