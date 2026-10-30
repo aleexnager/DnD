@@ -78,7 +78,7 @@ const EN = {
   "Oculto para la party": "Hidden from the party", "Visible para la party": "Visible to the party",
   "Restar vida": "Take hit points", "Curar": "Heal", "Vida temporal": "Temporary hit points",
   "Restar vida (1 si no pones cantidad)": "Take hit points (1 if no amount)", "Curar (1 si no pones cantidad)": "Heal (1 if no amount)",
-  "Estados": "Conditions", "Atacar": "Attack", "Apuntar con los ataques": "Target with attacks",
+  "Estados": "Conditions", "Atacar": "Attack", "Apuntar con los ataques": "Target with attacks", "Dejar de apuntarle": "Stop targeting",
   "Tirar un ataque": "Roll an attack", "Iniciativa": "Initiative", "Velocidad": "Speed",
   "Concentrado en": "Concentrating on", "Agotamiento": "Exhaustion", "Inspiración": "Inspiration",
   "En el mapa": "On the map", "Tirar la salvación de concentración": "Roll the concentration save",
@@ -1330,6 +1330,12 @@ const SPELL_PARTS = [
   [/^(\d+) puntos de sueño$/, "$1 points of sleep"],
   [/^(\S+) de vida temporal$/, "$1 temporary hit points"]
 ];
+/* Un nombre en una línea: si es una criatura del bestiario (con o sin
+   número, «Hongo chillón 2»), en inglés; los de los personajes, tal cual */
+const nm = w => {
+  const k = String(w).trim(), m = /^(.+?) (\d{1,3})$/.exec(k);
+  return EN[k] || (m && EN[m[1]] ? `${EN[m[1]]} ${m[2]}` : w);
+};
 const PATTERNS = [
   /* La ficha de criatura de 2024 */
   [/^(\S+) \(([\d.,]+) PX; BC ([+−-]\d+)\)$/, "$1 (XP $2; PB $3)"],
@@ -1455,26 +1461,26 @@ const PATTERNS = [
   [/^sueño (\S+)$/, "sleep $1"],
   /* Lo que escribe el servidor al lanzar */
   [/^((?:(?! contra )[^:·])+): (salvación \d+|\d+) · (.+)$/,
-    (m, who, first, rest) => `${who}: ${first.replace("salvación", "save")} · ${pieces(rest)}`],
-  [/^((?:(?! contra )[^:·])+): (\d+ de daño[^·]*(?: · .+)?)$/, (m, who, rest) => `${who}: ${pieces(rest)}`],
+    (m, who, first, rest) => `${nm(who)}: ${first.replace("salvación", "save")} · ${pieces(rest)}`],
+  [/^((?:(?! contra )[^:·])+): (\d+ de daño[^·]*(?: · .+)?)$/, (m, who, rest) => `${nm(who)}: ${pieces(rest)}`],
   [/^((?:(?! contra )[^:·])+): sin efecto$/, "$1: no effect"],
   [/^(.+?) \((truco|nivel \d+)\)(?: sobre ([^:·]+))?(?:: (.+))?$/,
-    (m, sp, l, on, rest) => `${word(sp)} (${level(l)})${on ? " on " + on : ""}${rest ? ": " + spellPart(rest) : ""}`],
+    (m, sp, l, on, rest) => `${word(sp)} (${level(l)})${on ? " on " + nm(on) : ""}${rest ? ": " + spellPart(rest) : ""}`],
   [/^(\d+) de daño( (?!y cae$)[^()]+?)?( \(la mitad si la supera\))?( y cae)?$/,
     (m, n, t, half, down) => `${n} ${dmgTail(t).trim() ? dmgTail(t).trim() + " " : ""}damage${half ? " (half on a success)" : ""}${down ? " and goes down" : ""}`],
   [/^(.+?): (\d+) de daño( (?!y cae$)[^()]+?)?( y cae)?$/,
-    (m, who, n, t, down) => `${who}: ${n} ${dmgTail(t).trim() ? dmgTail(t).trim() + " " : ""}damage${down ? " and goes down" : ""}`],
-  [/^(.+?): salvación (\d+)$/, "$1: save $2"],
+    (m, who, n, t, down) => `${nm(who)}: ${n} ${dmgTail(t).trim() ? dmgTail(t).trim() + " " : ""}damage${down ? " and goes down" : ""}`],
+  [/^(.+?): salvación (\d+)$/, (m, who, n) => `${nm(who)}: save ${n}`],
   [/^(.+?): salvación (\d+) \((la supera|falla)\) · recibe (\d+) de daño( y cae)?$/,
-    (m, who, n, r, d, down) => `${who}: save ${n} (${r === "falla" ? "fails" : "succeeds"}) · takes ${d} damage${down ? " and goes down" : ""}`],
+    (m, who, n, r, d, down) => `${nm(who)}: save ${n} (${r === "falla" ? "fails" : "succeeds"}) · takes ${d} damage${down ? " and goes down" : ""}`],
   [/^(.+?): salvación de (\S+) CD (\d+)(?: para (.+?))?(?: · (\d+) de daño(.*))?$/,
     (m, atk, a, dc, tgt, d, t) => `${word(atk)}: ${ABIL_EN[a] || SAVE_EN[a] || a} save DC ${dc}${tgt ? " for " + tgt : ""}${d ? ` · ${d}${dmgTail(t)} damage` : ""}`],
   [/^la supera$/, "succeeds"], [/^falla$/, "fails"], [/^impacta$/, "hits"], [/^pifia$/, "fumble"], [/^¡CRÍTICO!$/, "CRITICAL!"],
   [/^queda (.+)$/, (m, c) => `now ${word(c)}`],
-  [/^(.+?) resiste el sueño$/, "$1 resists the sleep"],
-  [/^(.+?) se duerme$/, "$1 falls asleep"],
-  [/^(.+?) se concentra en (.+)$/, (m, who, sp) => `${who} concentrates on ${word(sp)}`],
-  [/^(.+?) deja de concentrarse en (.+)$/, (m, who, sp) => `${who} stops concentrating on ${word(sp)}`],
+  [/^(.+?) resiste el sueño$/, (m, who) => `${nm(who)} resists the sleep`],
+  [/^(.+?) se duerme$/, (m, who) => `${nm(who)} falls asleep`],
+  [/^(.+?) se concentra en (.+)$/, (m, who, sp) => `${nm(who)} concentrates on ${word(sp)}`],
+  [/^(.+?) deja de concentrarse en (.+)$/, (m, who, sp) => `${nm(who)} stops concentrating on ${word(sp)}`],
   [/^Concentrado en ([^·]+)$/, (m, sp) => `Concentrating on ${word(sp.trim())}`],
   /* Voz */
   [/^(.+): conectando…$/, "$1: connecting…"],
@@ -1487,7 +1493,7 @@ const PATTERNS = [
   [/^nivel (\d+)$/i, "level $1"],
   /* «Pícara Elfa nivel 3»: clase y especie sueltas y el nivel al final */
   [/^(.+?) nivel (\d+)$/i, (m, who, n) => `${who.split(" ").map(w => word(w)).join(" ")} level ${n}`],
-  [/^Turno de ([^·]+)$/, "$1's turn"],
+  [/^Turno de ([^·]+)$/, (m, who) => `${nm(who)}'s turn`],
   [/^después ([^·]+)$/, "next $1"],
   [/^Concentrado en ([^·]+)$/, "Concentrating on $1"],
   [/^le habéis hecho (\d+) de daño$/, "you've dealt $1 damage"],
@@ -1496,7 +1502,7 @@ const PATTERNS = [
   [/^Ronda (\d+) · le toca a$/i, "Round $1 · up now"],
   [/^(\d+) en pie$/, "$1 standing"],
   [/^¿Expulsar a (.+)\? Su aparato vuelve a la entrada\.( Cierra la mesa si no quieres que vuelva a entrar\.)?$/,
-    (m, who, tail) => `Kick ${who} out? Their device goes back to the entrance.${tail ? " Close the table if you don't want them back." : ""}`],
+    (m, who, tail) => `Kick ${nm(who)} out? Their device goes back to the entrance.${tail ? " Close the table if you don't want them back." : ""}`],
   [/^(.+) ha salido de la mesa$/, "$1 has left the table"],
   [/^Le toca a$/, "Up now:"],
   [/^Lleva a (.+)$/, "Plays $1"], [/^Llevaba a (.+)$/, "Played $1"],
@@ -1543,7 +1549,7 @@ const PATTERNS = [
   [/^(\d+) enemigos?$/, (m, n) => `${n} ${n === "1" ? "enemy" : "enemies"}`],
 
   /* Menús y títulos con un nombre dentro */
-  [/^Atacar con (.+)$/, "Attack with $1"],
+  [/^Atacar con (.+)$/, (m, who) => `Attack with ${translateOne(who) ?? who}`],
   [/^Ajustes de (.+)$/, "$1 · settings"],
   [/^La cámara sigue a (.+)$/, "The camera follows $1"],
   [/^La cámara de la party sigue a (.+)$/, "The party camera now follows $1"],
@@ -1556,15 +1562,15 @@ const PATTERNS = [
 
   /* Lo que escribe el servidor en el registro */
   [/^(.+?) recibe (\d+) de daño(?: \((.+?)\))?( y cae| y vuelve en sí)?$/,
-    (m, who, n, note, tail) => `${who} takes ${n} damage${note ? " (" + note + ")" : ""}${tail === " y cae" ? " and goes down" : ""}`],
+    (m, who, n, note, tail) => `${nm(who)} takes ${n} damage${note ? " (" + note + ")" : ""}${tail === " y cae" ? " and goes down" : ""}`],
   [/^(.+?) recupera (\d+) de vida(?: \((.+?)\))?( y vuelve en sí)?$/,
-    (m, who, n, note, tail) => `${who} regains ${n} hit points${note ? " (" + note + ")" : ""}${tail ? " and comes round" : ""}`],
+    (m, who, n, note, tail) => `${nm(who)} regains ${n} hit points${note ? " (" + note + ")" : ""}${tail ? " and comes round" : ""}`],
   [/^(.+?) gana (\d+) de vida temporal$/, "$1 gains $2 temporary hit points"],
   [/^(.+?) tiene que superar una salvación de Constitución CD (\d+) o pierde la concentración en (.+)$/,
     "$1 must make a DC $2 Constitution save or lose concentration on $3"],
   [/^(.+?): se le pasa (.+)$/, "$1: $2 wears off"],
   [/^(.+?) cruzan? por (.+)$/, (m, who, p) => `${who.replace(/ y ([^,]+)$/, " and $1")} go${/ y [^,]+$/.test(who) ? "" : "es"} through ${word(p)}`],
-  [/^(.+) está en (.+), que lleva a (.+)\.$/, (m, who, p, to) => `${who} is on ${p}, which leads to ${to === "otro punto de este mapa" ? "another spot on this map" : to === "otro mapa" ? "another map" : to}.`],
+  [/^(.+) está en (.+), que lleva a (.+)\.$/, (m, who, p, to) => `${nm(who)} is on ${p}, which leads to ${to === "otro punto de este mapa" ? "another spot on this map" : to === "otro mapa" ? "another map" : to}.`],
   [/^¿Quién va con (.+)\?$/, "Who goes with $1?"],
   [/^Sala (\d+): pinta a trazos, todo es la misma sala\. Empieza dentro de otra para seguirla, o pulsa «Sala» otra vez para una nueva$/,
     "Room $1: paint in strokes, it's all one room. Start inside another to continue it, or press “Room” again for a new one"],
@@ -1576,12 +1582,14 @@ const PATTERNS = [
   [/^(.+?) retrasa su turno$/, "$1 delays their turn"],
   [/^La party toma un descanso (corto|largo)$/, (m, k) => `The party takes a ${k === "corto" ? "short" : "long"} rest`],
   [/^(.+?) pierde la concentración$/, "$1 loses concentration"],
-  [/^(.+?) (cae|encaja el golpe)$/, (m, who, v) => `${who} ${v === "cae" ? "goes down" : "takes the hit"}`],
-  [/^(.+?) contra (.+?): (\d+)( · .+)?$/, (m, atk, tgt, n, tail) => `${word(atk)} against ${tgt}: ${n}${(tail || "")
+  [/^(.+?) (cae|encaja el golpe)$/, (m, who, v) => `${nm(who)} ${v === "cae" ? "goes down" : "takes the hit"}`],
+  [/^(.+?) contra (.+?): (\d+)( · .+)?$/, (m, atk, tgt, n, tail) => `${word(atk)} against ${nm(tgt)}: ${n}${(tail || "")
     .replace("· ¡CRÍTICO!", "· CRITICAL!").replace("· impacta", "· hits").replace("· falla", "· misses")
     .replace("· pifia", "· fumble").replace(/(\d+) de daño( [^\s·]+)?/, (m, n, t) => `${n} ${t ? word(t.trim()) + " " : ""}damage`)}`],
   /* «Engaño +4»: una habilidad o característica con su modificador */
   [/^([^\d+−-][^+]*?) ([+-]\d+)$/, (m, what, mod) => EN[what.trim()] ? `${EN[what.trim()]} ${mod}` : m],
+  /* Una criatura del bestiario con su número al ponerla en el mapa: «Hongo chillón 2» */
+  [/^(.+?) (\d{1,3})$/, (m, name, n) => EN[name.trim()] ? `${EN[name.trim()]} ${n}` : m],
   /* Lo último: una lista con comas («Furia, Defensa sin armadura»), trozo a trozo,
      solo si todos los trozos se traducen */
   [/^[^,]+(?:, [^,]+)+$/, s => { const parts = s.split(", ").map(p => { const o = translateOne(p); return o && o !== p ? o : null; }); return parts.every(Boolean) ? parts.join(", ") : s; }]

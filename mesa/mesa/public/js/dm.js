@@ -1577,11 +1577,11 @@ function placeTokenMenu() {
     const bar = tokenPop.node.querySelector(".tk-id .bar i");
     if (bar) { bar.style.width = pct(c) + "%"; bar.className = hpTone(pct(c)); }
     const acb = tokenPop.node.querySelector(".tk-ac b");
-    if (acb) acb.textContent = acOf(c);
+    if (acb && !(tokenPop.acLocal && Date.now() - tokenPop.acLocal.t < 1500)) acb.textContent = acOf(c);
     const hpb = tokenPop.node.querySelector(".tk-hp b");
-    if (hpb) hpb.textContent = c.hp;
-    const thb = tokenPop.node.querySelector(".tk-thp b");
-    if (thb) thb.textContent = c.tempHp || 0;
+    /* Si se acaba de pulsar, manda la cuenta del globo hasta que la partida la alcance */
+    const L = tokenPop.hpLocal && Date.now() - tokenPop.hpLocal.t < 1500 ? tokenPop.hpLocal : null;
+    if (hpb && !L) { hpb.textContent = c.hp + (c.tempHp || 0); hpb.classList.toggle("over", c.tempHp > 0); }
   }
   const n = tokenPop.node, w = n.offsetWidth, h = n.offsetHeight, gap = 10, pad = 8;
   const minX = Math.max(pad, at.board.left + pad), maxX = Math.min(innerWidth - pad, at.board.right - pad);
@@ -1615,17 +1615,11 @@ function tokenMenu(id) {
       </div>
     </div>
     <div class="tk-quick">
-      <div class="tk-hp" title="Vida: cada toque resta o suma 1">
+      <div class="tk-hp" title="Vida: cada toque resta o suma 1. Por encima del máximo, el + da vida temporal; el − gasta antes la temporal">
         <span>PV</span>
         <button type="button" class="btn sm bad" data-tkq="dmg" aria-label="Restar 1 de vida">−</button>
-        <b class="tnum">${c.hp}</b>
+        <b class="tnum ${c.tempHp > 0 ? "over" : ""}">${c.hp + (c.tempHp || 0)}</b>
         <button type="button" class="btn sm good" data-tkq="heal" aria-label="Sumar 1 de vida">+</button>
-      </div>
-      <div class="tk-thp" title="Vida temporal: se gasta antes que la vida y no se suma a la máxima">
-        <span>Temp.</span>
-        <button type="button" class="btn sm" data-tkq="thpDown" aria-label="Restar 1 de vida temporal">−</button>
-        <b class="tnum">${c.tempHp || 0}</b>
-        <button type="button" class="btn sm" data-tkq="thpUp" aria-label="Sumar 1 de vida temporal">+</button>
       </div>
       <div class="tk-ac" title="CA temporal: Escudo, cobertura…">
         <span>CA</span>
@@ -1671,24 +1665,28 @@ function tokenMenu(id) {
     const now = byId(id);
     if (!now) return;
     const what = b.dataset.tkq;
+    /* La vida del globo es la total (vida + temporal), como la CA: el +
+       cura hasta el máximo y, ya lleno, suma vida temporal; el − es daño, que
+       gasta antes la temporal y luego la vida. Mientras se pulsa, el globo
+       lleva su propia cuenta (la partida tarda un instante en contestar) */
     if (what === "dmg" || what === "heal") {
+      const L = tokenPop.hpLocal && Date.now() - tokenPop.hpLocal.t < 1500 ? tokenPop.hpLocal : { hp: now.hp, temp: now.tempHp || 0 };
+      if (what === "dmg") {
+        if (L.hp + L.temp <= 0) return;
+        op("hp.apply", { id, damage: 1 });
+        if (L.temp > 0) L.temp--; else L.hp--;
+      } else if (L.hp < now.maxHp) { op("hp.apply", { id, heal: 1 }); L.hp++; }
+      else { if (L.temp >= 999) return; L.temp++; patchChar(id, { tempHp: L.temp }); }
+      tokenPop.hpLocal = { ...L, t: Date.now() };
       const shown = node.querySelector(".tk-hp b");
-      const cur = +shown.textContent;
-      if (what === "heal" && cur >= now.maxHp) return;
-      if (what === "dmg" && cur <= 0) return;
-      op("hp.apply", { id, [what === "dmg" ? "damage" : "heal"]: 1 });
-      shown.textContent = Math.max(0, Math.min(now.maxHp, cur + (what === "dmg" ? -1 : 1)));
+      shown.textContent = L.hp + L.temp;
+      shown.classList.toggle("over", L.temp > 0);
       return;
     }
-    if (what === "thpUp" || what === "thpDown") {
-      const shown = node.querySelector(".tk-thp b");
-      const next = Math.max(0, Math.min(999, (+shown.textContent || 0) + (what === "thpUp" ? 1 : -1)));
-      if (next === +shown.textContent) return;
-      patchChar(id, { tempHp: next });
-      shown.textContent = next;
-      return;
-    }
-    const next = Math.max(-20, Math.min(30, (now.tempAc || 0) + (what === "acUp" ? 1 : -1)));
+    /* Igual que la vida: el globo lleva la cuenta mientras se pulsa seguido */
+    const base = tokenPop.acLocal && Date.now() - tokenPop.acLocal.t < 1500 ? tokenPop.acLocal.v : (now.tempAc || 0);
+    const next = Math.max(-20, Math.min(30, base + (what === "acUp" ? 1 : -1)));
+    tokenPop.acLocal = { v: next, t: Date.now() };
     patchChar(id, { tempAc: next });
     node.querySelector(".tk-ac b").textContent = (now.ac || 0) + next;
   });

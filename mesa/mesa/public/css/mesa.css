@@ -1979,6 +1979,10 @@ button.st-pill:hover { background: var(--accent-wash); border-color: var(--accen
 .sound-edit input[type=range] { accent-color: var(--accent); padding: 0; }
 
 /* ---------- Creador de personajes ---------- */
+/* Las ventanas que se abren con el creador delante (la confirmación de
+   salir, una imagen…) van encima de él: antes quedaban detrás, invisibles, y
+   el creador parecía no cerrarse */
+.builder-back ~ .modal-back { z-index: 75; }
 .builder-back {
   position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 16px;
   background: rgba(4, 5, 8, .82); backdrop-filter: blur(6px); animation: fadeIn .16s ease both;
@@ -2941,9 +2945,8 @@ button.ac-shield { cursor: pointer; font: inherit; color: inherit; }
 .tk-hp .btn.bad { color: #f0b6b7; border-color: rgba(184, 56, 59, .5); }
 .tk-hp .btn.good { color: #9fe0aa; border-color: rgba(79, 157, 93, .5); }
 .tk-quick { flex-wrap: wrap; row-gap: 6px; }
-.tk-thp { display: flex; gap: 4px; align-items: center; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; order: 3; }
-.tk-thp b { min-width: 24px; text-align: center; font-size: 15px; color: #a9d4ff; }
-.tk-thp .btn { min-width: 32px; height: 32px; padding: 0 8px; justify-content: center; color: #a9d4ff; border-color: rgba(111, 182, 255, .45); }
+/* Por encima del máximo (vida temporal), el número en azul */
+.tk-hp b.over { color: #a9d4ff; }
 .tk-ac { display: flex; gap: 4px; align-items: center; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; }
 .tk-ac b { min-width: 24px; text-align: center; font-size: 15px; color: var(--vellum); }
 /* La party del jugador: cada fila abre la ficha (la de otro, en solo lectura) */
