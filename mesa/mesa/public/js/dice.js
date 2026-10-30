@@ -70,6 +70,30 @@ export function roll(formula, mode = "normal") {
   };
 }
 
+/* Los dados de una tirada, uno a uno, para la animación de dados en 3D:
+   { f: caras, v: lo que sacó, x: descartado (ventaja o desventaja) }.
+   Como mucho 30: más no caben en la pantalla. */
+export const DIE_FACES = [4, 6, 8, 10, 12, 20, 100];
+export function diceOf(result) {
+  const out = [];
+  for (const p of (result && result.parts) || []) {
+    if (p.kind !== "dice" || !DIE_FACES.includes(p.faces)) continue;
+    const dropped = [...p.dropped];
+    for (const v of p.rolls) {
+      const i = dropped.indexOf(v);
+      const x = i >= 0 && p.kept.filter(k => k === v).length < p.rolls.filter(r => r === v).length;
+      if (x) dropped.splice(i, 1);
+      out.push(x ? { f: p.faces, v, x: true } : { f: p.faces, v });
+      if (out.length >= 30) return out;
+    }
+  }
+  return out;
+}
+/* Lo que llega de un aparato se limpia antes de guardarlo */
+export const cleanDice = list => (Array.isArray(list) ? list : []).slice(0, 30)
+  .filter(d => d && DIE_FACES.includes(+d.f) && Number.isInteger(+d.v) && +d.v >= 1 && +d.v <= +d.f)
+  .map(d => d.x ? { f: +d.f, v: +d.v, x: true } : { f: +d.f, v: +d.v });
+
 /* Texto corto para el registro: "1d20+5 → 14 + 5" */
 export function detail(result) {
   return result.parts.map(p => {

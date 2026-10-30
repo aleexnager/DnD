@@ -13,7 +13,7 @@
 
 import { acOf, normalizeSpell, normalizeLibraryItem, MAX_LIBRARY, emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier, withBuffs, canSneak, canSmite, sneakDice, smiteDice, smiteFoe } from "./schema.js";
 import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells, partyRoomFrame } from "./los.js";
-import { roll, detail } from "./dice.js";
+import { roll, detail, diceOf, cleanDice } from "./dice.js";
 import { cutWalls, doorAt } from "./freewalls.js";
 import { critDamage } from "./attacks-core.js";
 import { soundsHeard, listenersFor } from "./sound-core.js";
@@ -303,8 +303,25 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
      puesta. Al jugador no se le enseña la CA ni la vida de nadie: solo lo que
      ha pasado. */
   const ABILITY_ES = { str: "Fuerza", dex: "Destreza", con: "Constitución", int: "Inteligencia", wis: "Sabiduría", cha: "Carisma" };
+  /* Los dados que salen mientras se resuelve un ataque o un conjuro se
+     guardan con su entrada del registro, para la animación de dados 3D */
+  let rollBag = null;
+  const rollT = (formula, mode) => { const r = roll(formula, mode); if (r && rollBag) rollBag.push(...diceOf(r)); return r; };
+  function withDice(client, fn) {
+    const before = doc.log.length;
+    rollBag = [];
+    let res;
+    try { res = fn(); } finally {
+      const fresh = doc.log.slice(before);
+      fresh.forEach(e => { e.by = client.role; });
+      const head = fresh.find(e => e.kind === "attack") || fresh[0];
+      if (!res && head && rollBag.length) head.dice = rollBag.slice(0, 30);
+      rollBag = null;
+    }
+    return res;
+  }
   /* Las salvaciones de los objetivos llevan sus efectos (Bendecir, Perdición…) */
-  const rollSave = (c, ability) => roll(withBuffs(c, "save", "1d20" + signed(modOf(c[ability]) + ((c.saves || []).includes(ability) ? (c.proficiency || 2) : 0))).formula);
+  const rollSave = (c, ability) => rollT(withBuffs(c, "save", "1d20" + signed(modOf(c[ability]) + ((c.saves || []).includes(ability) ? (c.proficiency || 2) : 0))).formula);
   const signed = n => (n >= 0 ? "+" : "") + n;
   const concentrationNote = (c, dc, push) => push({ kind: "event",
     text: `${c.name} tiene que superar una salvación de Constitución CD ${dc} o pierde la concentración en ${c.concentration}` });
@@ -424,11 +441,11 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       head(`${sp.name} (${lvlText}): ${rays > 1 ? rays + " ataques" : "ataque"} de conjuro ${signed(atkBonus)}`);
       for (let i = 0; i < rays; i++) {
         const t = targets[i % targets.length];
-        const atk = roll(withBuffs(caster, "attack", "1d20" + signed(atkBonus)).formula, op.mode === "adv" || op.mode === "dis" ? op.mode : "normal");
+        const atk = rollT(withBuffs(caster, "attack", "1d20" + signed(atkBonus)).formula, op.mode === "adv" || op.mode === "dis" ? op.mode : "normal");
         const hit = atk.crit || (!atk.fumble && atk.total >= (acOf(t) || 10));
         let text = `${t.name}: ${atk.total}${atk.crit ? " · ¡CRÍTICO!" : atk.fumble ? " · pifia" : hit ? " · impacta" : " · falla"}`;
         if (hit && damage) {
-          const d = roll(atk.crit ? critDamage(damage) : damage);
+          const d = rollT(atk.crit ? critDamage(damage) : damage);
           const r = hurt(t, d.total);
           text += ` · ${d.total} de daño${typeText}${r.dropped ? " y cae" : ""}`;
         }
@@ -437,7 +454,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       }
     } else if (sp.mode === "save") {
       /* Un solo dado de daño para todos, como manda el reglamento */
-      const d = damage ? roll(damage) : null;
+      const d = damage ? rollT(damage) : null;
       head(`${sp.name} (${lvlText}): salvación de ${ABILITY_ES[sp.save] || "Destreza"} CD ${dc}` +
         (d ? ` · ${d.total} de daño${typeText}${sp.half ? " (la mitad si la supera)" : ""}` : ""),
         d ? { total: d.total, detail: detail(d) } : {});
@@ -459,7 +476,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       const per = new Map();
       for (let i = 0; i < darts; i++) {
         const t = targets[i % targets.length];
-        per.set(t, (per.get(t) || 0) + roll(sp.damage || "1d4+1").total);
+        per.set(t, (per.get(t) || 0) + rollT(sp.damage || "1d4+1").total);
       }
       for (const [t, amount] of per) {
         const r = hurt(t, amount);
@@ -469,12 +486,12 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       const formula = addDice(sp.heal || "1d8", sp.upcast, extra) + (sp.healMod ? signed(mod) : "");
       head(`${sp.name} (${lvlText}): cura ${formula}`);
       for (const t of targets) {
-        const h = roll(formula);
+        const h = rollT(formula);
         const r = applyHp(t, { heal: Math.max(1, h.total) });
         push({ kind: "event", secret, text: `${t.name} recupera ${r.delta} de vida${r.revived ? " y vuelve en sí" : ""}`, detail: detail(h) });
       }
     } else if (sp.mode === "sleep") {
-      const pool = roll(damage || "5d8");
+      const pool = rollT(damage || "5d8");
       head(`${sp.name} (${lvlText}): ${pool.total} puntos de sueño`, { total: pool.total, detail: detail(pool) });
       let left = pool.total;
       for (const t of [...targets].filter(t => t.hp > 0 && !t.conditions.includes("inconsciente")).sort((a, b) => a.hp - b.hp)) {
@@ -503,7 +520,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
     if (a.save) {
       const [ability, dcText] = a.save.split(" ");
       const dc = Number(dcText) || 10;
-      const dmg = a.damage ? roll(a.damage) : null;
+      const dmg = a.damage ? rollT(a.damage) : null;
       push({
         kind: "attack", secret, label: `${attacker.name} · ${a.name}`,
         text: `${a.name}: salvación de ${ABILITY_ES[ability] || ability.toUpperCase()} CD ${dc}${target ? " para " + target.name : ""}` +
@@ -523,7 +540,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
     }
 
     const toHit = withBuffs(attacker, "attack", "1d20" + (a.atk >= 0 ? "+" : "") + a.atk);
-    const atk = roll(toHit.formula, mode);
+    const atk = rollT(toHit.formula, mode);
     if (!atk) return "Ese ataque no tiene una fórmula válida";
     const ac = target ? acOf(target) : null;
     /* Sin objetivo no se sabe si entra: se tira el daño igual, para quien lo quiera */
@@ -549,8 +566,8 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       } else extras.push(`sin espacios de nivel ${smiteSlot} para el castigo`);
     }
     const free = String(ex.extra || "").replace(/\s+/g, "").slice(0, 24);
-    if (lands && free && roll(free)) { formula += (/^[+-]/.test(free) ? "" : "+") + free; extras.push("daño extra " + free); }
-    const dmg = lands && formula ? roll(atk.crit ? critDamage(formula) : formula) : null;
+    if (lands && free && rollT(free)) { formula += (/^[+-]/.test(free) ? "" : "+") + free; extras.push("daño extra " + free); }
+    const dmg = lands && formula ? rollT(atk.crit ? critDamage(formula) : formula) : null;
     const notes = [...toHit.names.filter(n => !dmgBuffs.includes(n)), ...dmgBuffs, ...extras];
 
     /* Al jugador no se le dice la CA, solo si ha entrado o no. */
@@ -797,7 +814,8 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         doc.bestiary = (Array.isArray(op.list) ? op.list : []).map(normalizeBeast);
         break;
       case "log.add": {
-        const entry = { ...op.entry, id: rid(6), ts: Date.now(), actor: client.name };
+        const entry = { ...op.entry, id: rid(6), ts: Date.now(), actor: client.name, by: client.role };
+        if ("dice" in entry) entry.dice = cleanDice(entry.dice);
         /* Un jugador no tira en secreto para nadie: lo que tira «al DM» lo
            ven el DM y él, como un susurro */
         if (!dm && entry.secret && entry.kind === "roll" && client.role === "player") {
@@ -813,9 +831,9 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         doc.log = [];
         break;
       case "spell.cast":
-        return castSpell(client, op);
+        return withDice(client, () => castSpell(client, op));
       case "attack.resolve":
-        return resolveAttack(client, op);
+        return withDice(client, () => resolveAttack(client, op));
 
       case "hp.apply": {
         const c = findChar(op.id);

@@ -509,6 +509,10 @@ const EN = {
   "Lo de esta franja es de la mesa: el retrato, el color en el tablero y lo que ve y alcanza en el mapa (una antorcha alumbra 4 casillas; la visión en la oscuridad de un enano, 12).":
     "This strip belongs to the table: the portrait, the colour on the board and what the character sees and reaches on the map (a torch lights 4 squares; a dwarf's darkvision, 12).",
   "Concentración": "Concentration",
+  /* Dados 3D */
+  "¡Crítico!": "Critical!", "Pifia": "Fumble", "Dados de los jugadores solo en la tele": "Players' dice only on the TV",
+  "No te saltan en tu pantalla": "They don't pop up on your screen",
+  "Los dados 3D de los jugadores solo salen en la pantalla de la mesa": "Players' 3D dice only show on the table screen",
   /* Indicadores de ataques y conjuros */
   "Cuerpo a cuerpo": "Melee", "Personal": "Self", "Hay que tocar al objetivo": "You must touch the target",
   "Sale de quien lo lanza": "Originates from the caster", "Impacta": "Hits", "Cura": "Heals", "Sueño": "Sleep",

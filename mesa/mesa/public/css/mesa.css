@@ -3413,3 +3413,37 @@ button.st-pill:active, .buff:active { transform: scale(.95); }
 .bd-asi-row { display: grid; grid-template-columns: 76px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; }
 .bd-asi-row b { font-size: 13px; }
 @media (max-width: 520px) { .bd-asi-row { grid-template-columns: 1fr 1fr; } .bd-asi-row b { grid-column: 1 / -1; } }
+
+/* ---------- Dados en 3D (dice3d.js) ----------
+   El lienzo cubre la pantalla por encima de todo, sin quitar los clics; la
+   placa del resultado sube cuando los dados se paran. */
+.dice3d { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 86; pointer-events: none;
+  opacity: 0; transition: opacity .42s var(--ease-in); }
+.dice3d.on { opacity: 1; transition: opacity .12s ease; }
+.dice3d-result {
+  position: fixed; left: 50%; bottom: max(12vh, 90px); z-index: 87; pointer-events: none;
+  display: grid; justify-items: center; gap: 2px; min-width: 180px; max-width: min(560px, 90vw); padding: 12px 22px 14px;
+  border: 1px solid var(--accent-line); border-radius: 16px; background: rgba(13, 16, 18, .9);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(255, 255, 255, .03);
+  text-align: center; opacity: 0; transform: translate(-50%, 14px) scale(.96);
+  transition: opacity .28s var(--ease-out), transform .38s var(--ease-out);
+}
+.dice3d-result.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.dice3d-result small { font-size: 12px; color: var(--dim); letter-spacing: .04em; overflow-wrap: anywhere; }
+.dice3d-result b { font: 700 54px/1 var(--sans); color: var(--accent-soft); }
+.dice3d-result span { font-size: 15px; line-height: 1.35; color: var(--vellum); overflow-wrap: anywhere; }
+.dice3d-result i { font-style: normal; font: 700 12px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; }
+.dice3d-result.crit { border-color: var(--heal-line); }
+.dice3d-result.crit b, .dice3d-result.crit i { color: #8fe39a; }
+.dice3d-result.crit.on b { animation: critGlow 1.6s ease .1s both; }
+.dice3d-result.fumble { border-color: var(--danger-line); }
+.dice3d-result.fumble b, .dice3d-result.fumble i { color: #ff8a8a; }
+.dice3d-result.fumble.on b { animation: fumbleShake .5s ease .1s both; }
+/* En la tele, más grande: se lee desde el sofá */
+body.screen .dice3d-result { padding: 16px 30px 18px; }
+body.screen .dice3d-result b { font-size: 84px; }
+body.screen .dice3d-result small { font-size: 16px; }
+@media (prefers-reduced-motion: reduce) {
+  .dice3d-result { transform: translate(-50%, 0); }
+  .dice3d-result.crit.on b, .dice3d-result.fumble.on b { animation: none; }
+}

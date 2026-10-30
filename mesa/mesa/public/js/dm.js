@@ -8,7 +8,8 @@ import { acOf, initBonus, pbForCR, cellKey, CONDITIONS, conditionName, ABILITIES
 import { openAttacks } from "./attacks.js";
 import { feetChars, nextRoomId, visibleCells, roomsOf, hasSight, occupied } from "./los.js";
 import { store, onState, onPresence, onStatus, op, patchChar, patchSession, patchMap, uploadImage, leave, lobby, setOpGuard } from "./net.js";
-import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret } from "./dice-panel.js";
+import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret, isQuiet } from "./dice-panel.js";
+import { startDice3D } from "./dice3d.js";
 import { openCharEditor, openConditions, openTempAC, acShield } from "./char-editor.js";
 import { openBuilder, quickRandom } from "./creador.js";
 import { MapView } from "./map.js";
@@ -171,6 +172,7 @@ export function mountDM(root) {
 
   const layout = root.querySelector(".layout");
   layout.appendChild(dicePanel({ isDM: true }));
+  startDice3D({ role: "dm", quiet: isQuiet });
   mountLibrary();
 
   /* Cabecera */
