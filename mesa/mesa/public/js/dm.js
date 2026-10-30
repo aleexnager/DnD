@@ -26,6 +26,7 @@ import { ambientToggle, previewSound, stopPreview } from "./ambient.js";
 import { SOUND_LIBRARY, SOUND_CATS, libSound } from "./sound-library.js";
 import { mountLibrary } from "./library.js";
 import { tourButton, inviteTour, openTourIndex } from "./tour.js";
+import { watchCombat } from "./efectos.js";
 import { exampleChars, exampleCombat, isExample, EXAMPLE_MARK } from "./tour-example.js";
 import { currentLang } from "./i18n.js";
 
@@ -209,7 +210,12 @@ export function mountDM(root) {
   onState(render);
   bindTable(root);
   bindKeys();
+  /* La primera vez, las cartas entran escalonadas; después ya no, que la
+     mesa se repinta a cada cambio */
+  root.classList.add("vfx-arrive");
+  setTimeout(() => root.classList.remove("vfx-arrive"), 1400);
   render();
+  watchCombat({ compact: true });
 }
 
 /* Personaje nuevo: el creador paso a paso, o la ficha a mano para un PNJ rápido */
@@ -476,7 +482,7 @@ function cardHTML(c) {
 
     <div class="hp">
       <div class="nums">
-        <b class="tnum">${c.hp}</b><span>/ ${c.maxHp}</span>
+        <b class="tnum" data-num="${esc(c.id)}">${c.hp}</b><span>/ ${c.maxHp}</span>
         ${c.tempHp ? `<span class="temp"><i class="hp-extra">+${c.tempHp}</i> temporales</span>` : ""}
         <span class="spacer"></span>
         ${acShield(c, { act: "tempAc" })}

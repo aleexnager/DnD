@@ -87,8 +87,11 @@ export class MapView {
     this._held = new Map();                   // id -> dónde se soltó, hasta que el servidor confirme
     this._marks = new Map();                  // id -> destello de golpe o de cura
     this._hp = new Map();                     // id -> última vida vista, para saber si ha bajado
+    this._abs = new Map();                    // id -> vida más temporal, para la cifra del golpe
     this._frame = 0;
     this._pulse = null;                       // aro que se abre al empezar un turno
+    this._floats = [];                        // «−7» y «+5» que suben desde la ficha
+    this._born = new Map();                   // id -> cuándo apareció, para que entre creciendo
     this._lastNow = undefined;
     this._seenMemo = { map: null, chars: null, reveal: null, seen: null };
     this._cam = null;                         // cámara que sigue a alguien, suavizada
@@ -126,7 +129,20 @@ export class MapView {
       const hp = (c.hpPct !== undefined ? c.hpPct : c.hp) + (c.tempHp || 0) / 1000;
       const before = this._hp.get(c.id);
       this._hp.set(c.id, hp);
-      if (before !== undefined && hp !== before) this._marks.set(c.id, { kind: hp < before ? "hurt" : "heal", t0: t });
+      const abs = c.hp + (c.tempHp || 0), was = this._abs.get(c.id);
+      this._abs.set(c.id, abs);
+      if (before === undefined || hp === before) continue;
+      /* Cae: el golpe que le deja a cero se nota más que los demás */
+      const fell = was !== undefined && was > 0 && c.hp <= 0;
+      this._marks.set(c.id, { kind: fell ? "down" : hp < before ? "hurt" : "heal", t0: t });
+      /* La cifra solo si quien mira sabe la vida de verdad: el DM, o la party
+         con sus personajes. De un monstruo, la party no sabe cuánto le quitan. */
+      const exact = c.hpPct === undefined && (this.mode === "dm" || c.kind === "pc");
+      const delta = was === undefined ? 0 : abs - was;
+      if (exact && delta) {
+        this._floats = this._floats.filter(f => f.id !== c.id || t - f.t0 > 250);
+        this._floats.push({ id: c.id, text: (delta < 0 ? "−" : "+") + Math.abs(delta), hurt: delta < 0, t0: t });
+      }
     }
     const combat = session && session.combat;
     const nowId = combat && combat.on && combat.order.length ? combat.order[combat.index] : null;
@@ -143,6 +159,8 @@ export class MapView {
     let s = this._glide.get(c.id);
     const fresh = !s || s.mapId !== c.mapId || s.frame !== this._frame - 1;
     if (fresh || this.still()) {
+      /* Recién llegada (o recién salida de la niebla): entra creciendo */
+      if (fresh && !this.still()) this._born.set(c.id, t);
       s = { fx: x, fy: y, tx: x, ty: y, t0: t, mapId: c.mapId, frame: this._frame };
       this._glide.set(c.id, s);
       return { x, y };
@@ -1083,16 +1101,29 @@ export class MapView {
         this._glide.set(c.id, { fx: x, fy: y, tx: x, ty: y, t0: t, mapId: c.mapId, frame: this._frame });
         pos = { x, y };
       } else pos = this.glide(c, x, y, t);
+      const born = this._born.get(c.id);
+      const grow = born === undefined ? 1 : Math.min(1, (t - born) / 380);
+      if (grow < 1) {
+        /* Crece desde el centro de su casilla con un pequeño rebote */
+        const span = g.cell * footprint(c), ox = X(pos.x) + span / 2, oy = Y(pos.y) + span / 2;
+        const k = grow - 1, s = 1 + 2.2 * k * k * k + 1.2 * k * k;
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, grow * 1.6);
+        ctx.translate(ox, oy); ctx.scale(Math.max(0.01, s), Math.max(0.01, s)); ctx.translate(-ox, -oy);
+        this._moving = true;
+      } else if (born !== undefined) this._born.delete(c.id);
       this.token(ctx, g, c, pos.x, pos.y, X, Y, {
         now: c.id === nowId, selected: this.selection.has(c.id), target: this.target === c.id && !aimed.has(c.id), memory: !!c.memory,
         mark: this._marks.get(c.id), pulse: this._pulse && this._pulse.id === c.id ? this._pulse : null, t
       });
+      if (grow < 1) ctx.restore();
       if (!c.memory) {
         const span = g.cell * footprint(c);
         drawn.set(c.id, { cx: X(pos.x) + span / 2, cy: Y(pos.y) + span / 2, r: span * 0.4, color: c.color });
       }
     }
     this.aims(ctx, g, drawn, t);
+    this.floats(ctx, g, drawn, t);
 
     /* Recuadro de selección */
     if (this.band) {
@@ -1343,6 +1374,43 @@ export class MapView {
     for (let i = 1; i < points.length; i++) ctx.lineTo(X(points[i][0]), Y(points[i][1]));
     ctx.stroke();
     ctx.restore();
+  }
+
+  /* El daño y la cura, en cifras que suben desde la ficha y se apagan. Si la
+     ficha no está a la vista, su cifra tampoco. */
+  floats(ctx, g, drawn, t) {
+    if (!this._floats.length) return;
+    if (this.still()) { this._floats = []; return; }
+    const DUR = 1200;
+    this._floats = this._floats.filter(f => t - f.t0 < DUR);
+    const size = Math.round(Math.max(14, Math.min(42, g.cell * 0.5)));
+    ctx.save();
+    ctx.font = `800 ${size}px Roboto, system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
+    for (const f of this._floats) {
+      const at = drawn.get(f.id);
+      if (!at) continue;
+      const k = (t - f.t0) / DUR;
+      /* Salta un poco más grande, se asienta y sube frenando */
+      const pop = k < 0.15 ? 0.6 + (k / 0.15) * 0.6 : 1.2 - Math.min(0.2, (k - 0.15) * 0.8);
+      const y = at.cy - at.r - size * 0.4 - (1 - Math.pow(1 - k, 2)) * g.cell * 0.9;
+      ctx.globalAlpha = k > 0.65 ? 1 - (k - 0.65) / 0.35 : 1;
+      ctx.save();
+      ctx.translate(at.cx, y);
+      ctx.scale(pop, pop);
+      ctx.lineWidth = Math.max(3, size * 0.18);
+      ctx.strokeStyle = "rgba(8,9,12,.9)";
+      ctx.strokeText(f.text, 0, 0);
+      ctx.fillStyle = f.hurt ? "#ff6b6b" : "#8fe39a";
+      ctx.shadowColor = f.hurt ? "rgba(255,60,60,.8)" : "rgba(120,230,140,.8)";
+      ctx.shadowBlur = size * 0.5;
+      ctx.fillText(f.text, 0, 0);
+      ctx.restore();
+    }
+    ctx.restore();
+    this._moving = true;
   }
 
   tick() {
@@ -1623,21 +1691,49 @@ export class MapView {
     const span = g.cell * n;
     const tiny = /Diminuto|Tiny/i.test(String(c.size || c.sizeType || ""));
     const r = span * (tiny ? 0.26 : 0.4);
-    const cx = X(x) + span / 2, cy = Y(y) + span / 2;
+    let cx = X(x) + span / 2;
+    const cy = Y(y) + span / 2;
     const down = c.hp <= 0;
 
-    /* Golpe o cura: un halo rojo o verde que se apaga en medio segundo */
+    /* Golpe o cura: un halo rojo o verde que se apaga en medio segundo. El
+       golpe además sacude la ficha; la cura suelta unas motas que suben; y
+       el golpe que la tumba abre una onda roja con ascuas. */
     if (mark && !this.still()) {
-      const k = (t - mark.t0) / 650;
+      const life = mark.kind === "down" ? 1100 : mark.kind === "heal" ? 900 : 650;
+      const k = (t - mark.t0) / life;
       if (k >= 1) this._marks.delete(c.id);
       else {
+        const hurt = mark.kind !== "heal";
+        if (hurt && k < 0.45) cx += Math.sin(k * 70) * (1 - k / 0.45) * Math.max(2, g.cell * 0.07);
         ctx.save();
-        const tone = mark.kind === "hurt" ? "184,56,59" : "79,157,93";
+        const tone = hurt ? "184,56,59" : "79,157,93";
         const grad = ctx.createRadialGradient(cx, cy, r * 0.6, cx, cy, r * (1.5 + k * 0.6));
         grad.addColorStop(0, `rgba(${tone},${0.55 * (1 - k)})`);
         grad.addColorStop(1, `rgba(${tone},0)`);
         ctx.fillStyle = grad;
         ctx.beginPath(); ctx.arc(cx, cy, r * (1.5 + k * 0.6), 0, Math.PI * 2); ctx.fill();
+        if (mark.kind === "heal") {
+          for (let i = 0; i < 8; i++) {
+            const q = (k * 1.3 - i * 0.07);
+            if (q <= 0 || q >= 1) continue;
+            const mx = cx + Math.cos(i * 2.4) * r * (0.5 + (i % 3) * 0.22) + Math.sin(q * 9 + i) * r * 0.08;
+            const my = cy + r * 0.6 - q * r * 2.1;
+            const rad = Math.max(1.5, g.cell * 0.035) * (1 - q * 0.5);
+            ctx.fillStyle = `rgba(169,240,178,${0.95 * (1 - q)})`;
+            ctx.shadowColor = "rgba(120,230,140,.9)"; ctx.shadowBlur = rad * 4;
+            ctx.beginPath(); ctx.arc(mx, my, rad, 0, Math.PI * 2); ctx.fill();
+          }
+        }
+        if (mark.kind === "down") {
+          ctx.strokeStyle = `rgba(230,70,70,${0.9 * (1 - k)})`;
+          ctx.lineWidth = Math.max(2, g.cell * 0.08) * (1 - k);
+          ctx.beginPath(); ctx.arc(cx, cy, r * (1 + k * 2.2), 0, Math.PI * 2); ctx.stroke();
+          for (let i = 0; i < 10; i++) {
+            const a = i * 0.628 + 0.3, d = r * (0.9 + k * (1.4 + (i % 3) * 0.4));
+            ctx.fillStyle = `rgba(255,${120 + (i % 3) * 40},80,${0.9 * (1 - k)})`;
+            ctx.beginPath(); ctx.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d + k * k * r, Math.max(1.5, g.cell * 0.03), 0, Math.PI * 2); ctx.fill();
+          }
+        }
         ctx.restore();
         this._moving = true;
       }
@@ -1668,11 +1764,26 @@ export class MapView {
     }
 
     if (now) {
+      /* En la tele, el aro de quien tiene el turno respira y lleva un arco de
+         luz que lo recorre: se encuentra la ficha de un vistazo desde el sofá */
+      const live = this.opts.ambient && !this.still();
+      const breath = live ? 0.5 + 0.5 * Math.sin(t / 420) : 0;
+      const R = r + Math.max(4, g.cell * 0.14);
       ctx.save();
       ctx.strokeStyle = "#e69a28";
       ctx.lineWidth = Math.max(2, g.cell * 0.08);
-      ctx.shadowColor = "#e69a28"; ctx.shadowBlur = 12;
-      ctx.beginPath(); ctx.arc(cx, cy, r + Math.max(4, g.cell * 0.14), 0, Math.PI * 2); ctx.stroke();
+      ctx.shadowColor = "#e69a28"; ctx.shadowBlur = 12 + breath * 14;
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+      if (live) {
+        const a = t / 700;
+        ctx.strokeStyle = "rgba(255,236,190,.95)";
+        ctx.lineWidth = Math.max(2, g.cell * 0.05);
+        ctx.lineCap = "round";
+        ctx.shadowColor = "#ffd27f"; ctx.shadowBlur = 16;
+        ctx.beginPath(); ctx.arc(cx, cy, R, a, a + 0.9); ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx, cy, R, a + Math.PI, a + Math.PI + 0.9); ctx.stroke();
+        this._moving = true;
+      }
       ctx.restore();
     }
 

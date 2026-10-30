@@ -14,6 +14,7 @@
 
 import { store, onState } from "./net.js";
 import { shapeOf, simulate, labelsFor, expand, norm, dot, sub, cross } from "./dice3d-core.js";
+import { burstFrom, edgeFlash } from "./efectos.js";
 
 let THREE = null;
 const loadThree = async () => THREE || (THREE = await import("../vendor/three/three.module.min.js"));
@@ -238,6 +239,15 @@ function showResult(label, e) {
   const line = e.kind === "roll" ? "" : String(e.text || "").split("\n")[0];
   label.className = "dice3d-result on" + (e.crit ? " crit" : e.fumble ? " fumble" : "") + (big ? "" : " text");
   label.innerHTML = `<small>${esc(head)}</small>${big ? `<b class="tnum">${esc(big)}</b>` : `<span>${esc(line)}</span>`}${e.crit ? "<i>¡Crítico!</i>" : e.fumble ? "<i>Pifia</i>" : ""}`;
+  /* El momento de la tirada: un crítico revienta en chispas doradas y
+     verdes; una pifia apaga la pantalla en rojo */
+  if (e.crit) {
+    edgeFlash("crit");
+    setTimeout(() => burstFrom(label, { colors: ["#fff4c9", "#ffd36b", "#8fe39a", "#c89b4a"], count: 40, power: 1.5, size: 7, life: 1400 }), 120);
+  } else if (e.fumble) {
+    edgeFlash("blood");
+    setTimeout(() => burstFrom(label, { colors: ["#ff8a8a", "#d24040", "#5a1517"], count: 16, power: 0.6, size: 5 }), 120);
+  }
 }
 
 /* ---------- Quién ve qué ----------

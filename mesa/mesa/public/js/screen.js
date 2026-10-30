@@ -11,6 +11,7 @@ import { MapView } from "./map.js";
 import { icon } from "./icons.js";
 import { langPicker } from "./i18n.js";
 import { tourButton } from "./tour.js";
+import { watchCombat, embers } from "./efectos.js";
 
 let mapView = null;
 let lastRollId = null;
@@ -44,7 +45,8 @@ export function mountScreen(root) {
       <div class="handout hidden" id="handout"><img alt=""><span></span></div>
     </div>`;
 
-  mapView = new MapView($("#scanvas", root), { mode: "party" });
+  mapView = new MapView($("#scanvas", root), { mode: "party", ambient: true });
+  embers($("#stage", root), 14);
   onState(render);
   startDice3D({ role: "screen" });
   onStatus(ok => $("#sdot", root).classList.toggle("off", !ok));
@@ -54,6 +56,7 @@ export function mountScreen(root) {
   $("#sfull", root).addEventListener("click", fullscreen);
   $("#ambientSlot", root).replaceWith(ambientToggle("screen"));
   render();
+  watchCombat();
 
   document.addEventListener("dblclick", e => { if (!e.target.closest("button")) fullscreen(); });
 }
@@ -275,7 +278,7 @@ function whoCard(c, session, { inTurn = false, fighting = true } = {}) {
     </div>
     ${p !== null ? hpBar(c.id, p) : ""}
     ${exact || (monster && c.wound) || c.conditions.length ? `<div class="state row-line">
-      ${exact ? `<span class="tnum">${c.hp}/${c.maxHp}${hpExtra(c)} PV</span>` : ""}
+      ${exact ? `<span><span class="tnum">${c.hp}/${c.maxHp}</span>${hpExtra(c)} PV</span>` : ""}
       ${monster && c.wound ? `<span>${esc(c.wound)}</span>` : ""}
       ${c.conditions.length ? `<span class="conds">${c.conditions.map(x => `<i>${esc(conditionName(x))}</i>`).join("")}</span>` : ""}
     </div>` : ""}

@@ -61,6 +61,48 @@ export function tweenBars(root, scope = "", silent = false) {
     const card = bar.closest("[data-flash]");
     if (card) card.classList.add(to < from ? "hurt" : "healed");
   });
+  /* Los números de vida cuentan hasta el nuevo valor, y la diferencia salta
+     por encima: «−7» en rojo, «+5» en verde. */
+  root.querySelectorAll("[data-num]").forEach(node => {
+    const key = scope + "#" + node.dataset.num;
+    const to = Number(node.textContent);
+    const from = lastBars.get(key);
+    lastBars.set(key, to);
+    if (still || from === undefined || from === to || !Number.isFinite(to)) return;
+    floatText(node, (to < from ? "−" : "+") + Math.abs(to - from), to < from ? "hurt" : "heal");
+    countTo(node, from, to);
+  });
+}
+
+/* Un número que corre desde donde estaba hasta el nuevo, deprisa al
+   principio y frenando al final. Si la vista se repinta a medias, el nodo
+   viejo deja de estar en la página y se para solo. */
+function countTo(node, from, to, dur = 650) {
+  const t0 = performance.now();
+  const step = now => {
+    if (!node.isConnected) return;
+    const k = Math.min(1, (now - t0) / dur);
+    node.textContent = String(Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))));
+    if (k < 1) requestAnimationFrame(step);
+  };
+  node.textContent = String(from);
+  requestAnimationFrame(step);
+}
+
+/* Un texto que sale de un elemento y sube mientras se apaga. Va colgado del
+   body, no del elemento: la vista se repinta entera y se lo llevaría. */
+export function floatText(node, text, tone = "hurt") {
+  if (!node || reducedMotion() || document.hidden) return;
+  const r = node.getBoundingClientRect();
+  if (!r.width) return;
+  const f = document.createElement("b");
+  f.className = "vfx-float " + tone;
+  f.setAttribute("aria-hidden", "true");
+  f.textContent = text;
+  f.style.left = (r.left + r.width / 2) + "px";
+  f.style.top = (r.top - r.height * 0.25) + "px";   // sale por encima del número, sin taparlo
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 1300);
 }
 
 export function el(html) {

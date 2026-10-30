@@ -18,6 +18,7 @@ import { ambientToggle } from "./ambient.js";
 import { langPicker } from "./i18n.js";
 import { icon, withIcon } from "./icons.js";
 import { tourButton, inviteTour } from "./tour.js";
+import { watchCombat, edgeFlash, burstFrom } from "./efectos.js";
 
 let tab = "ficha";
 let lastArea = null;      // la última área de conjuro colocada en el mapa
@@ -102,7 +103,10 @@ export function mountPlayer(root) {
   onState(render);
   onPresence(() => { if (doc() && !me()) render(); });
   bindActions(root);
+  root.classList.add("vfx-arrive");
+  setTimeout(() => root.classList.remove("vfx-arrive"), 1400);
   render();
+  watchCombat();
 }
 
 let hadChar = null;
@@ -116,6 +120,7 @@ function render() {
   $("#whoami").textContent = store.session.name;
   const pane = $("#pane");
   const mine = me();
+  noticeHurt(mine);
   noticeTurn(mine);
   noticeChat();
   noticeHandout();
@@ -158,8 +163,26 @@ function noticeTurn(mine) {
   if (mineTurn && nowId !== lastTurnId) {
     if (navigator.vibrate) navigator.vibrate([90, 60, 90]);
     toast("Te toca", "good");
+    edgeFlash("gold");
+    requestAnimationFrame(() => burstFrom(flash, { count: 18, power: 0.7 }));
   }
   lastTurnId = nowId;
+}
+
+/* Tu vida, en los bordes de la pantalla: un destello rojo con cada golpe y
+   verde con cada cura; por debajo de un cuarto, un pulso rojo que no se va
+   hasta que te curen, y gris si caes. Se ve aunque estés en otra pestaña. */
+let lastHp = null;
+function noticeHurt(mine) {
+  const hp = mine ? mine.hp + (mine.tempHp || 0) : null;
+  if (mine && lastHp !== null && lastHp.id === mine.id && hp !== lastHp.hp) {
+    edgeFlash(hp < lastHp.hp ? "blood" : "heal");
+    if (hp < lastHp.hp && navigator.vibrate) navigator.vibrate(60);
+  }
+  lastHp = mine ? { id: mine.id, hp } : null;
+  const p = mine ? pct(mine) : 100;
+  document.body.classList.toggle("vfx-low", !!mine && mine.hp > 0 && p < 25);
+  document.body.classList.toggle("vfx-out", !!mine && mine.hp <= 0);
 }
 
 /* Un puntito en la pestaña cuando hay mensajes o tiradas sin leer */
@@ -275,7 +298,7 @@ function renderSheet(pane, c, opts = {}) {
             <button class="hp-btn hurt" data-act="damage">Daño</button>
           </div>
           <div class="hp-cols">
-            <div class="hp-col"><span>Actuales</span><b class="tnum">${c.hp}</b></div>
+            <div class="hp-col"><span>Actuales</span><b class="tnum" data-num="${esc(c.id)}">${c.hp}</b></div>
             <i class="hp-sep">/</i>
             <div class="hp-col"><span>Máximos</span><b class="tnum">${c.maxHp}</b></div>
             <div class="hp-col temp"><span>Temp.</span><b class="tnum">${c.tempHp || "—"}</b></div>

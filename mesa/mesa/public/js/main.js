@@ -5,6 +5,7 @@ import { icon, withIcon } from "./icons.js";
 import { store, savedSession, forgetSession, join, lobby, ping, connect, onState, DEMO } from "./net.js";
 import { startI18n, langPicker, loadSpellTexts } from "./i18n.js";
 import { tourButton } from "./tour.js";
+import { transition, embers } from "./efectos.js";
 
 const SHARED = typeof SharedWorker === "function";
 
@@ -46,8 +47,7 @@ async function start(role) {
   const once = new Promise(resolve => onState(resolve));
   connect();
   await once;                       // no se pinta nada hasta tener el estado
-  app().className = "";
-  mount(app());
+  await transition(() => { app().className = ""; mount(app()); });
   /* Sonido ambiente: lo que el servidor diga que se oye desde aquí */
   const { ambientUpdate } = await import("./ambient.js");
   const sound = () => ambientUpdate(role, store.doc ? store.doc.sounds : []);
@@ -95,6 +95,7 @@ async function gate(wanted) {
       <div class="gate-foot"><span id="gateTour"></span><div class="gate-lang" id="gateLang"></div></div>
     </div>`;
 
+  embers($(".gate-bg"), 22);
   $("#gateLang").appendChild(langPicker());
   $("#gateTour").replaceWith(tourButton("gate", { label: true }));
   /* Por qué se ha vuelto a la entrada, si no ha sido por gusto */

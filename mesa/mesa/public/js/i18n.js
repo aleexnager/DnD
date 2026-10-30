@@ -90,6 +90,8 @@ const EN = {
   "Acciones": "Actions", "Ataques": "Attacks", "Conjuros": "Spells", "Equipo": "Inventory", "Notas": "Notes",
   "Daño": "Damage", "Curación": "Healing", "Temp": "Temp", "CA": "AC", "PV": "HP", "Editar": "Edit",
   "Te toca": "Your turn", "Es tu turno": "It's your turn", "ronda": "round", "Ronda": "Round",
+  /* Rótulos de cine (efectos.js) */
+  "Empieza el combate": "Combat begins", "¡A las armas!": "To arms!", "Fin del combate": "Combat over",
   "turno de": "turn of", "después": "next", "después:": "next:",
   "Todavía no tienes personaje": "You don't have a character yet",
   "Quédate con uno de los que ya hay en la mesa o hazte el tuyo.":
@@ -1337,6 +1339,7 @@ const nm = w => {
   return EN[k] || (m && EN[m[1]] ? `${EN[m[1]]} ${m[2]}` : w);
 };
 const PATTERNS = [
+  [/^Ronda (\d+)$/, "Round $1"],
   /* La ficha de criatura de 2024 */
   [/^(\S+) \(([\d.,]+) PX; BC ([+−-]\d+)\)$/, "$1 (XP $2; PB $3)"],
   [/^Ficha de las reglas de 2024 \(SRD 5\.2\.1\)(?: · (.+))?$/, (m, n) => "2024 rules stat block (SRD 5.2.1)" + (n ? " · " + n : "")],
