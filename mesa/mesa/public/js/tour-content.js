@@ -246,8 +246,8 @@ const DM = {
     ]),
 
     sec("personajes", "userPlus", ["Crear personajes", "El creador paso a paso, el azar y la ficha completa"], ["Creating characters", "The step-by-step builder, random characters and the full sheet"], "dm.table", [
-      S("#addBtn", ["Añadir personaje", "Abre el **creador paso a paso**: clase, especie, características, trasfondo, conjuros (si los lanza), equipo y resumen. Al terminar, el personaje se sienta en la mesa y en el mapa. Atajo: [[Ctrl]]+[[N]]."],
-        ["Add character", "Opens the **step-by-step builder**: class, species, abilities, background, spells (if a caster), equipment and summary. When done, the character joins the table and the map. Shortcut: [[Ctrl]]+[[N]]."]),
+      S("#addBtn", ["Añadir personaje", "Abre el **creador paso a paso**: clase y **nivel inicial** (del 1 al 20, con su vida, subclase, rasgos, mejoras de característica y conjuros de ese nivel), especie, características, trasfondo, conjuros (si los lanza), equipo y resumen. Al terminar, el personaje se sienta en la mesa y en el mapa. Atajo: [[Ctrl]]+[[N]]."],
+        ["Add character", "Opens the **step-by-step builder**: class and **starting level** (1 to 20, with that level's hit points, subclass, features, ability score improvements and spells), species, abilities, background, spells (if a caster), equipment and summary. When done, the character joins the table and the map. Shortcut: [[Ctrl]]+[[N]]."]),
       S(".builder .bd-steps", ["Los pasos", "Arriba, los pasos: los ya vistos llevan una marca y puedes volver a cualquiera pulsándolo. Abajo, **Atrás** y **Siguiente**; si falta algo para seguir, se dice al lado del botón."],
         ["The steps", "At the top, the steps: those you have seen get a tick and you can go back to any by clicking it. At the bottom, **Back** and **Next**; if something is missing, it is said next to the button."], "dm.builder"),
       S(".builder [data-random]", ["Al azar, dentro del creador", "Rellena todo con un personaje coherente (características según la clase, habilidades, conjuros, equipo y un nombre a juego) y te deja en el resumen para cambiar lo que quieras antes de crearlo."],
@@ -339,8 +339,10 @@ const DM = {
         ["Quick dice", "One tap rolls that die; **2d20** rolls two at once."]),
       S("#dock .roll-opts .adv", ["Cómo se tira", "**Desventaja**, **Normal** o **Ventaja** para tus tiradas. Y sin tocar nada, al pulsar cualquier tirada de la app: [[Mayús]] ventaja, [[Ctrl]] desventaja y [[Alt]] en secreto."],
         ["How to roll", "**Disadvantage**, **Normal** or **Advantage** for your rolls. And without touching anything, when you click any roll in the app: [[Shift]] advantage, [[Ctrl]] disadvantage and [[Alt]] secret."]),
-      S("#dock [data-secret]", ["Tirada secreta", "Encendida, lo que tiras solo lo ves tú: ni los jugadores ni la tele."],
-        ["Secret roll", "When on, what you roll is seen only by you: not the players, not the TV."]),
+      S("#dock [data-secret]", ["Tirada secreta", "Encendida, lo que tiras solo lo ves tú: ni los jugadores ni la tele. Cada tirada **rueda en 3D** por encima de la pantalla, en la tuya y en la tele, y se para en el resultado; las secretas, solo en la tuya."],
+        ["Secret roll", "When on, what you roll is seen only by you: not the players, not the TV. Every roll **tumbles in 3D** over the screen, on yours and on the TV, and stops on the result; secret ones, only on yours."]),
+      S("#dock [data-quiet]", ["Dados de los jugadores solo en la tele", "Si no quieres que las tiradas de los jugadores te salten en tu pantalla, enciende esto: siguen rodando en la tele y apuntándose en el registro. Las tuyas te salen siempre."],
+        ["Players' dice only on the TV", "If you don't want the players' rolls popping up on your screen, switch this on: they still tumble on the TV and go into the log. Yours always show."]),
       S("#dock .dice-form", ["Cualquier fórmula", "Escribe «1d20+5», «2d6+3» o «8d6» y pulsa **Tirar**."],
         ["Any formula", "Type “1d20+5”, “2d6+3” or “8d6” and press **Roll**."]),
       S("#dock .log-tabs", ["El registro", "Todo lo que se tira y se dice queda aquí para todos, salvo lo secreto. Filtra por **Todo**, **Tiradas** o **Charla**; los críticos y las pifias se marcan."],

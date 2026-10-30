@@ -295,7 +295,8 @@ proyección compartida.
 
 ## La mesa
 
-Cada personaje tiene su tarjeta con vida, CA, estados y, al desplegarla,
+Cada personaje tiene su tarjeta con vida, CA, estados y, al desplegarla con
+**Ver más** (solo se abre esa: las de al lado no se estiran),
 características, salvaciones, habilidades, espacios de conjuro, recursos
 propios y sus notas. Los botones **−** y **+** con la casilla del medio aplican
 daño y curación; `Intro` aplica daño y `Mayús + Intro`, curación. La vida
@@ -337,13 +338,59 @@ veinte últimos, así que un daño mal apuntado o un borrado por error se arregl
 en un segundo. La biblioteca no entra en el deshacer: lo que escribas en un
 cuaderno no se pierde al deshacer un golpe.
 
+### La ficha: la hoja de personaje de 2024
+
+El lápiz de cada tarjeta (y **Rellenar la ficha a mano** en el creador) abre
+la ficha con **el formato de la hoja oficial de 2024**, en dos páginas y con
+los colores de la mesa; en inglés, con los rótulos de la hoja inglesa:
+
+- **Primera página**: nombre, trasfondo, clase, especie y subclase; nivel y
+  PX en el óvalo; **CA** en su escudo (con el rombo de escudo), **puntos de
+  golpe** actuales, temporales y máximos, dados de golpe gastados y salvaciones
+  contra muerte. A la izquierda, el bonificador por competencia y las seis
+  **características** con su modificador en el círculo, su puntuación, su
+  salvación y sus habilidades (el círculo marca la competencia); la
+  inspiración heroica y el entrenamiento con armaduras, armas y herramientas.
+  A la derecha, iniciativa, velocidad, tamaño y percepción pasiva; **armas y
+  trucos de daño**; rasgos de clase con sus usos; atributos de especie y dotes.
+- **Segunda página**: aptitud mágica con su modificador, CD y ataque; los
+  **espacios de conjuro** con sus rombos de gastados; la tabla de **trucos y
+  conjuros preparados** (nivel, nombre, tiempo, alcance, C·R·M y notas, con sus
+  indicadores), donde se añaden de la biblioteca, se crean, se retocan o se
+  quitan; aspecto, historia y personalidad, alineamiento, idiomas, equipo,
+  sintonización con objetos mágicos y monedas.
+
+Los números que dependen de otros (modificadores, salvaciones, habilidades,
+percepción pasiva, CD y ataque de conjuros, la competencia según el nivel) se
+recalculan mientras escribes. Los conjuros que hacen daño salen también en
+«Armas y trucos de daño», y **en combate cuentan como ataques**: la ventana de
+**Atacar** los lista en su sección y, al elegir uno, abre su ventana de lanzar
+con el objetivo ya marcado. Arriba, aparte de la hoja, lo que es de la mesa:
+retrato, color, jugador, visión, luz y alcance. En el teléfono las cajas se
+apilan en el mismo orden y las tablas pasan a tarjetas.
+
+### Crear un personaje
+
+**Añadir personaje** abre el creador paso a paso, que hace personajes de
+**cualquier nivel, del 1 al 20**: en el paso de clase se elige el nivel inicial
+y Mesa calcula la vida (el dado entero a nivel 1 y la media en cada nivel
+siguiente, más la Constitución), la competencia, los dados de golpe, los
+**rasgos de clase** de cada nivel con su explicación, la **subclase** del SRD
+con sus rasgos (o una tuya, sin rasgos automáticos), las **mejoras de
+característica** de los niveles que tocan (+1 a dos o +2 a una, sin pasar de
+20; el guerrero y el pícaro tienen las suyas de más), los **espacios de
+conjuro** de 2024 (lanzador completo, medio lanzador o pacto del brujo), cuántos
+trucos y conjuros preparados elige y de qué nivel, y los recursos que crecen
+(Furia, Imposición de manos, Canalizar divinidad, Forma salvaje…). Como en
+2024, el paladín y el explorador lanzan conjuros desde el nivel 1.
+
 **Al azar** (arriba, junto a «Añadir personaje») crea un personaje entero de
 nivel 1 con un clic y lo sienta directamente en la mesa y en el mapa, en la
 primera casilla libre junto a la party: especie, clase, trasfondo,
 características repartidas según la clase, habilidades, conjuros, equipo y un
 nombre a juego con su especie. Dentro del creador paso a paso, el mismo botón
-rellena todo y te deja en el resumen para cambiar lo que quieras antes de
-crearlo.
+rellena todo (al nivel que hayas elegido) y te deja en el resumen para cambiar
+lo que quieras antes de crearlo.
 
 ## Combate
 
@@ -525,9 +572,9 @@ la barra** y el tablero ocupa todo el ancho; un botón pequeño en la esquina de
 plano la vuelve a sacar. La casilla bajo el puntero se lee **arriba a la
 derecha** del tablero, donde no la tapa la estantería de la biblioteca.
 
-**Pulsar una ficha** abre su globo: arriba, la **vida** (escribe una cantidad;
-`Intro` o **−** restan, `Mayús + Intro` o **+** suman) y la **CA temporal** con
-− y +, sin cerrarlo, para ir rápido en combate; debajo, apuntarle, atacar,
+**Pulsar una ficha** abre su globo: arriba, la **vida** y la **CA temporal**,
+cada una con **−** y **+** de uno en uno, sin cerrarlo, para ir rápido en
+combate; debajo, apuntarle, atacar,
 estados, abrir la ficha, ocultarla, centrar la cámara de la party o sacarla del
 mapa.
 
@@ -990,7 +1037,22 @@ a los aparatos.
 
 El panel de la derecha (abajo, en el móvil) tira `1d20+5`, `2d6`, `8d6` y lo que
 le eches, con botones para ventaja y desventaja. Los críticos y las pifias se
-marcan. Todo va a un registro común que ven todos, salvo lo que el DM tire con
+marcan.
+
+**Dados en 3D.** Cada tirada rueda por encima de la pantalla con dados de
+verdad, uno por cada dado tirado y de su tipo (d4, d6, d8, d10, d12, d20; el
+d100 son dos d10, decenas y unidades), del color de quien tira: caen, rebotan
+contra los bordes, se paran y una placa enseña el total (verde y «¡Crítico!»
+con un 20 natural, roja y «Pifia» con un 1). La caída se simula antes y el
+dado se numera para que la cara de arriba sea el resultado que salió: rueda de
+verdad y el número es el bueno. También ruedan los dados de los ataques y
+conjuros que resuelve el servidor. Se ven **en la tele y en la pantalla del
+DM**; las tiradas **secretas** del DM, solo en la suya. Con **Dados de los
+jugadores solo en la tele** (en el panel del DM), las tiradas de los jugadores
+no le saltan en su pantalla y siguen saliendo en la tele. Con «reducir
+movimiento» se ve el final sin la caída. Los dibuja
+[three.js](https://threejs.org) (MIT, en `public/vendor/three/`), que se carga
+la primera vez que hace falta. Todo va a un registro común que ven todos, salvo lo que el DM tire con
 **En secreto**. Las características, salvaciones y habilidades de cada ficha se
 tiran desde la propia ficha, ya con su modificador.
 
@@ -1159,6 +1221,9 @@ public/
     schema.js          forma de los datos y migración (lo usan servidor y navegador)
     los.js             muros, luz, visión, distancias y plantillas (compartido)
     attacks.js         leer y lanzar ataques
+    hoja.js            la ficha con el formato de la hoja de personaje de 2024
+    dice3d.js          dados en 3D: la escena, las caras y quién los ve
+    dice3d-core.js     dados en 3D: forma de cada dado, física y numeración
     chips.js           indicadores con icono de ataques y conjuros (alcance, área, estado…)
     bestiario-datos.js las 115 fichas del bestiario (reglas de 2024), con su inglés
     chars-io.js        exportar e importar personajes entre campañas
@@ -1185,6 +1250,7 @@ public/
     tour-example.js    las fichas de ejemplo del tutorial (solo en la pantalla del DM)
     libros/            los cuatro libros de serie (reglas, jugador, conjuros, bestiario)
   vendor/pdfjs/        pdf.js de Mozilla, para leer los PDF de la biblioteca
+  vendor/three/        three.js (MIT), para los dados en 3D
 data/                  la partida y las imágenes (se crea al arrancar)
 ```
 
@@ -1217,6 +1283,11 @@ data/                  la partida y las imágenes (se crea al arrancar)
 - Un PDF escaneado (páginas que son fotos) no tiene texto que buscar: se lee
   con «Ver original», pero el buscador no lo encuentra.
 
+- Los dados en 3D se ven en la tele y en la pantalla del DM, no en el móvil
+  de los jugadores (en el suyo se lee la tirada en el registro).
+- El creador saca los rasgos de cada nivel del manual del jugador, cuyo texto
+  está en español; con la interfaz en inglés, los nombres y explicaciones de
+  esos rasgos siguen en español.
 - Los conjuros lanzables de la biblioteca son 39 del SRD hasta nivel 5 (el
   compendio trae los 339, para leer). Los que no
   hacen daño ni ponen un estado (Escudo de fe, Bendecir, Revivificar…) se
