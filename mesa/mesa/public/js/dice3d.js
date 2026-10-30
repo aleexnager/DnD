@@ -152,6 +152,9 @@ const queue = [];
 let busy = false;
 export function showRoll(entry) {
   if (!entry || !Array.isArray(entry.dice) || !entry.dice.length) return;
+  /* Con la pestaña escondida no se anima (el navegador para las animaciones
+     y saltaría tarde, al volver): la tirada ya está en el registro */
+  if (typeof document !== "undefined" && document.hidden) return;
   if (queue.length >= 2) queue.shift();
   queue.push(entry);
   if (!busy) next();
@@ -184,12 +187,16 @@ async function play(entry) {
   const frames = quick ? [last] : sim.frames;
   const t0 = performance.now(), fps = 60;
   await new Promise(done => {
+    /* Si la pestaña se esconde a mitad, se acaba sin esperar */
+    const bail = () => { if (document.hidden) { document.removeEventListener("visibilitychange", bail); done(); } };
+    document.addEventListener("visibilitychange", bail);
     const tick = now => {
+      if (document.hidden) return;
       /* El reloj de requestAnimationFrame puede ir un pelo por detrás de t0 */
       const k = Math.max(0, Math.min(frames.length - 1, Math.floor((now - t0) / 1000 * fps)));
       frames[k].forEach((s, i) => { meshes[i].position.set(...s.p); meshes[i].quaternion.set(...s.q); });
       renderer.render(sc, camera);
-      if (k < frames.length - 1) requestAnimationFrame(tick); else done();
+      if (k < frames.length - 1) requestAnimationFrame(tick); else { document.removeEventListener("visibilitychange", bail); done(); }
     };
     requestAnimationFrame(tick);
   });
@@ -228,6 +235,9 @@ let started = false;
 export function startDice3D({ role, quiet = () => false } = {}) {
   if (started || (role !== "screen" && role !== "dm")) return;
   started = true;
+  /* three.js se trae en segundo plano al poco de entrar: así la primera
+     tirada no espera a descargarlo en una tele o un portátil lentos */
+  setTimeout(() => { loadThree().catch(() => {}); }, 2500);
   const seen = new Set();
   let ready = false;
   /* Lo que ya estaba en el registro al entrar no se tira otra vez */
