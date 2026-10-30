@@ -5,8 +5,10 @@
 
    Habilidades: los ids de SKILLS en schema.js. Conjuros: ids de SPELL_LIBRARY. */
 
-import { modOf, normalizeSpell, uid } from "./schema.js";
+import { modOf, normalizeSpell, uid, profForLevel } from "./schema.js";
 import { SPELL_LIBRARY } from "./spells.js";
+import { CLASS_PROGRESSION } from "./libros/jugador.js";
+import { CONJUROS } from "./libros/conjuros.js";
 
 /* Armadura: base, si suma DES y hasta cuánto (null = toda) */
 const ARMOR = {
@@ -91,6 +93,7 @@ export const CLASSES = [
   { id: "paladin", name: "Paladín", tone: "#c8a24a", die: 10, primary: ["str", "cha"], saves: ["wis", "cha"],
     pitch: "Un juramento sagrado que se defiende con acero y fe.",
     choose: 2, from: ["atletismo", "perspicacia", "intimidacion", "medicina", "persuasion", "religion"], armor: "Todas y escudos", shield: true,
+    caster: "cha", slots: 2, spells: ["bendecir", "curar-heridas", "escudo-de-fe", "orden-imperiosa"], pick: 2,
     features: [["Sentido divino", "Notas a celestiales, infernales y muertos vivientes cercanos."],
       ["Imposición de manos", "Una reserva de 5 puntos de vida por descanso largo para curar con el tacto."]],
     resources: [["Imposición de manos", 5]],
@@ -98,7 +101,7 @@ export const CLASSES = [
   { id: "explorador", name: "Explorador", tone: "#4f7f4a", die: 10, primary: ["dex", "wis"], saves: ["str", "dex"],
     pitch: "Rastreador incansable de la frontera, letal a distancia.",
     choose: 3, from: ["trato_con_animales", "atletismo", "perspicacia", "investigacion", "naturaleza", "percepcion", "sigilo", "supervivencia"],
-    armor: "Ligeras, intermedias y escudos",
+    armor: "Ligeras, intermedias y escudos", caster: "wis", slots: 2, spells: ["curar-heridas", "enmaranar"], pick: 2,
     features: [["Enemigo predilecto", "Ventaja para rastrear y recordar datos de un tipo de criatura."],
       ["Explorador nato", "En tu terreno favorito el viaje es más rápido y no te pierdes."]],
     kit: { armor: "escamas", weapons: ["espadaCorta", "espadaCorta", "arcoLargo"], items: [["Flechas", 0.05, 20], ["Paquete de explorador", 59]] } },
@@ -177,18 +180,144 @@ export const POINT_COST = { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9
 export const POINTS = 27;
 export const ALIGNMENTS = ["Legal bueno", "Neutral bueno", "Caótico bueno", "Legal neutral", "Neutral", "Caótico neutral", "Legal malvado", "Neutral malvado", "Caótico malvado"];
 
+/* ---------- Subir de nivel ----------
+   Lo que gana cada clase del nivel 2 al 20 sale de la progresión del manual
+   del jugador (libros/jugador.js): rasgos, mejoras de característica y la
+   subclase del SRD. Los espacios de conjuro, de las tablas de 2024. */
+export const MAX_LEVEL = 20;
+const FULL_SLOTS = [[2], [3], [4, 2], [4, 3], [4, 3, 2], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 2], [4, 3, 3, 3, 1], [4, 3, 3, 3, 2],
+  [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1],
+  [4, 3, 3, 3, 2, 1, 1, 1, 1], [4, 3, 3, 3, 3, 1, 1, 1, 1], [4, 3, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 3, 2, 2, 1, 1]];
+const HALF_SLOTS = [[2], [2], [3], [3], [4, 2], [4, 2], [4, 3], [4, 3], [4, 3, 2], [4, 3, 2], [4, 3, 3], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 1],
+  [4, 3, 3, 2], [4, 3, 3, 2], [4, 3, 3, 3, 1], [4, 3, 3, 3, 1], [4, 3, 3, 3, 2], [4, 3, 3, 3, 2]];
+/* Brujo: [cuántos espacios, de qué nivel] */
+const PACT = [[1, 1], [2, 1], [2, 2], [2, 2], [2, 3], [2, 3], [2, 4], [2, 4], [2, 5], [2, 5], [3, 5], [3, 5], [3, 5], [3, 5], [3, 5], [3, 5], [4, 5], [4, 5], [4, 5], [4, 5]];
+const HALF = ["paladin", "explorador"], PACT_CASTER = "brujo";
+/* Trucos y conjuros preparados de cada nivel (2024) */
+const CANTRIPS = { bardo: [2, 4, 10], clerigo: [3, 4, 10], druida: [2, 4, 10], hechicero: [4, 4, 10], brujo: [2, 4, 10], mago: [3, 4, 10] };
+const PREPARED = {
+  full: [4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 16, 17, 17, 18, 18, 19, 20, 21, 22],
+  hechicero: [2, 4, 6, 7, 9, 10, 11, 12, 14, 15, 16, 16, 17, 17, 18, 18, 19, 20, 21, 22],
+  brujo: [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15],
+  half: [2, 3, 4, 5, 6, 6, 7, 7, 9, 9, 10, 10, 11, 11, 12, 12, 14, 14, 15, 15]
+};
+const lvIdx = lv => Math.max(1, Math.min(MAX_LEVEL, Math.trunc(+lv || 1))) - 1;
+
+export function slotsFor(cls, level) {
+  const out = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  if (!cls.caster) return out;
+  const i = lvIdx(level);
+  if (cls.id === PACT_CASTER) { const [n, lv] = PACT[i]; out[lv - 1] = n; return out; }
+  (HALF.includes(cls.id) ? HALF_SLOTS : FULL_SLOTS)[i].forEach((n, k) => { out[k] = n; });
+  return out;
+}
+export const maxSpellLevel = (cls, level) => { const sl = slotsFor(cls, level); return sl.reduce((m, n, i) => n ? i + 1 : m, 0); };
+
+/* Cuántos conjuros elige al crearlo: trucos y preparados de su nivel */
+export function spellPicks(cls, level) {
+  if (!cls.caster) return 0;
+  const i = lvIdx(level), L = i + 1;
+  const cant = CANTRIPS[cls.id] ? CANTRIPS[cls.id][0] + (L >= CANTRIPS[cls.id][1] ? 1 : 0) + (L >= CANTRIPS[cls.id][2] ? 1 : 0) : 0;
+  const prep = (PREPARED[cls.id] || PREPARED[HALF.includes(cls.id) ? "half" : "full"])[i];
+  return cant + prep;
+}
+
+/* Los conjuros que puede elegir: los de su clase en la biblioteca (según el
+   compendio), hasta el nivel de espacio que alcanza */
+const CLASS_NAME = { bardo: "Bardo", brujo: "Brujo", clerigo: "Clérigo", druida: "Druida", explorador: "Explorador", hechicero: "Hechicero", mago: "Mago", paladin: "Paladín" };
+const fold = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+export function spellOptions(cls, level) {
+  if (!cls.caster) return [];
+  const top = maxSpellLevel(cls, level), who = CLASS_NAME[cls.id];
+  const ofClass = new Set(CONJUROS.filter(c => c.classes.includes(who)).map(c => fold(c.name)));
+  const ids = new Set(cls.spells || []);
+  return SPELL_LIBRARY.filter(sp => sp.level <= top && (ids.has(sp.id) || ofClass.has(fold(sp.name)) && (sp.level > 0 || CANTRIPS[cls.id])))
+    .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name, "es"));
+}
+
+/* Los niveles con mejora de característica (el guerrero tiene más; el pícaro, una extra) */
+export function asiLevels(cls, level) {
+  const prog = CLASS_PROGRESSION[cls.id];
+  if (!prog) return [];
+  return prog.levels.map((f, i) => /Mejora de característica/.test(f || "") ? i + 1 : 0).filter(n => n && n <= level);
+}
+/* La subclase del SRD, con el nivel en que llega */
+export function subclassOf(cls) {
+  const prog = CLASS_PROGRESSION[cls.id];
+  if (!prog) return null;
+  return { name: prog.sub.name, level: Math.min(...prog.sub.features.map(f => f[0])), features: prog.sub.features };
+}
+
+/* Los rasgos de clase del nivel 2 en adelante (y los de la subclase) */
+const strip = t => fold(t).replace(/\s*\(.*?\)\s*/g, "").trim();
+export function classFeaturesUpTo(cls, level, { subclass = true } = {}) {
+  const prog = CLASS_PROGRESSION[cls.id];
+  if (!prog) return [];
+  const have = new Set(cls.features.map(([n]) => strip(n)));
+  const out = [];
+  const explain = name => {
+    const key = strip(name);
+    const hit = prog.features.find(([n]) => strip(n) === key) || prog.features.find(([n]) => strip(n).startsWith(key) || key.startsWith(strip(n)));
+    return hit ? hit[1] : "";
+  };
+  for (let L = 2; L <= level; L++) {
+    for (const raw of String(prog.levels[L - 1] || "").split(/,\s*/)) {
+      const name = raw.trim();
+      if (!name || name === "—" || /^Mejora de característica/.test(name) || /^rasgo de /i.test(name) || /^(Senda|Colegio|Dominio|Círculo|Arquetipo|Tradición|Juramento|Origen|Patrón|Conclave|Tradición monástica|Arquetipo marcial)/i.test(name) && subclass) continue;
+      const key = strip(name);
+      if (have.has(key)) continue;
+      have.add(key);
+      out.push({ name, text: explain(name) || `Rasgo de ${cls.name.toLowerCase()} de nivel ${L}.`, source: "Clase", level: L });
+    }
+  }
+  if (subclass) {
+    const sub = subclassOf(cls);
+    for (const [L, name, text] of sub.features) {
+      if (L > level || have.has(strip(name))) continue;
+      have.add(strip(name));
+      out.push({ name, text, source: "Clase", level: L, sub: sub.name });
+    }
+  }
+  return out;
+}
+
+/* Recursos que crecen con el nivel */
+const RAGE = [2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6];
+function resourcesFor(cls, level, mod) {
+  const L = lvIdx(level) + 1;
+  const out = (cls.resources || []).map(([name, n]) => {
+    let max = typeof n === "number" ? n : Math.max(1, mod(n));
+    if (name === "Furia") max = RAGE[L - 1];
+    if (name === "Imposición de manos") max = 5 * L;
+    if (name === "Tomar aliento") max = L >= 17 ? 4 : L >= 10 ? 3 : 2;
+    return { name, uses: 0, max };
+  });
+  const add = (name, max) => out.push({ name, uses: 0, max });
+  if (cls.id === "monje" && L >= 2) add("Puntos de concentración", L);
+  if (cls.id === "hechicero" && L >= 2) add("Puntos de hechicería", L);
+  if (cls.id === "clerigo" && L >= 2) add("Canalizar divinidad", L >= 18 ? 4 : L >= 6 ? 3 : 2);
+  if (cls.id === "paladin" && L >= 3) add("Canalizar divinidad", L >= 11 ? 3 : 2);
+  if (cls.id === "druida" && L >= 2) add("Forma salvaje", L >= 17 ? 4 : L >= 6 ? 3 : 2);
+  if (cls.id === "guerrero" && L >= 2) add("Oleada de acción", L >= 17 ? 2 : 1);
+  if (cls.id === "guerrero" && L >= 9) add("Indomable", L >= 17 ? 3 : L >= 13 ? 2 : 1);
+  return out;
+}
+
 /* ---------- De las elecciones a la ficha ----------
    choice: { name, classId, speciesId, bgId, base: { str…cha }, free: [abil, abil],
              skills: [ids elegidos], spells: [ids], alignment, color, avatarId, player }
    Devuelve los campos de una ficha de nivel 1, listos para normalizeChar. */
 
 export const ABIL_KEYS = ["str", "dex", "con", "int", "wis", "cha"];
+const ABIL_NAME = { str: "Fuerza", dex: "Destreza", con: "Constitución", int: "Inteligencia", wis: "Sabiduría", cha: "Carisma" };
 const sign = n => (n >= 0 ? "+" : "") + n;
 
 export function finalScores(choice) {
   const sp = SPECIES.find(s => s.id === choice.speciesId) || {};
   const out = {};
   for (const k of ABIL_KEYS) out[k] = (Number(choice.base && choice.base[k]) || 10) + ((sp.bonus || {})[k] || 0) + ((choice.free || []).includes(k) ? 1 : 0);
+  /* Mejoras de característica: +1 y +1 (o +2 si se repite), hasta 20 */
+  for (const pair of choice.asi || []) for (const k of pair || []) if (ABIL_KEYS.includes(k) && out[k] < 20) out[k] += 1;
   return out;
 }
 
@@ -212,11 +341,14 @@ export function buildCharacter(choice) {
   const sp = SPECIES.find(s => s.id === choice.speciesId);
   const bg = BACKGROUNDS.find(b => b.id === choice.bgId) || BACKGROUNDS[BACKGROUNDS.length - 1];
   if (!cls || !sp) throw new Error("Falta la clase o la especie");
+  const level = lvIdx(choice.level) + 1;
   const scores = finalScores(choice);
-  const prof = 2;
+  const prof = profForLevel(level);
   const mod = k => modOf(scores[k]);
 
-  const hp = cls.die + mod("con") + (sp.hpPerLevel || 0) + (cls.unarmored === "draconic" ? 1 : 0);
+  /* Nivel 1: el dado entero; cada nivel más, la media redondeada hacia arriba */
+  const perLevel = (sp.hpPerLevel || 0) + (cls.unarmored === "draconic" ? 1 : 0);
+  const hp = Math.max(1, cls.die + mod("con") + perLevel + (level - 1) * (Math.floor(cls.die / 2) + 1 + mod("con") + perLevel));
   const skills = [...new Set([...(choice.skills || []), ...bg.skills, ...(sp.skills || [])])];
 
   /* Armas: una entrada de ataque por arma distinta; en el equipo, agrupadas */
@@ -234,25 +366,33 @@ export function buildCharacter(choice) {
     ...cls.kit.items.map(([name, weight, qty = 1, equipped = false]) => ({ name, weight, qty, equipped }))
   ];
 
+  const sub = level > 1 || choice.subclass ? subclassOf(cls) : null;
+  const subName = sub && level >= sub.level ? (choice.subclass || sub.name) : "";
   const features = [
     ...cls.features.map(([name, text]) => ({ name, text, source: "Clase" })),
+    ...classFeaturesUpTo(cls, level, { subclass: !choice.subclass || choice.subclass === (sub && sub.name) }).map(({ name, text }) => ({ name, text, source: "Clase" })),
     ...sp.traits.map(([name, text]) => ({ name, text, source: "Especie" })),
-    { name: bg.name, text: bg.pitch, source: "Trasfondo" }
+    { name: bg.name, text: bg.pitch, source: "Trasfondo" },
+    ...asiLevels(cls, level).map((L, i) => {
+      const pair = (choice.asi || [])[i] || [];
+      const txt = pair[0] && pair[0] === pair[1] ? `+2 a ${ABIL_NAME[pair[0]]}` : pair.filter(Boolean).map(k => `+1 a ${ABIL_NAME[k]}`).join(" y ");
+      return { name: `Mejora de característica (nivel ${L})`, text: txt || "Sin repartir todavía.", source: "Dote" };
+    })
   ];
-  const resources = (cls.resources || []).map(([name, n]) => ({ name, uses: 0, max: typeof n === "number" ? n : Math.max(1, mod(n)) }));
+  const resources = resourcesFor(cls, level, mod);
   const spellbook = (choice.spells || []).map(id => SPELL_LIBRARY.find(s => s.id === id)).filter(Boolean)
     .map(s => normalizeSpell({ ...s, id: uid() }));
 
   return {
     kind: "pc", name: (choice.name || "").trim() || "Sin nombre",
-    className: cls.name, race: sp.name, background: bg.name, level: 1,
+    className: cls.name, race: sp.name, background: bg.name, level, subclass: subName,
     alignment: choice.alignment || "", player: choice.player || "",
     color: choice.color || cls.tone, avatarId: choice.avatarId || "",
     ...scores, proficiency: prof,
     hp, maxHp: hp, tempHp: 0, ac: armorClass(cls, scores), speed: sp.speed, size: sp.size, vision: sp.vision,
-    hitDice: "1d" + cls.die, saves: cls.saves.slice(), skills,
+    hitDice: level + "d" + cls.die, saves: cls.saves.slice(), skills,
     attacks, items, features, resources, spellbook,
-    castAbility: cls.caster || "", slots: [cls.slots || 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    castAbility: cls.caster || "", slots: slotsFor(cls, level)
   };
 }
 

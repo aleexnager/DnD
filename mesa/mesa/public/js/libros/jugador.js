@@ -21,7 +21,8 @@ function klass({ id, name, intro, die, primary, saves, armor, weapons, tools = "
     { id: id + "-otras", title: "Otras subclases", html: `<p>Los manuales oficiales traen más caminos; sus reglas no son de libre uso y no se reproducen aquí, pero sirven de guía para elegir:</p><ul>${others.map(([n, d]) => `<li><b>${esc(n)}</b>: ${d}</li>`).join("")}</ul>` }
   ];
   if (y2024) entries.push({ id: id + "-2024", title: "Qué cambia en 2024", html: `<p>${y2024}</p>` });
-  return { id, title: name, intro: `<p>${intro}</p>`, entries };
+  /* raw: los datos tal cual, para que el creador sepa qué gana cada nivel */
+  return { id, title: name, intro: `<p>${intro}</p>`, entries, raw: { id, die, levels, features, sub } };
 }
 
 const BARBARO = klass({ id: "barbaro", name: "Bárbaro", die: 12, primary: "Fuerza", saves: "Fuerza y Constitución",
@@ -328,6 +329,11 @@ const TRASFONDOS = { id: "trasfondos", title: "Trasfondos", intro: "<p>De dónde
   ["Soldado", "Sirvió en un ejército. Atletismo e Intimidación, un juego, dote Atacante salvaje. Fuerza, Destreza, Constitución."],
   ["Viajero", "Siempre de paso. Perspicacia y Sigilo, herramientas de ladrón, dote Afortunado. Destreza, Sabiduría, Carisma."]
 ].map(([n, d], i) => ({ id: "tr" + i, title: n, html: `<p>${d}</p>` })) };
+
+/* Por clase: el dado, los rasgos de cada nivel (1 a 20), su explicación y la
+   subclase del SRD con sus rasgos por nivel. Lo usa el creador de personajes. */
+export const CLASS_PROGRESSION = Object.fromEntries([BARBARO, BARDO, BRUJO, CLERIGO, DRUIDA, EXPLORADOR, GUERRERO, HECHICERO, MAGO, MONJE, PALADIN, PICARO]
+  .map(k => [k.id, k.raw]));
 
 export const JUGADOR = { sections: [BARBARO, BARDO, BRUJO, CLERIGO, DRUIDA, EXPLORADOR, GUERRERO, HECHICERO, MAGO, MONJE, PALADIN, PICARO, ESPECIES, TRASFONDOS,
   { id: "creditos", title: "Créditos", entries: [{ id: "cr", title: "", html: "<p>Las reglas de este manual salen del <i>System Reference Document</i> 5.1 y 5.2 de Wizards of the Coast LLC, publicados con licencia Creative Commons Attribution 4.0, resumidas y redactadas para Mesa. Las subclases fuera del SRD solo se nombran. Dungeons &amp; Dragons es marca de Wizards of the Coast.</p>" }] }] };
