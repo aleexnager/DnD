@@ -202,6 +202,17 @@ export function op(type, extra = {}) {
   return true;
 }
 
+/* Quién apunta a quién, para que se vea en los mapas: «to» es un id o una
+   lista; vacío, deja de apuntar. Se manda solo si cambia. */
+const aimed = new Map();
+export function aimAt(from, to, { secret = false, src = "win" } = {}) {
+  const list = (Array.isArray(to) ? to : [to]).filter(Boolean);
+  const key = src + ":" + (src === "pick" ? "" : from), sig = JSON.stringify([from, list, !!secret]);
+  if (aimed.get(key) === sig) return;
+  aimed.set(key, sig);
+  op("aim.set", { from: from || "", to: list, secret: !!secret, src });
+}
+
 async function flush() {
   const ops = queue;
   queue = [];

@@ -33,6 +33,8 @@ export const reducedMotion = () =>
 
 /* La barra de vida lleva su identificador para que, al repintarse, se deslice
    desde donde estaba en vez de saltar. */
+/* La vida temporal, en una insignia junto a la vida, como la CA temporal */
+export const hpExtra = c => c && c.tempHp > 0 ? ` <i class="hp-extra" title="Puntos de golpe temporales">+${c.tempHp}</i>` : "";
 export const hpBar = (id, p) =>
   `<div class="bar"><i class="${hpTone(p)}" data-bar="${esc(id)}" data-p="${p}" style="width:${p}%"></i></div>`;
 

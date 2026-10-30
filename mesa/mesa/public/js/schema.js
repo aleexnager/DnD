@@ -726,7 +726,10 @@ const SESSION_DEFAULTS = {
   showMoveRange: true,  // pintar el alcance al arrastrar
   allowPlayerDraw: false,  // ¿los jugadores pueden dibujar en el mapa?
   showWallsToParty: false, // ¿la party ve los muros y las puertas dibujados?
-  autoSkipDown: true    // saltar en la iniciativa a los que están fuera de combate
+  autoSkipDown: true,   // saltar en la iniciativa a los que están fuera de combate
+  /* Nuevo en 2.20 */
+  aims: [],             // quién apunta a quién (efímero): { from, to, src, secret }
+  showAims: true        // ¿la party y la tele ven a quién se apunta?
 };
 
 export function emptyDoc() {
@@ -805,6 +808,7 @@ export function migrate(raw) {
   session.combat.order = Array.isArray(session.combat.order) ? session.combat.order : [];
   session.requests = Array.isArray(session.requests) ? session.requests : [];
   session.ping = null;
+  session.aims = [];
   if (!maps.some(m => m.id === session.activeMapId)) session.activeMapId = maps[0].id;
   if (src.activeMapId && maps.some(m => m.id === src.activeMapId)) session.activeMapId = src.activeMapId;
   chars.forEach(c => { if (c.mx !== null && !maps.some(m => m.id === c.mapId)) c.mapId = session.activeMapId; });

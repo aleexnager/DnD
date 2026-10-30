@@ -3,7 +3,7 @@
    aquí solo se elige qué, a qué nivel y contra quién. */
 
 import { el, on, esc, toast, modal, confirmBox } from "./util.js";
-import { op, patchChar, store } from "./net.js";
+import { op, patchChar, store, aimAt } from "./net.js";
 import { normalizeSpell, modOf, CONDITIONS, SHAPE_NAMES, uid } from "./schema.js";
 import { guessAbility, libraryOf, isBuiltinSpell, builtinSpell } from "./spells.js";
 import { icon, withIcon } from "./icons.js";
@@ -318,8 +318,12 @@ export function openCast(c, sp, ctx = {}) {
     mode = b.dataset.m;
     body.querySelectorAll("[data-m]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
   });
+  /* Los objetivos marcados se ven en el mapa mientras se decide */
+  const secretNow = () => !!(body.querySelector("#castSecret") && body.querySelector("#castSecret").checked) || !!ctx.secret;
+  const aimNow = () => aimAt(c.id, [...body.querySelectorAll(".cast-targets input:checked")].map(i => i.value), { secret: secretNow() });
+  body.addEventListener("change", e => { if (e.target.matches(".cast-targets input, #castSecret")) aimNow(); });
   const win = modal({
-    title: `${sp.name}${sp.level ? " · nivel " + sp.level : " · truco"}`, body,
+    title: `${sp.name}${sp.level ? " · nivel " + sp.level : " · truco"}`, body, onClose: () => aimAt(c.id, ""),
     actions: [
       { label: "Cancelar" },
       { label: "Lanzar", tone: "primary", run: host => {
@@ -333,6 +337,7 @@ export function openCast(c, sp, ctx = {}) {
       } }
     ]
   });
+  aimNow();
   const area = body.querySelector("#castArea");
   if (area) area.addEventListener("click", () => { win.close(); ctx.previewArea(sp, () => openCast(ctx.getChar ? ctx.getChar(c.id) : c, sp, ctx)); });
 }

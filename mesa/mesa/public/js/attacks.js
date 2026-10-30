@@ -6,7 +6,7 @@
    tirar de un clic en vez de leer y hacer cuentas. */
 
 import { el, on, esc, toast, modal } from "./util.js";
-import { store, op } from "./net.js";
+import { store, op, aimAt } from "./net.js";
 import { acOf, normalizeAttack, modOf, parseAttackLine, canSneak, canSmite, sneakDice, buffsFor } from "./schema.js";
 import { critDamage } from "./attacks-core.js";
 import { keyMods } from "./dice-panel.js";
@@ -155,8 +155,13 @@ export function openAttacks(attacker, { targets = [], preselect = null, secret =
     }).join("")}</div>` : ""}
   </div>`);
 
-  const m = modal({ title: "Ataques de " + attacker.name, body, wide: true, actions: [{ label: "Cerrar" }] });
-  body.querySelector("#atkTarget").addEventListener("change", e => { targetId = e.target.value; });
+  /* Mientras la ventana está abierta, el mapa enseña a quién apunta; al
+     cerrarla (o al lanzar un conjuro, que sigue en su ventana) se quita */
+  let toSpell = false;
+  const m = modal({ title: "Ataques de " + attacker.name, body, wide: true, actions: [{ label: "Cerrar" }],
+    onClose: () => { if (!toSpell) aimAt(attacker.id, ""); } });
+  aimAt(attacker.id, targetId, { secret });
+  body.querySelector("#atkTarget").addEventListener("change", e => { targetId = e.target.value; aimAt(attacker.id, targetId, { secret }); });
   on(body, "click", "[data-m]", (e, b) => {
     mode = b.dataset.m;
     body.querySelectorAll("[data-m]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
@@ -165,6 +170,7 @@ export function openAttacks(attacker, { targets = [], preselect = null, secret =
   on(body, "click", "[data-sp]", (e, b) => {
     const sp = spells.find(x => x.id === b.dataset.sp);
     if (!sp) return;
+    toSpell = true;
     m.close();
     openCast(attacker, sp, { ...spellCtx, preselect: s => targetId ? [targetId] : (spellCtx.preselect ? spellCtx.preselect(s) : []) });
   });

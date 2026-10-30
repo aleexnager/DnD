@@ -176,15 +176,19 @@ export function simulate(dice, bounds, R = Math.random) {
   }
   /* Al final, cada dado bien apoyado sobre la cara que tiene arriba: los
      últimos fotogramas lo asientan, sin que se note */
+  /* El d4 no tiene cara arriba sino una punta: se asienta sobre la cara de
+     abajo y su «top» es esa cara (el número se lee en el vértice de arriba) */
   const top = bodies.map(b => {
+    const sign = b.sh.F.length === 4 ? -1 : 1;
     let best = 0, bestY = -2;
-    b.sh.normals.forEach((nv, i) => { const y = qRot(b.q, nv)[1]; if (y > bestY) { bestY = y; best = i; } });
+    b.sh.normals.forEach((nv, i) => { const y = sign * qRot(b.q, nv)[1]; if (y > bestY) { bestY = y; best = i; } });
     return best;
   });
   const settle = Math.min(14, frames.length - 1);
   const finals = bodies.map((b, i) => {
-    const up = qRot(b.q, b.sh.normals[top[i]]);
-    return { q: qNorm(qMul(qBetween(up, [0, 1, 0]), b.q)), y: restHeight(b.sh, top[i]) };
+    const n = qRot(b.q, b.sh.normals[top[i]]);
+    const want = b.sh.F.length === 4 ? [0, -1, 0] : [0, 1, 0];
+    return { q: qNorm(qMul(qBetween(n, want), b.q)), y: restHeight(b.sh, top[i]) };
   });
   for (let k = 0; k < settle; k++) {
     const t = (k + 1) / settle, f = frames[frames.length - settle + k];
@@ -192,7 +196,8 @@ export function simulate(dice, bounds, R = Math.random) {
   }
   return { frames, top };
 }
-/* Altura del centro cuando el dado se apoya con la cara de arriba hacia arriba */
+/* Altura del centro cuando el dado se apoya con esa cara hacia arriba (o,
+   en el d4, hacia abajo): la distancia del centro al plano de la cara */
 function restHeight(sh, face) {
   const n = sh.normals[face];
   return Math.max(...sh.V.map(v => dot(v, n)));

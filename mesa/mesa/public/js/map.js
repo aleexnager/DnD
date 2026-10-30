@@ -122,7 +122,7 @@ export class MapView {
     const { chars, session } = this.data;
     const t = performance.now();
     for (const c of chars || []) {
-      const hp = c.hpPct !== undefined ? c.hpPct : c.hp;
+      const hp = (c.hpPct !== undefined ? c.hpPct : c.hp) + (c.tempHp || 0) / 1000;
       const before = this._hp.get(c.id);
       this._hp.set(c.id, hp);
       if (before !== undefined && hp !== before) this._marks.set(c.id, { kind: hp < before ? "hurt" : "heal", t0: t });
@@ -1052,6 +1052,8 @@ export class MapView {
     const order = session && session.combat && session.combat.on ? session.combat.order : [];
     const nowId = order.length ? order[session.combat.index] : null;
     const t = performance.now();
+    const drawn = new Map();   // dónde ha quedado cada ficha, para las flechas de «apunta a»
+    const aimed = new Set(((this.data.session && this.data.session.aims) || []).map(a => a.to));
     for (const c of chars) {
       if (c.mapId !== map.id || c.mx === null) continue;
       let x = c.mx, y = c.my;
@@ -1081,10 +1083,15 @@ export class MapView {
         pos = { x, y };
       } else pos = this.glide(c, x, y, t);
       this.token(ctx, g, c, pos.x, pos.y, X, Y, {
-        now: c.id === nowId, selected: this.selection.has(c.id), target: this.target === c.id, memory: !!c.memory,
+        now: c.id === nowId, selected: this.selection.has(c.id), target: this.target === c.id && !aimed.has(c.id), memory: !!c.memory,
         mark: this._marks.get(c.id), pulse: this._pulse && this._pulse.id === c.id ? this._pulse : null, t
       });
+      if (!c.memory) {
+        const span = g.cell * footprint(c);
+        drawn.set(c.id, { cx: X(pos.x) + span / 2, cy: Y(pos.y) + span / 2, r: span * 0.4, color: c.color });
+      }
     }
+    this.aims(ctx, g, drawn, t);
 
     /* Recuadro de selección */
     if (this.band) {
@@ -1340,6 +1347,71 @@ export class MapView {
   tick() {
     cancelAnimationFrame(this._anim);
     this._anim = requestAnimationFrame(() => this.draw());
+  }
+
+  /* Quién apunta a quién: una flecha a rayas que avanza, del color del que
+     apunta, y una mira roja alrededor del objetivo. Sin atacante (el DM
+     marca un objetivo fuera de combate), solo la mira. */
+  aims(ctx, g, drawn, t) {
+    const list = ((this.data.session && this.data.session.aims) || []);
+    if (!list.length) return;
+    const wins = new Set(list.filter(a => a.src === "win").map(a => a.from));
+    const marked = new Set();
+    const moving = !this.still();
+    for (const a of list) {
+      if (a.src === "pick" && wins.has(a.from)) continue;     // la ventana abierta manda
+      const to = drawn.get(a.to);
+      if (!to) continue;
+      const from = a.from && drawn.get(a.from);
+      ctx.save();
+      if (from && a.from !== a.to) {
+        const dx = to.cx - from.cx, dy = to.cy - from.cy, d = Math.hypot(dx, dy);
+        const ux = dx / d, uy = dy / d;
+        const sx = from.cx + ux * (from.r + 3), sy = from.cy + uy * (from.r + 3);
+        const ex = to.cx - ux * (to.r + Math.max(7, g.cell * 0.2)), ey = to.cy - uy * (to.r + Math.max(7, g.cell * 0.2));
+        if (Math.hypot(ex - sx, ey - sy) > 4) {
+          /* Un poco curvada, para que dos que se apuntan no se pisen */
+          const bend = Math.min(d * 0.12, g.cell * 0.6);
+          const mx = (sx + ex) / 2 - uy * bend, my = (sy + ey) / 2 + ux * bend;
+          const w = Math.max(2, g.cell * 0.07);
+          ctx.lineCap = "round";
+          ctx.strokeStyle = "rgba(7,8,12,.7)"; ctx.lineWidth = w + 3;
+          ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(mx, my, ex, ey); ctx.stroke();
+          ctx.strokeStyle = from.color || "#e8c37a"; ctx.lineWidth = w;
+          ctx.setLineDash([w * 3, w * 2.2]);
+          ctx.lineDashOffset = moving ? -(t / 40) % (w * 5.2) : 0;
+          ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(mx, my, ex, ey); ctx.stroke();
+          ctx.setLineDash([]);
+          /* Punta de flecha, en la dirección con la que llega la curva */
+          const ang = Math.atan2(ey - my, ex - mx), hl = Math.max(8, g.cell * 0.22);
+          ctx.fillStyle = from.color || "#e8c37a";
+          ctx.strokeStyle = "rgba(7,8,12,.7)"; ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(ex + Math.cos(ang) * hl * 0.5, ey + Math.sin(ang) * hl * 0.5);
+          ctx.lineTo(ex + Math.cos(ang + 2.5) * hl, ey + Math.sin(ang + 2.5) * hl);
+          ctx.lineTo(ex + Math.cos(ang - 2.5) * hl, ey + Math.sin(ang - 2.5) * hl);
+          ctx.closePath(); ctx.fill(); ctx.stroke();
+        }
+      }
+      if (!marked.has(a.to)) {
+        marked.add(a.to);
+        /* La mira: un aro con cuatro marcas que gira despacio */
+        const R = to.r + Math.max(6, g.cell * 0.16), spin = moving ? t / 1600 : 0;
+        ctx.strokeStyle = COLORS.target; ctx.lineWidth = Math.max(2, g.cell * 0.06);
+        ctx.setLineDash([R * 0.9, R * 0.68]); ctx.lineDashOffset = -spin * R * 2;
+        ctx.beginPath(); ctx.arc(to.cx, to.cy, R, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+        for (let k = 0; k < 4; k++) {
+          const q = spin + k * Math.PI / 2;
+          ctx.beginPath();
+          ctx.moveTo(to.cx + Math.cos(q) * (R - g.cell * 0.08), to.cy + Math.sin(q) * (R - g.cell * 0.08));
+          ctx.lineTo(to.cx + Math.cos(q) * (R + g.cell * 0.12), to.cy + Math.sin(q) * (R + g.cell * 0.12));
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+    if (moving) this._moving = true;
   }
 
   conditionBadges(ctx, g, conds, cx, cy, r) {
@@ -1617,6 +1689,15 @@ export class MapView {
       ctx.lineWidth = Math.max(2, g.cell * 0.09);
       ctx.strokeStyle = { ok: "#48a84d", warn: "#e69a28", bad: "#d24040", out: "#555" }[hpTone(p)];
       ctx.stroke();
+      /* La vida temporal, un arco azul por fuera, en proporción a la máxima */
+      if (c.tempHp > 0 && c.maxHp > 0) {
+        const t = Math.min(1, c.tempHp / c.maxHp);
+        ctx.beginPath();
+        ctx.arc(cx, cy, r + Math.max(4, g.cell * 0.13), -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * t);
+        ctx.lineWidth = Math.max(1.5, g.cell * 0.05);
+        ctx.strokeStyle = "#6fb6ff";
+        ctx.stroke();
+      }
     }
     if (down) {
       ctx.strokeStyle = "#b8383b";

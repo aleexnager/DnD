@@ -3,11 +3,11 @@
 import { openExportChars, importChars } from "./chars-io.js";
 import { afterMove } from "./portals.js";
 import { voiceWidget } from "./voice.js";
-import { $, el, on, esc, lines, sign, pct, hpTone, hpBar, tweenBars, initials, imgURL, toast, modal, confirmBox, shrinkImage, clamp } from "./util.js";
+import { $, el, on, esc, lines, sign, pct, hpTone, hpBar, tweenBars, initials, imgURL, toast, modal, confirmBox, shrinkImage, clamp, hpExtra } from "./util.js";
 import { acOf, initBonus, pbForCR, cellKey, CONDITIONS, conditionName, ABILITIES, SKILLS, PIN_KINDS, normalizeSound, modOf, normalizeChar, normalizeBeast, bestiaryOf, isBaseBeast, normalizeMap, normalizePin, normalizePortal, uid, encounterDifficulty, MAX_COLS, MAX_ROWS } from "./schema.js";
 import { openAttacks } from "./attacks.js";
 import { feetChars, nextRoomId, visibleCells, roomsOf, hasSight, occupied } from "./los.js";
-import { store, onState, onPresence, onStatus, op, patchChar, patchSession, patchMap, uploadImage, leave, lobby, setOpGuard } from "./net.js";
+import { store, onState, onPresence, onStatus, op, patchChar, patchSession, patchMap, uploadImage, leave, lobby, setOpGuard, aimAt } from "./net.js";
 import { dicePanel, renderLog, throwDice, tellTable, currentMode, isSecret, isQuiet } from "./dice-panel.js";
 import { startDice3D } from "./dice3d.js";
 import { openCharEditor, openConditions, openTempAC, acShield } from "./char-editor.js";
@@ -45,6 +45,13 @@ let shapeSize = 20;
 let shapeColor = "#8878d8";
 const SHAPE_COLORS = ["#8878d8", "#e56b6f", "#f08a2b", "#7fd0ff", "#8fd694", "#e0bd76"];
 let targetId = null;
+/* El objetivo marcado se ve en los mapas: apuntado por quien tiene el turno
+   (fuera de combate, solo la mira). En secreto, solo lo ve el DM. */
+function syncAim() {
+  const c = doc() && session().combat;
+  const from = c && c.on && c.order.length ? c.order[c.index] || "" : "";
+  aimAt(from, targetId || "", { src: "pick", secret: isSecret() });
+}
 let lastAlert = null;   // null = todavía no se ha pintado nada
 let lastArea = null;    // la última plantilla colocada para un conjuro
 let afterArea = null;
@@ -87,6 +94,7 @@ let example = null, exampleOff = null, exampleWarned = 0;
 const exampleGuard = o => {
   const s = JSON.stringify(o);
   if (!s.includes("tour-ex") && !EXAMPLE_MARK.test(s)) return o;
+  if (o.type === "aim.set") return null;
   if (o.type === "log.add" && o.entry && o.entry.kind === "roll") return { ...o, entry: { ...o.entry, secret: true } };
   if (Date.now() - exampleWarned > 2500) { exampleWarned = Date.now(); toast("Es un ejemplo del tutorial: no cambia la partida"); }
   return null;
@@ -469,7 +477,7 @@ function cardHTML(c) {
     <div class="hp">
       <div class="nums">
         <b class="tnum">${c.hp}</b><span>/ ${c.maxHp}</span>
-        ${c.tempHp ? `<span class="temp">+${c.tempHp} temporales</span>` : ""}
+        ${c.tempHp ? `<span class="temp"><i class="hp-extra">+${c.tempHp}</i> temporales</span>` : ""}
         <span class="spacer"></span>
         ${acShield(c, { act: "tempAc" })}
       </div>
@@ -622,6 +630,7 @@ function bindTable(root) {
       case "target": {
         targetId = targetId === c.id ? null : c.id;
         if (mapView) mapView.target = targetId;
+        syncAim();
         toast(targetId ? "Apuntando a " + c.name : "Sin objetivo");
         return render();
       }
@@ -1363,6 +1372,7 @@ function renderMap() {
         if (e && (e.ctrlKey || e.metaKey)) {
           targetId = targetId === id ? null : id;
           mapView.target = targetId;
+          syncAim();
           return render();
         }
         tokenMenu(id);
@@ -1563,13 +1573,15 @@ function placeTokenMenu() {
   const c = byId(tokenPop.id);
   if (c) {
     const small = tokenPop.node.querySelector(".tk-id small");
-    if (small) small.innerHTML = `<span class="tnum">${c.hp}/${c.maxHp}</span> PV · CA <span class="tnum">${acOf(c)}</span>${c.tempAc ? ` <i class="ac-extra">${c.tempAc > 0 ? "+" : "−"}${Math.abs(c.tempAc)}</i>` : ""}`;
+    if (small) small.innerHTML = `<span class="tnum">${c.hp}/${c.maxHp}</span>${hpExtra(c)} PV · CA <span class="tnum">${acOf(c)}</span>${c.tempAc ? ` <i class="ac-extra">${c.tempAc > 0 ? "+" : "−"}${Math.abs(c.tempAc)}</i>` : ""}`;
     const bar = tokenPop.node.querySelector(".tk-id .bar i");
     if (bar) { bar.style.width = pct(c) + "%"; bar.className = hpTone(pct(c)); }
     const acb = tokenPop.node.querySelector(".tk-ac b");
     if (acb) acb.textContent = acOf(c);
     const hpb = tokenPop.node.querySelector(".tk-hp b");
     if (hpb) hpb.textContent = c.hp;
+    const thb = tokenPop.node.querySelector(".tk-thp b");
+    if (thb) thb.textContent = c.tempHp || 0;
   }
   const n = tokenPop.node, w = n.offsetWidth, h = n.offsetHeight, gap = 10, pad = 8;
   const minX = Math.max(pad, at.board.left + pad), maxX = Math.min(innerWidth - pad, at.board.right - pad);
@@ -1598,7 +1610,7 @@ function tokenMenu(id) {
       ${c.avatarId ? `<img class="avatar" src="${imgURL(c.avatarId)}" alt="">` : `<div class="avatar">${initials(c.name)}</div>`}
       <div class="tk-id">
         <b>${esc(c.name)}</b>
-        <small><span class="tnum">${c.hp}/${c.maxHp}</span> PV · CA <span class="tnum">${acOf(c)}</span>${c.tempAc ? ` <i class="ac-extra">${c.tempAc > 0 ? "+" : "−"}${Math.abs(c.tempAc)}</i>` : ""}</small>
+        <small><span class="tnum">${c.hp}/${c.maxHp}</span>${hpExtra(c)} PV · CA <span class="tnum">${acOf(c)}</span>${c.tempAc ? ` <i class="ac-extra">${c.tempAc > 0 ? "+" : "−"}${Math.abs(c.tempAc)}</i>` : ""}</small>
         ${hpBar(c.id, p)}
       </div>
     </div>
@@ -1608,6 +1620,12 @@ function tokenMenu(id) {
         <button type="button" class="btn sm bad" data-tkq="dmg" aria-label="Restar 1 de vida">−</button>
         <b class="tnum">${c.hp}</b>
         <button type="button" class="btn sm good" data-tkq="heal" aria-label="Sumar 1 de vida">+</button>
+      </div>
+      <div class="tk-thp" title="Vida temporal: se gasta antes que la vida y no se suma a la máxima">
+        <span>Temp.</span>
+        <button type="button" class="btn sm" data-tkq="thpDown" aria-label="Restar 1 de vida temporal">−</button>
+        <b class="tnum">${c.tempHp || 0}</b>
+        <button type="button" class="btn sm" data-tkq="thpUp" aria-label="Sumar 1 de vida temporal">+</button>
       </div>
       <div class="tk-ac" title="CA temporal: Escudo, cobertura…">
         <span>CA</span>
@@ -1662,6 +1680,14 @@ function tokenMenu(id) {
       shown.textContent = Math.max(0, Math.min(now.maxHp, cur + (what === "dmg" ? -1 : 1)));
       return;
     }
+    if (what === "thpUp" || what === "thpDown") {
+      const shown = node.querySelector(".tk-thp b");
+      const next = Math.max(0, Math.min(999, (+shown.textContent || 0) + (what === "thpUp" ? 1 : -1)));
+      if (next === +shown.textContent) return;
+      patchChar(id, { tempHp: next });
+      shown.textContent = next;
+      return;
+    }
     const next = Math.max(-20, Math.min(30, (now.tempAc || 0) + (what === "acUp" ? 1 : -1)));
     patchChar(id, { tempAc: next });
     node.querySelector(".tk-ac b").textContent = (now.ac || 0) + next;
@@ -1669,7 +1695,7 @@ function tokenMenu(id) {
   on(node, "click", "[data-tk]", (e, b) => {
     const what = b.dataset.tk;
     closeTokenMenu();
-    if (what === "target") { targetId = targetId === id ? null : id; mapView.target = targetId; return render(); }
+    if (what === "target") { targetId = targetId === id ? null : id; mapView.target = targetId; syncAim(); return render(); }
     if (what === "attack") return attack(c);
     if (what === "focus") { patchSession({ focusId: id }); return toast("La cámara sigue a " + c.name); }
     if (what === "conditions") return openConditions(c);
@@ -2016,6 +2042,7 @@ function openMapSettings(map) {
       <label class="check" style="margin-top:8px"><input type="checkbox" name="dark" ${map.dark ? "checked" : ""}> Mapa a oscuras (solo se ve con antorchas o visión en la oscuridad)</label>
       <label class="check" style="margin-top:8px"><input type="checkbox" name="playerZoom" ${map.playerZoom ? "checked" : ""}> Dejar que los jugadores se acerquen y alejen</label>
       <label class="check" style="margin-top:8px"><input type="checkbox" name="range" ${session().showMoveRange !== false ? "checked" : ""}> Pintar el alcance al arrastrar una ficha</label>
+      <label class="check" style="margin-top:8px"><input type="checkbox" name="aims" ${session().showAims !== false ? "checked" : ""}> Enseñar a la party a quién se apunta al atacar (tú lo ves siempre)</label>
       <label class="check" style="margin-top:8px"><input type="checkbox" name="foehp" ${session().showFoeHP ? "checked" : ""}> Enseñar a la party cuánta vida les queda a los enemigos</label>
       <div class="cols2" style="margin-top:12px">
         <label class="field"><span>Cámara</span>
@@ -2154,6 +2181,7 @@ function openMapSettings(map) {
           allowPlayerDraw: v("draw").checked,
           showWallsToParty: v("walls").checked,
           showMoveRange: v("range").checked,
+          showAims: v("aims").checked,
           showFoeHP: v("foehp").checked
         });
       }

@@ -3,7 +3,7 @@
    que alguien pueda descuadrarla al pasar por delante. */
 
 import { ambientToggle } from "./ambient.js";
-import { $, esc, pct, hpTone, initials, imgURL, hpBar, tweenBars, reducedMotion } from "./util.js";
+import { $, esc, pct, hpTone, initials, imgURL, hpBar, tweenBars, reducedMotion, hpExtra } from "./util.js";
 import { store, onState, onStatus, leave } from "./net.js";
 import { startDice3D } from "./dice3d.js";
 import { conditionName, acOf, acParts } from "./schema.js";
@@ -275,7 +275,7 @@ function whoCard(c, session, { inTurn = false, fighting = true } = {}) {
     </div>
     ${p !== null ? hpBar(c.id, p) : ""}
     ${exact || (monster && c.wound) || c.conditions.length ? `<div class="state row-line">
-      ${exact ? `<span class="tnum">${c.hp}/${c.maxHp} PV</span>` : ""}
+      ${exact ? `<span class="tnum">${c.hp}/${c.maxHp}${hpExtra(c)} PV</span>` : ""}
       ${monster && c.wound ? `<span>${esc(c.wound)}</span>` : ""}
       ${c.conditions.length ? `<span class="conds">${c.conditions.map(x => `<i>${esc(conditionName(x))}</i>`).join("")}</span>` : ""}
     </div>` : ""}

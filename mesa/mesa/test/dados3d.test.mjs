@@ -32,7 +32,9 @@ test("la caída acaba en reposo, dentro de la pantalla y con el número que sali
     const last = sim.frames[sim.frames.length - 1];
     dice.forEach((d, i) => {
       const sh = shapeOf(d.shape), q = last[i].q;
-      assert.ok(qRot(q, sh.normals[sim.top[i]])[1] > 0.999, "apoyado sobre una cara");
+      /* El d4 se apoya en la cara de abajo (con la punta arriba); los demás, con una cara arriba */
+      if (d.shape === 4) assert.ok(qRot(q, sh.normals[sim.top[i]])[1] < -0.999, "d4 apoyado sobre una cara, con la punta arriba");
+      else assert.ok(qRot(q, sh.normals[sim.top[i]])[1] > 0.999, "apoyado sobre una cara");
       /* z positivo es la parte de abajo de la pantalla: ahí la pared sube para dejar sitio a la placa */
       assert.ok(Math.abs(last[i].p[0]) <= 11.6 && last[i].p[2] >= -6.6 && last[i].p[2] <= 6 * 0.45 + 0.6, "dentro de la pantalla");
       const labels = labelsFor(d, sim.top[i], q);
@@ -41,6 +43,7 @@ test("la caída acaba en reposo, dentro de la pantalla y con el número que sali
         let hi = 0, hy = -9;
         sh.V.forEach((v, k) => { const y = qRot(q, v)[1]; if (y > hy) { hy = y; hi = k; } });
         assert.equal(labels[hi], String(d.v));
+        assert.ok(hy > 0.9 * Math.max(...sh.V.map(v => Math.hypot(...v))), "la punta mira hacia arriba");
       } else assert.equal(labels[sim.top[i]], d.face);
       assert.equal(new Set(labels).size, labels.length, "sin números repetidos");
     });

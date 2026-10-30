@@ -20,7 +20,7 @@ const loadThree = async () => THREE || (THREE = await import("../vendor/three/th
 const reduced = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- Caras con número ---------- */
-function faceTexture(label, color, ink, d4Corners = null) {
+function faceTexture(label, color, ink, opt = {}) {
   const c = document.createElement("canvas");
   c.width = c.height = 128;
   const g = c.getContext("2d");
@@ -30,14 +30,28 @@ function faceTexture(label, color, ink, d4Corners = null) {
   grad.addColorStop(0, "rgba(255,255,255,.22)"); grad.addColorStop(1, "rgba(0,0,0,.18)");
   g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
   g.fillStyle = ink; g.textAlign = "center"; g.textBaseline = "middle";
-  if (d4Corners) {
-    g.font = "700 34px Roboto, system-ui, sans-serif";
-    for (const [txt, u, v] of d4Corners) { g.fillText(txt, u * 128, (1 - v) * 128); }
+  if (opt.corners) {
+    /* d4: cada número junto a su vértice y con la cabeza hacia él, como en
+       los de verdad: con esa punta arriba, los tres se leen derechos */
+    g.font = "700 36px Roboto, system-ui, sans-serif";
+    for (const [txt, u, v] of opt.corners) {
+      const x = u * 128, y = (1 - v) * 128;
+      g.save(); g.translate(x, y); g.rotate(Math.atan2(x - 64, opt.cy - y)); g.fillText(txt, 0, 0); g.restore();
+    }
   } else {
-    const big = String(label).length > 2 ? 46 : String(label).length > 1 ? 60 : 78;
+    const txt = String(label);
+    /* Las caras triangulares (d8, d20) y las cometas del d10 son más
+       estrechas: número más pequeño */
+    const room = opt.room || 1;
+    const big = Math.round((txt.length > 2 ? 46 : txt.length > 1 ? 58 : 74) * room);
+    const cy = opt.cy || 64;
     g.font = `700 ${big}px Roboto, system-ui, sans-serif`;
-    g.fillText(label, 64, 68);
-    if (label === "6" || label === "9") g.fillRect(48, 104, 32, 5);
+    g.fillText(txt, 64, cy);
+    /* 6 y 9 (y 60 y 90) se distinguen con una raya debajo */
+    if (/^(6|9|60|90)$/.test(txt)) {
+      const w = Math.min(g.measureText(txt).width * 0.8, 46), h = Math.max(4, Math.round(big / 13));
+      g.fillRect(64 - w / 2, cy + big * 0.42, w, h);
+    }
   }
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
@@ -76,11 +90,11 @@ function buildMesh(f, labels, color, ink) {
     if (f === 4) {
       /* El d4 se lee por el vértice de arriba: cada esquina lleva el número de su vértice */
       const c = [0.5, 0.44];
-      map = faceTexture("", color, ink, face.map((vi, k) => {
+      map = faceTexture("", color, ink, { cy: (1 - c[1]) * 128, corners: face.map((vi, k) => {
         const [u, v] = faceUV[fi][k];
-        return [labels[vi], c[0] + (u - c[0]) * 0.62, c[1] + (v - c[1]) * 0.62];
-      }));
-    } else map = faceTexture(labels[fi], color, ink);
+        return [labels[vi], c[0] + (u - c[0]) * 0.6, c[1] + (v - c[1]) * 0.6];
+      }) });
+    } else map = faceTexture(labels[fi], color, ink, F[fi].length === 3 ? { room: 0.74, cy: 70 } : F[fi].length === 4 ? { room: 0.66, cy: 70 } : {});
     return new THREE.MeshStandardMaterial({ map, roughness: 0.38, metalness: 0.08, transparent: true });
   });
   const mesh = new THREE.Mesh(geo, mats);

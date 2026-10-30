@@ -209,7 +209,12 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       bestiary: [],
       spellLib: doc.spellLib || [],
       maps,
-      session: { ...doc.session, notes: "", alert: null, activeMapId: showMap ? map.id : "" }
+      session: { ...doc.session, notes: "", alert: null, activeMapId: showMap ? map.id : "",
+        /* A quién se apunta: si el DM lo enseña, sin lo secreto y solo entre
+           fichas que la party tiene a la vista */
+        aims: doc.session.showAims === false || !showMap ? [] : (doc.session.aims || []).filter(a => !a.secret
+          && chars.some(c => c.id === a.to && c.mx !== null && !c.memory)
+          && (!a.from || chars.some(c => c.id === a.from && c.mx !== null && !c.memory))) }
     };
   }
 
@@ -1028,6 +1033,20 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         m.sounds = op.remove ? list : [...list, sound].slice(-40);
         break;
       }
+      /* Quién apunta a quién: la ventana de ataque abierta («win») o el
+         objetivo que el DM deja marcado para el que tiene el turno («pick»).
+         Sin «to», se quita. Un jugador solo apunta con su personaje. */
+      case "aim.set": {
+        const from = String(op.from || "").slice(0, 40);
+        const to = [...new Set((Array.isArray(op.to) ? op.to : [op.to]).map(x => String(x || "").slice(0, 40)).filter(Boolean))].slice(0, 12);
+        const src = op.src === "pick" ? "pick" : "win";
+        if (!dm && (src === "pick" || !owns(from))) return "Solo apuntas con tu personaje";
+        if (from && !findChar(from)) return "No existe ese personaje";
+        if (to.some(id => !findChar(id))) return "No existe ese objetivo";
+        const rest = (doc.session.aims || []).filter(a => !(a.src === src && (src === "pick" || a.from === from)));
+        doc.session.aims = [...rest, ...to.map(id => ({ from, to: id, src, secret: dm && !!op.secret }))].slice(-24);
+        return "SKIP_HISTORY";
+      }
       case "ping":
         doc.session.ping = { x: op.x, y: op.y, mapId: op.mapId || doc.session.activeMapId, ts: Date.now(), by: client.name, color: op.color || "#ffd27f" };
         break;
@@ -1068,7 +1087,8 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         if (!dm) return "Solo el DM";
         const c = { ...doc.session.combat };
         if (!c.on || !c.order.length) break;
-        endTurn(findChar(c.order[c.index]));
+        const ended = c.order[c.index];
+        endTurn(findChar(ended));
         const dir = op.dir === -1 ? -1 : 1;
         for (let n = 0; n < c.order.length; n++) {
           let i = c.index + dir;
@@ -1080,6 +1100,10 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         }
         doc.session.combat = c;
         const now = findChar(c.order[c.index]);
+        /* Al pasar el turno, el que acaba deja de apuntar y el objetivo que
+           el DM tenga marcado pasa a ser el del que empieza */
+        doc.session.aims = (doc.session.aims || []).filter(a => !(a.src === "win" && a.from === ended))
+          .map(a => a.src === "pick" ? { ...a, from: now ? now.id : "" } : a);
         startTurn(now);
         if (now && now.kind === "pc") doc.session.focusId = now.id;
         break;
@@ -1237,7 +1261,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
   /* Aplica un lote. Si una operación falla, las anteriores ya se aplicaron y
      hay que repartirlas igual: por eso se devuelve cuántas entraron. */
   async function run(client, ops) {
-    const worthRemembering = ops.some(o => o && !["ping", "chat", "log.add", "request.done", "undo", "voice.set", "library.set", "library.remove"].includes(o.type));
+    const worthRemembering = ops.some(o => o && !["ping", "aim.set", "chat", "log.add", "request.done", "undo", "voice.set", "library.set", "library.remove"].includes(o.type));
     if (worthRemembering) remember();
     let applied = 0;
     for (const op of ops) {
