@@ -364,7 +364,16 @@ export function openBuilder({ onManual, place = false } = {}) {
   const go = k => { st.step = k; st.seen.add(k); paint(); body.scrollTop = 0; };
 
   const close = () => { document.removeEventListener("keydown", onKey); back.remove(); };
-  const askClose = async () => { if (!st.classId || await confirmBox("¿Salir sin crear el personaje? Se pierde lo elegido.")) close(); };
+  /* Una sola pregunta a la vez: pulsar cerrar otra vez no apila confirmaciones */
+  let asking = false;
+  const askClose = async () => {
+    if (asking) return;
+    if (!st.classId) return close();
+    asking = true;
+    const ok = await confirmBox("¿Salir sin crear el personaje? Se pierde lo elegido.");
+    asking = false;
+    if (ok) close();
+  };
   const onKey = e => { if (e.key === "Escape" && !document.querySelector(".modal-back")) askClose(); };
   document.addEventListener("keydown", onKey);
 

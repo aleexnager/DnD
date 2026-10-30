@@ -9,6 +9,7 @@ import { cellKey, edgeKey, clamp, footprint, conditionName } from "./schema.js";
 import { visibleCells, reachableCells, shapeCells, shapeOutline, gridDistance, occupied, fits, nextRoomId } from "./los.js";
 import { initials, imgURL, pct, hpTone, reducedMotion } from "./util.js";
 import { drawGlyph } from "./icons.js";
+import { translateLine } from "./i18n.js";
 
 const COLORS = {
   void: "#0a0c0e",
@@ -1414,6 +1415,35 @@ export class MapView {
     if (moving) this._moving = true;
   }
 
+  acMark(ctx, g, extra, cx, cy, r) {
+    const up = extra > 0, tone = up ? "#8fd694" : "#e07a6a";
+    ctx.save();
+    /* El aro: seis placas, como las de una armadura */
+    const R = r + Math.max(6, g.cell * 0.2), w = Math.max(2, g.cell * 0.05);
+    ctx.strokeStyle = tone; ctx.lineWidth = w; ctx.lineCap = "round";
+    for (let i = 0; i < 6; i++) {
+      const a0 = -Math.PI / 2 + i * Math.PI / 3 + 0.16, a1 = a0 + Math.PI / 3 - 0.32;
+      ctx.beginPath(); ctx.arc(cx, cy, R, a0, a1); ctx.stroke();
+    }
+    /* El escudo con el número, abajo a la derecha */
+    const s = Math.max(9, Math.min(g.cell * 0.2, r * 0.62));
+    const bx = cx + r * 0.78, by = cy + r * 0.62;
+    ctx.beginPath();
+    ctx.moveTo(bx, by - s);
+    ctx.quadraticCurveTo(bx + s * 0.95, by - s * 0.92, bx + s * 0.95, by - s * 0.55);
+    ctx.quadraticCurveTo(bx + s * 0.9, by + s * 0.55, bx, by + s);
+    ctx.quadraticCurveTo(bx - s * 0.9, by + s * 0.55, bx - s * 0.95, by - s * 0.55);
+    ctx.quadraticCurveTo(bx - s * 0.95, by - s * 0.92, bx, by - s);
+    ctx.closePath();
+    ctx.fillStyle = up ? "#1f3a2a" : "#3a1f1f"; ctx.fill();
+    ctx.lineWidth = Math.max(1.2, s * 0.12); ctx.strokeStyle = tone; ctx.stroke();
+    ctx.fillStyle = up ? "#c9f2cd" : "#f4c4bb";
+    ctx.font = `800 ${Math.round(s * 0.95)}px Roboto, system-ui, sans-serif`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(`${up ? "+" : "−"}${Math.abs(extra)}`, bx, by + s * 0.02);
+    ctx.restore();
+  }
+
   conditionBadges(ctx, g, conds, cx, cy, r) {
     const shown = conds.length > 3 ? conds.slice(0, 3) : conds;
     const extra = conds.length - shown.length;
@@ -1699,6 +1729,9 @@ export class MapView {
         ctx.stroke();
       }
     }
+    /* CA temporal (Escudo, cobertura…): un aro de placas verdes por fuera y
+       un escudo con el extra; si la CA baja, en rojo */
+    if (c.tempAc && !down && g.cell > 14) this.acMark(ctx, g, c.tempAc, cx, cy, r);
     if (down) {
       ctx.strokeStyle = "#b8383b";
       ctx.lineWidth = Math.max(2, g.cell * 0.07);
@@ -1736,7 +1769,10 @@ export class MapView {
 
     /* Nombre */
     if (g.cell > 26) {
-      const label = c.name.length > 14 ? c.name.slice(0, 13) + "…" : c.name;
+      /* Las criaturas del bestiario, en el idioma de cada uno («Shrieker 2»);
+         los nombres de los personajes no se tocan */
+      const name = c.kind === "monster" ? translateLine(c.name) : c.name;
+      const label = name.length > 14 ? name.slice(0, 13) + "…" : name;
       ctx.font = `600 ${Math.max(9, Math.round(g.cell * 0.2))}px Roboto, system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";

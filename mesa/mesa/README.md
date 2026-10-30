@@ -215,7 +215,9 @@ El inglés se aplica sobre la interfaz ya escrita en español, con un
 diccionario. Se traducen los botones, los rótulos, los avisos, las pistas de las
 herramientas, los dieciséis estados con su explicación, las dieciocho
 habilidades, lo que escribe el programa en el registro y **el bestiario que
-viene de fábrica**, con sus 115 criaturas, sus fichas técnicas, sus rasgos y
+viene de fábrica** (también las criaturas ya puestas en el mapa con su número,
+«Hongo chillón 2» sale «Shrieker Fungus 2», en el rótulo del mapa, el globo,
+las tarjetas y el registro), con sus 115 criaturas, sus fichas técnicas, sus rasgos y
 sus ataques ("Cimitarra — +4 al ataque — 1d6+2 cortante" sale como "Scimitar —
 +4 to hit — 1d6+2 slashing"). También **los 391 conjuros** (nombre, tiempo,
 alcance, componentes, duración y descripción, en la ficha, la biblioteca, la
@@ -579,12 +581,18 @@ la barra** y el tablero ocupa todo el ancho; un botón pequeño en la esquina de
 plano la vuelve a sacar. La casilla bajo el puntero se lee **arriba a la
 derecha** del tablero, donde no la tapa la estantería de la biblioteca.
 
-**Pulsar una ficha** abre su globo: arriba, la **vida**, la **vida temporal**
-y la **CA temporal**, cada una con **−** y **+** de uno en uno, sin cerrarlo,
-para ir rápido en combate. La vida temporal se ve como la CA temporal: una
-insignia azul (+5) junto a la vida en el globo, en las tarjetas del DM, en la
-lista de compañeros del jugador y en la tele, y un arco azul por fuera del aro
-de vida de la ficha en el mapa. Debajo, apuntarle, atacar,
+**Pulsar una ficha** abre su globo: arriba, la **vida** y la **CA temporal**,
+cada una con **−** y **+** de uno en uno, sin cerrarlo, para ir rápido en
+combate. La vida funciona como la CA: el número es el total y, con la vida
+llena, el **+** sigue subiendo como **vida temporal** (el número se pone
+azul); el **−** es daño, que gasta antes la temporal y luego la vida. Se
+puede pulsar seguido: el globo lleva la cuenta hasta que la partida contesta.
+La vida temporal se ve como una insignia azul (+5) junto a la vida en el
+globo, en las tarjetas del DM, en la lista de compañeros del jugador y en la
+tele, y como un arco azul por fuera del aro de vida de la ficha en el mapa.
+La **CA temporal** también se ve en el mapa: un aro de placas verdes alrededor
+de la ficha y un escudo con el extra (+2), en rojo si la CA baja. La party no
+la ve en los enemigos, como no ve su CA. Debajo, apuntarle, atacar,
 estados, abrir la ficha, ocultarla, centrar la cámara de la party o sacarla del
 mapa.
 
