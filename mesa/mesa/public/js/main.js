@@ -3,7 +3,7 @@
 import { $, el, esc, toast, initials, imgURL } from "./util.js";
 import { icon, withIcon } from "./icons.js";
 import { store, savedSession, forgetSession, join, lobby, ping, connect, onState, DEMO } from "./net.js";
-import { startI18n, langPicker } from "./i18n.js";
+import { startI18n, langPicker, loadSpellTexts } from "./i18n.js";
 import { tourButton } from "./tour.js";
 
 const SHARED = typeof SharedWorker === "function";
@@ -224,4 +224,6 @@ if ("serviceWorker" in navigator && window.isSecureContext) {
 }
 
 startI18n();
-boot();
+/* En inglés, los conjuros traducidos antes de pintar nada (rollable traduce
+   la descripción entera antes de partirla); si tarda, se arranca igual */
+Promise.race([loadSpellTexts(), new Promise(r => setTimeout(r, 1500))]).then(boot);

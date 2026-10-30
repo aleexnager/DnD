@@ -416,7 +416,9 @@ export function normalizeAttack(raw = {}) {
    scale   truco que crece a los niveles 5, 11 y 17 (scaleRays: en rayos)
    cond    estado que pone si falla la salvación o recibe el ataque
    shape   área para colocar en el mapa (circle, cone, line, square) */
-export const SPELL_MODES = ["attack", "save", "auto", "heal", "sleep", "none"];
+/* hit: daño que entra sin tirar (los castigos, que se lanzan tras impactar),
+   con una salvación opcional para el estado; temp: vida temporal */
+export const SPELL_MODES = ["attack", "save", "auto", "heal", "sleep", "hit", "temp", "none"];
 export const ABILITY_KEYS = ["str", "dex", "con", "int", "wis", "cha"];
 export function normalizeSpell(raw = {}) {
   const str = (v, n = 80) => String(v || "").slice(0, n);
@@ -434,7 +436,7 @@ export function normalizeSpell(raw = {}) {
     scale: !!raw.scale, scaleRays: !!raw.scaleRays,
     rays: clamp(Math.trunc(num(raw.rays, 1)), 1, 10), raysUp: clamp(Math.trunc(num(raw.raysUp)), 0, 3),
     darts: clamp(Math.trunc(num(raw.darts)), 0, 12),
-    heal: str(raw.heal, 20), healMod: !!raw.healMod,
+    heal: str(raw.heal, 20), healMod: !!raw.healMod, temp: str(raw.temp, 20),
     dmgMod: !!raw.dmgMod,                  // suma la característica de lanzamiento al daño (Arma espiritual)
     summon: !!raw.summon,                  // crea o invoca algo que se queda en el tablero
     cond: str(raw.cond, 24), condRounds: clamp(Math.trunc(num(raw.condRounds)), 0, 1000),
@@ -726,7 +728,10 @@ const SESSION_DEFAULTS = {
   showMoveRange: true,  // pintar el alcance al arrastrar
   allowPlayerDraw: false,  // ¿los jugadores pueden dibujar en el mapa?
   showWallsToParty: false, // ¿la party ve los muros y las puertas dibujados?
-  autoSkipDown: true    // saltar en la iniciativa a los que están fuera de combate
+  autoSkipDown: true,   // saltar en la iniciativa a los que están fuera de combate
+  /* Nuevo en 2.20 */
+  aims: [],             // quién apunta a quién (efímero): { from, to, src, secret }
+  showAims: true        // ¿la party y la tele ven a quién se apunta?
 };
 
 export function emptyDoc() {
@@ -805,6 +810,7 @@ export function migrate(raw) {
   session.combat.order = Array.isArray(session.combat.order) ? session.combat.order : [];
   session.requests = Array.isArray(session.requests) ? session.requests : [];
   session.ping = null;
+  session.aims = [];
   if (!maps.some(m => m.id === session.activeMapId)) session.activeMapId = maps[0].id;
   if (src.activeMapId && maps.some(m => m.id === src.activeMapId)) session.activeMapId = src.activeMapId;
   chars.forEach(c => { if (c.mx !== null && !maps.some(m => m.id === c.mapId)) c.mapId = session.activeMapId; });

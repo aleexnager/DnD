@@ -4,7 +4,7 @@
 import { exportChars, importChars } from "./chars-io.js";
 import { afterMove } from "./portals.js";
 import { voiceWidget } from "./voice.js";
-import { $, el, on, esc, lines, sign, pct, hpTone, hpBar, tweenBars, initials, imgURL, toast, modal, clamp } from "./util.js";
+import { $, el, on, esc, lines, sign, pct, hpTone, hpBar, tweenBars, initials, imgURL, toast, modal, clamp, hpExtra } from "./util.js";
 import { ABILITIES, SKILLS, CONDITIONS, conditionName, modOf, acOf, acParts, initBonus } from "./schema.js";
 import { store, onState, onStatus, onPresence, op, patchChar, leave } from "./net.js";
 import { dicePanel, renderLog, throwDice, tellTable } from "./dice-panel.js";
@@ -401,7 +401,7 @@ function renderParty(pane) {
             ${hpBar(c.id, p)}
           </div>
           <div style="text-align:right">
-            <b class="tnum">${c.hp}</b><small style="color:var(--dim)">/${c.maxHp}</small><br>
+            <b class="tnum">${c.hp}</b><small style="color:var(--dim)">/${c.maxHp}</small>${hpExtra(c)}<br>
             <small style="color:var(--dim)" title="${esc(acParts(c).title)}">CA ${acOf(c)}${c.tempAc ? ` <i class="ac-extra">${c.tempAc > 0 ? "+" : "−"}${Math.abs(c.tempAc)}</i>` : ""}</small>
           </div>
         </button>`;

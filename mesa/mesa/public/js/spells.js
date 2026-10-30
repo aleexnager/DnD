@@ -6,6 +6,8 @@
    Los campos están explicados en normalizeSpell (schema.js). */
 
 import { normalizeSpell, registerSpellLibrary, registerSpellUpgrade } from "./schema.js";
+import { ROWS, CLS } from "./libros/conjuros-lista.js";
+import { MEC, EN } from "./libros/conjuros-mec.js";
 
 const S = (o) => normalizeSpell(o);
 
@@ -140,6 +142,87 @@ export const SPELL_LIBRARY = [
     duration: "Concentración, hasta 1 minuto", conc: true, mode: "save", save: "wis", cond: "paralizado", condRounds: 10, targetsUp: 1,
     desc: "Una criatura que veas hace una salvación de Sabiduría o queda paralizada mientras dure. Al final de cada uno de sus turnos repite la salvación y, si la supera, se libra. Un objetivo más por nivel de espacio por encima del 5." })
 ];
+
+/* ---------- El resto del Manual del Jugador ----------
+   Los demás conjuros del compendio (libros/conjuros-lista.js), con lo que
+   hacen en la mesa según libros/conjuros-mec.js. Los de arriba, escritos a
+   mano, mandan sobre estos. */
+export const spellSlug = name => String(name).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const HAND = new Set(SPELL_LIBRARY.map(sp => sp.id));
+const TIME_2024 = t => t.replace(/^1 (acción|reacción)/, (m, w) => w[0].toUpperCase() + w.slice(1));
+const DURATION_2024 = d => d.replace(/^Conc\., /, "Concentración, hasta ");
+/* Rondas de un estado según la duración, si el conjuro no las dice */
+const roundsOf = d => /1 minuto/.test(d) ? 10 : /10 minutos/.test(d) ? 100 : /asalto|turno/.test(d) ? 1 : 0;
+for (const [name, level, school, time, range, components, duration, , desc, higher] of ROWS) {
+  const id = spellSlug(name);
+  if (HAND.has(id)) continue;
+  const m = MEC[id] || {};
+  const full = higher ? `${desc} A niveles superiores: ${higher}` : desc;
+  SPELL_LIBRARY.push(S({
+    id, name, level, school, time: TIME_2024(time), range, components, duration: DURATION_2024(duration),
+    conc: /^Conc/.test(duration), desc: full.length > 900 ? full.slice(0, 897) + "…" : full,
+    ...m, condRounds: m.cond && m.condRounds === undefined ? roundsOf(duration) : m.condRounds
+  }));
+}
+
+/* Clases de cada conjuro de serie y su nombre en el manual en inglés:
+   para filtrar la biblioteca y para buscar en los dos idiomas */
+export const SPELL_CLASSES = new Map(ROWS.map(r => [spellSlug(r[0]), r[7].split(/\s+/).map(k => CLS[k]).filter(Boolean)]));
+export const spellEnglish = id => EN[id] || "";
+
+/* Categorías para filtrar: salen de lo que hace el conjuro (su modo, daño,
+   estado, invocación) y de su texto. Un conjuro puede estar en varias. */
+export const SPELL_CATS = [
+  ["dano", "Daño"], ["cura", "Curación"], ["estados", "Estados"], ["control", "Control del campo"],
+  ["defensa", "Defensa y mejoras"], ["invocacion", "Invocación"], ["movimiento", "Movimiento"],
+  ["info", "Información"], ["utilidad", "Utilidad"]
+];
+const COND_WORDS = /\b(cegad|encantad|ensordecid|asustad|agarrad|incapacitad|paralizad|petrificad|envenenad|derribad|apresad|aturdid|inconscient|dormid)/i;
+/* Los que el texto no deja claros, a mano */
+const CAT_FIX = {
+  "resistencia": ["defensa"], "proteccion-contra-el-bien-y-el-mal": ["defensa"], "ayuda": ["defensa", "cura"],
+  "desenfocar": ["defensa"], "proteccion-contra-la-energia": ["defensa"], "piel-de-piedra": ["defensa"],
+  "custodia-contra-la-muerte": ["defensa"], "aura-de-vida": ["defensa", "cura"], "intermitencia": ["defensa"],
+  "proteccion-contra-las-armas": ["defensa"], "armadura-de-agathys": ["defensa", "cura"], "retirada-expeditiva": ["movimiento"],
+  "zancada-prodigiosa": ["movimiento"], "levitar": ["movimiento"], "caida-de-pluma": ["movimiento"],
+  "respirar-bajo-el-agua": ["movimiento"], "caminar-sobre-el-agua": ["movimiento"], "corcel-fantasma": ["movimiento", "invocacion"],
+  "contraconjuro": ["defensa"], "disipar-magia": ["defensa"], "globo-de-invulnerabilidad": ["defensa"], "campo-antimagia": ["defensa"],
+  "embelesar": ["estados"], "zona-de-verdad": ["estados"], "perdonar-la-vida": ["cura"], "bayas-buenas": ["cura"],
+  "crecimiento-vegetal": ["control"], "controlar-el-agua": ["control"], "terreno-alucinatorio": ["control"],
+  "santuario": ["defensa"], "invisibilidad": ["defensa"], "invisibilidad-mayor": ["defensa"], "potenciar-caracteristica": ["defensa"],
+  "libertad-de-movimiento": ["defensa"], "disipar-el-bien-y-el-mal": ["defensa"], "agrandar-reducir": ["defensa", "estados"],
+  "revivir-a-los-muertos": ["cura"], "reencarnar": ["cura"], "vigor-arcano": ["cura"], "teletransporte": ["movimiento"],
+  "zancada-arborea": ["movimiento"], "transporte-vegetal": ["movimiento"], "pasamuros": ["movimiento"], "forma-eterea": ["movimiento"],
+  "palabra-de-poder-matar": ["dano"], "carcaj-veloz": ["defensa"], "invertir-la-gravedad": ["control"], "laberinto": ["estados", "control"],
+  "glifo-custodio": ["dano", "control"], "silencio": ["control"], "polimorfar": ["estados"]
+};
+const CAT_DROP = {
+  "vision-en-la-oscuridad": ["control"], "hablar-con-las-plantas": ["control"], "ojo-arcano": ["control", "defensa"],
+  "dormir": ["defensa"], "taumaturgia": ["defensa"], "alarma": ["defensa"], "sirviente-invisible": ["defensa"],
+  "ver-lo-invisible": ["defensa"], "clarividencia": ["defensa"], "fuego-feerico": ["defensa"], "rayo-de-debilitamiento": ["defensa"],
+  "imponer-maldicion": ["defensa"], "ralentizar": ["defensa"], "danza-irresistible": ["defensa"], "calmar-emociones": ["defensa"],
+  "elementalismo": ["control"], "crear-o-destruir-agua": ["control"], "libertad-de-movimiento": ["control"],
+  "silencio": ["defensa"], "polimorfar": ["defensa"], "mano-arcana": ["defensa"]
+};
+export function spellCats(sp) {
+  const d = `${sp.desc || ""}`, out = [];
+  const harms = !!sp.damage && !["heal", "temp"].includes(sp.mode);
+  if (harms) out.push("dano");
+  if (["heal", "temp"].includes(sp.mode) || /recupera[n]? [^.]*puntos de golpe|puntos de golpe temporales|PG temporales|vuelve a la vida|revive|resucita/i.test(d)) out.push("cura");
+  if (sp.cond || sp.failText || COND_WORDS.test(d)) out.push("estados");
+  if (/terreno difícil|\bmuro\b|un muro|niebla|oscuridad mágica|esfera de oscuridad|telarañas?|tentáculos|empuja|\bderriba|ralentiz/i.test(d) || (sp.shape && sp.conc)) out.push("control");
+  if (!harms && /resistencia (a|al)|inmun|ventaja en las salvaciones|ventaja en sus|\bCA\b|suma 1d4|suman 1d4|\+[123] (a|al)|se vuelve invisible|queda invisible|reduce [^.]*daño|bonificador|puntos de golpe máximos|PG temporales|extra al impactar/i.test(d)) out.push("defensa");
+  if (sp.summon || /^(Invocar|Conjurar|Encontrar (familiar|montura)|Animar|Crear muertos)/.test(sp.name || "")) out.push("invocacion");
+  if (/teletransport|\bvuel[ao]|volar|velocidad (de vuelo|aumenta|sube)|\bsalt|trepa|camina|zancada|portal|otro plano|viaja/i.test(d)) out.push("movimiento");
+  if (sp.school === "Adivinación") out.push("info");
+  out.push(...(CAT_FIX[sp.id] || []));
+  /* La CA de una criatura invocada no es una mejora para nadie */
+  const drop = [...(CAT_DROP[sp.id] || []), ...(out.includes("invocacion") ? ["defensa"] : [])];
+  const kept = out.filter(c => !drop.includes(c));
+  if (!kept.length) kept.push("utilidad");
+  out.length = 0; out.push(...kept);
+  return [...new Set(out)];
+}
 
 /* Para que las fichas con los conjuros escritos a mano los encuentren aquí */
 registerSpellLibrary(SPELL_LIBRARY);

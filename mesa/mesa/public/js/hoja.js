@@ -305,7 +305,7 @@ export function mountSheet(host, c) {
      armas (solo lectura; se cambian en la tabla de conjuros) */
   const paintSpellAttacks = () => {
     const st = castNumbers();
-    const hits = book.filter(sp => sp.damage && ["attack", "save", "auto"].includes(sp.mode));
+    const hits = book.filter(sp => sp.damage && ["attack", "save", "auto", "hit"].includes(sp.mode));
     q("#hjSpellAtk").innerHTML = hits.map(sp => `<div class="hj-tr hj-wrow from-spell" role="row" title="Sale de la tabla de conjuros">
       <span class="hj-ro">${icon("wand", 13)}<b>${esc(sp.name)}</b></span>
       <span class="hj-ro tnum">${sp.mode === "attack" ? sign(st.atk) : sp.mode === "save" ? `CD ${st.dc} ${SAVE_ABBR[sp.save] || "DES"}` : "—"}</span>

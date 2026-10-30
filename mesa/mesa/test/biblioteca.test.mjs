@@ -132,8 +132,9 @@ test("los cuatro libros de serie: secciones con contenido e ids únicos", () => 
     }
   }
   assert.ok(JUGADOR.sections.filter(s => s.entries.some(e => /Progresión/.test(e.title))).length === 12, "una sección por clase");
-  assert.equal(CONJUROS.length, 339, "los 339 del SRD 5.2.1");
-  assert.equal(books.conjuros.sections.slice(0, 10).reduce((n, s) => n + s.entries.length, 0), 339, "trucos y niveles 1-9");
+  assert.equal(CONJUROS.length, 391, "los 391 del Manual del Jugador de 2024 (339 del SRD 5.2.1 y 52 más)");
+  assert.equal(books.conjuros.sections.slice(0, 10).reduce((n, s) => n + s.entries.length, 0), 391, "trucos y niveles 1-9");
+  assert.equal(new Set(CONJUROS.map(s => s.name)).size, 391, "sin nombres repetidos");
   assert.ok(search(books.conjuros, "bola de fuego")[0].title === "Bola de fuego");
   assert.ok(search(books.bestiario, "goblin").length > 0);
   assert.ok(search(books.reglas, "agarrado").length > 0);

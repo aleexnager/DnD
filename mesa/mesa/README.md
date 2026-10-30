@@ -217,7 +217,14 @@ herramientas, los dieciséis estados con su explicación, las dieciocho
 habilidades, lo que escribe el programa en el registro y **el bestiario que
 viene de fábrica**, con sus 115 criaturas, sus fichas técnicas, sus rasgos y
 sus ataques ("Cimitarra — +4 al ataque — 1d6+2 cortante" sale como "Scimitar —
-+4 to hit — 1d6+2 slashing"). Lo que escribís vosotros no se toca: los
++4 to hit — 1d6+2 slashing"). También **los 391 conjuros** (nombre, tiempo,
+alcance, componentes, duración y descripción, en la ficha, la biblioteca, la
+ventana de lanzar, el registro y el compendio): los del SRD con su texto
+oficial en inglés y los demás con un resumen propio; y **los rasgos de clase**
+del creador guiado. Estos textos (unos 300 KB) solo se descargan si el idioma
+es inglés. Quedan en español los libros de consulta de la estantería
+(Reglas, la prosa del Manual del jugador y las fichas largas del bestiario
+dentro del libro). Lo que escribís vosotros no se toca: los
 nombres de los personajes, la charla, tus notas y las criaturas que te inventes
 se quedan tal cual, que es como tiene que ser.
 
@@ -572,11 +579,25 @@ la barra** y el tablero ocupa todo el ancho; un botón pequeño en la esquina de
 plano la vuelve a sacar. La casilla bajo el puntero se lee **arriba a la
 derecha** del tablero, donde no la tapa la estantería de la biblioteca.
 
-**Pulsar una ficha** abre su globo: arriba, la **vida** y la **CA temporal**,
-cada una con **−** y **+** de uno en uno, sin cerrarlo, para ir rápido en
-combate; debajo, apuntarle, atacar,
+**Pulsar una ficha** abre su globo: arriba, la **vida**, la **vida temporal**
+y la **CA temporal**, cada una con **−** y **+** de uno en uno, sin cerrarlo,
+para ir rápido en combate. La vida temporal se ve como la CA temporal: una
+insignia azul (+5) junto a la vida en el globo, en las tarjetas del DM, en la
+lista de compañeros del jugador y en la tele, y un arco azul por fuera del aro
+de vida de la ficha en el mapa. Debajo, apuntarle, atacar,
 estados, abrir la ficha, ocultarla, centrar la cámara de la party o sacarla del
 mapa.
+
+**A quién se apunta.** Cuando alguien abre su ventana de ataques o de lanzar
+un conjuro y elige objetivo, los tres mapas (el del DM, el de los jugadores y
+la tele) dibujan una **flecha a rayas que avanza**, del color de quien ataca,
+y una **mira roja** que gira alrededor del objetivo; cambia al cambiar de
+objetivo y se quita al cerrar la ventana. El objetivo que el DM deja marcado
+desde el globo (o con [[Ctrl]]+clic) sale apuntado por quien tiene el turno y
+pasa al siguiente al avanzar la iniciativa. **El DM lo ve siempre**; para la
+party y la tele está encendido de serie y se apaga en **Ajustes del mapa →
+Enseñar a la party a quién se apunta**. Lo que se tira en secreto, y las
+criaturas que la party no ve, no se enseñan.
 
 ### La propuesta de muros aprende de tus planos
 
@@ -950,11 +971,25 @@ que es donde se gasta el espacio de conjuro.
 ## Conjuros
 
 Cada personaje, y cada monstruo que los tenga, lleva su **lista de conjuros**
-(botón **Conjuros** en la ficha). Se añaden desde una **biblioteca de 39
-conjuros del SRD** ya preparados con **el texto de 2024**, de trucos a nivel 5: Rayo de fuego, Llama
-sagrada, Descarga sobrenatural, Proyectil mágico, Dormir, Curar heridas,
-Inmovilizar persona, Bola de fuego, Relámpago, Espíritus guardianes, Cono de
-frío… Los que cambiaron en 2024 llevan su versión nueva (Curar heridas 2d8,
+(botón **Conjuros** en la ficha). Se añaden desde una **biblioteca con los 391
+conjuros del Manual del Jugador de 2024**, de trucos a nivel 9 y de todas las
+clases (bardo, brujo, clérigo, druida, explorador, hechicero, mago, paladín y
+también el artífice) y especies: los 339 del SRD 5.2.1 y los 52 que solo
+están en el manual (Maleficio, Armadura de Agathys, Doblar por los muertos,
+los Invocar…, los castigos de paladín, Estática sináptica…). Están
+**contrastados con dos fuentes**: el texto oficial del SRD 5.2.1 (vía Open5e)
+y la lista completa de 2024 conjuro a conjuro (nivel, escuela, clases,
+tiempo, alcance, componentes y duración); de ahí salieron 12 componentes que
+estaban mal en el compendio y se han corregido.
+
+Al **añadir de la biblioteca** se busca por nombre (también **en inglés**) o
+escuela y se filtra por **nivel** (trucos, 1 a 9), **categoría** (daño,
+curación, estados, control del campo, defensa y mejoras, invocación,
+movimiento, información y utilidad; un conjuro puede estar en varias) y
+**clase**, con el recuento de lo que queda a la vista. **156 se resuelven
+solos** en Mesa (ataque, salvación, daño directo, cura o vida temporal, con su
+daño, estado y área); el resto entran como «solo efecto»: gastan el espacio y
+el registro cuenta lo que hacen. Los de siempre llevan su versión de 2024 (Curar heridas 2d8,
 Palabra curativa 2d4, Dormir con salvación de Sabiduría, Arma espiritual con
 concentración, Toque helado cuerpo a cuerpo…), y las copias que ya estaban en
 las fichas sin retocar se ponen al día solas; las retocadas se respetan. La
@@ -975,6 +1010,12 @@ directamente a quien quede dentro. Después **el servidor lo resuelve todo**:
 - **Proyectil mágico**: los dardos impactan siempre y se reparten.
 - **Curas**: suman la característica de lanzamiento y levantan a quien
   estaba en el suelo.
+- **Daño directo**: los castigos y golpes que se lanzan tras impactar
+  (Castigo divino, Castigo atronador, Golpe atrapador…) meten su daño sin
+  tirar para impactar y, si piden salvación, solo quien la falla se queda con
+  el estado.
+- **Vida temporal**: Falsa vida, Armadura de Agathys… dan sus puntos de golpe
+  temporales, potenciados con espacios mayores.
 - **Dormir**: tira la reserva y duerme de menos a más vida.
 - **Concentración**: si el conjuro la pide, el personaje queda concentrado (la
   salvación al recibir daño es CD 10 o la mitad del daño, como mucho 30); si
@@ -992,7 +1033,7 @@ cura), con el bonificador y el daño listos para tirar con un toque y el botón
 
 **Todo conjuro se puede retocar**, como un ataque: el lápiz de cada uno en la
 lista de conjuros cambia nombre, nivel, tiempo, alcance, duración, cómo se
-resuelve (ataque, salvación, dardos, cura, sueño o solo efecto), daño y tipo,
+resuelve (ataque, salvación, dardos, cura, sueño, daño directo, vida temporal o solo efecto), daño y tipo,
 mitad si salva, lo que sube con espacios mayores, el estado que pone y cuántas
 rondas, objetivos, área y concentración. Ese cambio es solo de esa ficha.
 **Crear un conjuro** hace uno desde cero.
@@ -1045,7 +1086,10 @@ d100 son dos d10, decenas y unidades), del color de quien tira: caen, rebotan
 contra los bordes, se paran y una placa enseña el total (verde y «¡Crítico!»
 con un 20 natural, roja y «Pifia» con un 1). La caída se simula antes y el
 dado se numera para que la cara de arriba sea el resultado que salió: rueda de
-verdad y el número es el bueno. También ruedan los dados de los ataques y
+verdad y el número es el bueno. El **d4** se apoya en una cara con la punta
+hacia arriba, y el resultado es el número de esa punta, como en un d4 de
+verdad. El **6 y el 9** (y el 60 y el 90 del d100) llevan una raya debajo para
+no confundirlos. También ruedan los dados de los ataques y
 conjuros que resuelve el servidor. Se ven **en la tele y en la pantalla del
 DM**; las tiradas **secretas** del DM, solo en la suya. Con **Dados de los
 jugadores solo en la tele** (en el panel del DM), las tiradas de los jugadores
@@ -1230,7 +1274,7 @@ public/
     forja.js           la forja de mapas: el editor a pantalla completa
     forja-core.js      la forja: geometría del plano, paredes, puertas y generador
     forja-draw.js      la forja: estilos, objetos y cómo se pinta el plano
-    spells.js          biblioteca de conjuros del SRD
+    spells.js          biblioteca de conjuros (los 391, con su mecánica y categorías)
     spellbook.js       lista de conjuros de cada personaje y ventana de lanzar
     voice.js           voz entre aparatos (WebRTC)
     portals.js         cruzar un acceso con varios a la vez
@@ -1248,7 +1292,10 @@ public/
     tour.js            el tutorial guiado: foco, tarjeta, índice y buscador
     tour-content.js    los recorridos de cada pantalla, por secciones (español e inglés)
     tour-example.js    las fichas de ejemplo del tutorial (solo en la pantalla del DM)
-    libros/            los cuatro libros de serie (reglas, jugador, conjuros, bestiario)
+    libros/            los cuatro libros de serie (reglas, jugador, conjuros, bestiario);
+                       conjuros-lista.js (los 391), conjuros-mec.js (cómo se
+                       resuelve cada uno y su nombre en inglés), conjuros-en.js y
+                       jugador-en.js (los textos en inglés, que solo se cargan en inglés)
   vendor/pdfjs/        pdf.js de Mozilla, para leer los PDF de la biblioteca
   vendor/three/        three.js (MIT), para los dados en 3D
 data/                  la partida y las imágenes (se crea al arrancar)
@@ -1278,20 +1325,23 @@ data/                  la partida y las imágenes (se crea al arrancar)
 ## Lo que aún no hace
 
 - Los libros de serie son resúmenes del SRD, no los manuales oficiales
-  completos, y están en español (la interfaz sí se traduce). De las subclases
+  completos. El compendio de conjuros y los rasgos de clase salen en inglés;
+  Reglas, la prosa del Manual del jugador y las fichas del bestiario dentro
+  del libro siguen en español (la interfaz sí se traduce). De las subclases
   que no son del SRD solo va el nombre y la idea.
 - Un PDF escaneado (páginas que son fotos) no tiene texto que buscar: se lee
   con «Ver original», pero el buscador no lo encuentra.
 
 - Los dados en 3D se ven en la tele y en la pantalla del DM, no en el móvil
   de los jugadores (en el suyo se lee la tirada en el registro).
-- El creador saca los rasgos de cada nivel del manual del jugador, cuyo texto
-  está en español; con la interfaz en inglés, los nombres y explicaciones de
-  esos rasgos siguen en español.
-- Los conjuros lanzables de la biblioteca son 39 del SRD hasta nivel 5 (el
-  compendio trae los 339, para leer). Los que no
-  hacen daño ni ponen un estado (Escudo de fe, Bendecir, Revivificar…) se
-  anotan en el registro y el efecto lo aplicas tú.
+- La biblioteca trae los 391 conjuros del Manual del Jugador de 2024; los de
+  suplementos (Forgotten Realms, Eberron, Arcana Unleashed y las entregas de
+  D&D Beyond) no están. De los 391, los que no hacen daño, curan, dan vida
+  temporal ni ponen un estado (Escudo de fe, Bendecir, Revivificar…) se anotan
+  en el registro y el efecto lo aplicas tú; los que reparten una cantidad
+  entre varios (Palabra de poder: fortalecer, Curar en masa) también.
+- En inglés, los conjuros del SRD muy largos (Deseo, Polimorfar…) llevan su
+  texto oficial recortado; el entero está en el SRD.
 - La voz no tiene servidor de retransmisión: en redes que no dejan conectar
   aparato con aparato, no llega.
 - Los muros diagonales van de esquina a esquina; curvas de otro ángulo se

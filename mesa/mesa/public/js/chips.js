@@ -67,7 +67,10 @@ export function spellChips(sp) {
   if (sp.mode === "save") out.push(chip("roll", "shield", `${SAVE[sp.save] || "DES"}${sp.half ? " ½" : ""}`,
     `Salvación de ${SAVE_LONG[sp.save] || "Destreza"}${sp.half ? "; si la supera, la mitad del daño" : ""}`));
   if (sp.mode === "auto") out.push(chip("roll", "zap", "Impacta", `Impacta siempre${sp.darts ? `: ${sp.darts} dardos` : ""}`));
+  if (sp.mode === "hit") out.push(chip("roll", "zap", sp.save ? `Directo · ${SAVE[sp.save] || "DES"}` : "Directo",
+    `El daño entra sin tirar (se lanza tras impactar)${sp.save ? `; salvación de ${SAVE_LONG[sp.save] || "Destreza"} para el estado` : ""}`));
   if (sp.mode === "heal") out.push(chip("heal", "heart", "Cura", "Recupera puntos de golpe"));
+  if (sp.mode === "temp") out.push(chip("heal", "shield", "PG temp.", "Da puntos de golpe temporales"));
   if (sp.mode === "sleep") out.push(chip("cond", "moon", "Sueño", "Duerme a las criaturas"));
   if (sp.cond) out.push(condChip(sp.cond));
   if (sp.summon) out.push(chip("summon", "summon", "Invoca", "Crea o invoca algo que se queda en el tablero"));
