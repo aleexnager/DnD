@@ -11,7 +11,7 @@ const old = {
   name: "Aria",
   weapons: "Espada corta — +5 al ataque — 1d6+3 perforante\nDaga x2",
   inventory: "2 antorchas\nCuerda de cáñamo (50 pies)\nraciones x5",
-  spells: "Proyectil mágico\nLuz: ilumina un objeto"
+  spells: "Proyectil mágico\nLuz: ilumina un objeto\nNiebla de Mesa: un conjuro de la casa"
 };
 
 test("las armas con tirada pasan a ataques y las demás al equipo", () => {
@@ -30,11 +30,15 @@ test("el equipo lee las cantidades y pone mayúscula", () => {
 
 test("los conjuros de la biblioteca entran con su mecánica y los demás como nota", () => {
   const c = normalizeChar(old);
-  const [pm, luz] = c.spellbook;
+  const [pm, luz, casa] = c.spellbook;
   assert.equal(pm.name, "Proyectil mágico");
   assert.equal(pm.mode, "auto");
   assert.equal(pm.level, 1);
-  assert.deepEqual([luz.name, luz.mode, luz.desc], ["Luz", "none", "ilumina un objeto"]);
+  /* Luz está en la biblioteca de 2024: entra con su texto completo */
+  assert.deepEqual([luz.name, luz.mode, luz.level], ["Luz", "none", 0]);
+  assert.match(luz.desc, /luz brillante/);
+  /* Uno que no está en la biblioteca se queda como nota */
+  assert.deepEqual([casa.name, casa.mode, casa.desc], ["Niebla de Mesa", "none", "un conjuro de la casa"]);
   assert.equal(c.spells, "");
 });
 

@@ -92,7 +92,7 @@ export function resolveAttack({ attacker, attack, target, mode = "normal", secre
 
 /* ---------- Ventana de ataque ---------- */
 /* Los conjuros que sirven para atacar: también salen en la ventana de atacar */
-export const combatSpells = c => (c.spellbook || []).filter(sp => ["attack", "save", "auto", "sleep"].includes(sp.mode))
+export const combatSpells = c => (c.spellbook || []).filter(sp => ["attack", "save", "auto", "sleep", "hit"].includes(sp.mode))
   .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name, "es"));
 
 export function openAttacks(attacker, { targets = [], preselect = null, secret = false, spellCtx = null } = {}) {

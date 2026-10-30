@@ -402,7 +402,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
     const maxTargets = sp.targets + sp.targetsUp * extra;
     const targets = [...new Set(Array.isArray(op.targets) ? op.targets : [])]
       .map(findChar).filter(Boolean).slice(0, Math.max(1, maxTargets));
-    const needsTarget = ["attack", "save", "auto", "heal", "sleep"].includes(sp.mode);
+    const needsTarget = ["attack", "save", "auto", "heal", "sleep", "hit", "temp"].includes(sp.mode);
     if (needsTarget && !targets.length) return "Elige al menos un objetivo";
 
     if (sp.level > 0 && hasSlots) {
@@ -486,6 +486,30 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
       for (const [t, amount] of per) {
         const r = hurt(t, amount);
         push({ kind: "event", secret, text: `${t.name}: ${amount} de daño${typeText}${r.dropped ? " y cae" : ""}` });
+      }
+    } else if (sp.mode === "hit") {
+      /* El golpe ya ha entrado: el daño extra va directo y, si pide
+         salvación, el estado solo a quien la falle */
+      head(`${sp.name} (${lvlText}): ${damage || "efecto"}${typeText}${sp.save ? ` · salvación de ${ABILITY_ES[sp.save] || "Destreza"} CD ${dc}` : ""}`);
+      for (const t of targets) {
+        let text = t.name;
+        if (damage) { const d = rollT(damage); const r = hurt(t, d.total); text += `: ${d.total} de daño${typeText}${r.dropped ? " y cae" : ""}`; }
+        if (sp.save) {
+          const sv = rollSave(t, sp.save);
+          const passed = sv.total >= dc;
+          text += ` · salvación ${sv.total} · ${passed ? "la supera" : "falla"}`;
+          if (!passed && sp.cond) { setCondition(t, sp.cond, sp.condRounds); text += ` · queda ${sp.cond}`; }
+          if (!passed && sp.failText) text += ` · ${sp.failText}`;
+        } else if (sp.cond) { setCondition(t, sp.cond, sp.condRounds); text += ` · queda ${sp.cond}`; }
+        push({ kind: "event", secret, text });
+      }
+    } else if (sp.mode === "temp") {
+      const formula = addDice(sp.temp || "5", sp.upcast, extra) + (sp.healMod ? signed(mod) : "");
+      head(`${sp.name} (${lvlText}): ${formula} de vida temporal`);
+      for (const t of targets) {
+        const h = rollT(formula);
+        applyHp(t, { temp: Math.max(1, h.total) });
+        push({ kind: "event", secret, text: `${t.name} gana ${Math.max(1, h.total)} de vida temporal`, detail: detail(h) });
       }
     } else if (sp.mode === "heal") {
       const formula = addDice(sp.heal || "1d8", sp.upcast, extra) + (sp.healMod ? signed(mod) : "");
