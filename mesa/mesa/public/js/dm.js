@@ -690,7 +690,7 @@ function targetsFor(c) {
 }
 
 function attack(c) {
-  openAttacks(c, { targets: targetsFor(c), preselect: targetId, secret: c.kind === "monster" && isSecret() });
+  openAttacks(c, { targets: targetsFor(c), preselect: targetId, secret: c.kind === "monster" && isSecret(), spellCtx: dmSpellCtx() });
 }
 
 function delayTurn() {

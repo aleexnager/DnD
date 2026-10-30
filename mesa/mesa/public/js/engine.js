@@ -604,7 +604,8 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
   }
 
   /* ---------- Operaciones ---------- */
-  const LIST_FIELDS = ["attacks", "items", "features", "spellbook", "resources", "weapons", "inventory", "spells", "buffs"];
+  const LIST_FIELDS = ["attacks", "items", "features", "spellbook", "resources", "weapons", "inventory", "spells", "buffs",
+    "attune", "coins", "armorTraining"];
   const PLAYER_LOCKED = new Set(["id", "kind", "hidden", "xp", "cr", "mapId", "mx", "my", "claimedBy"]);
   const findChar = id => doc.chars.find(c => c.id === id);
 
@@ -629,7 +630,8 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         if (!c) return "No existe ese personaje";
         if (!dm && !owns(op.id)) return "Solo el DM puede tocar esa ficha";
         for (const [k, v] of Object.entries(op.fields || {})) {
-          if (!dm && PLAYER_LOCKED.has(k)) continue;
+          /* Los PX de un personaje los apunta su jugador; los de un monstruo, no */
+          if (!dm && PLAYER_LOCKED.has(k) && !(k === "xp" && c.kind === "pc")) continue;
           c[k] = v;
         }
         /* Las listas de la ficha se guardan ya saneadas, y un texto de antes

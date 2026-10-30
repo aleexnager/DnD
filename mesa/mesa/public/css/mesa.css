@@ -104,7 +104,7 @@ a { color: var(--accent-soft); }
 /* Cualquier campo escribible, lleve o no atributo «type»: sin esto, un
    <input> pelado se quedaba con el fondo blanco del navegador y la letra
    clara encima, que era ilegible. */
-input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]):not([type=range]),
+input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]):not([type=range]):not(.hoja *),
 select, textarea {
   width: 100%;
   background: var(--well);
@@ -1436,7 +1436,7 @@ label.field > span, .field-label { font-size: 11px; }
 .btn.hurt { color: var(--danger-text); border-color: var(--danger-line); }
 .btn.heal { color: var(--heal-text); border-color: var(--heal-line); }
 .icon-btn { border-radius: 4px; }
-input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]):not([type=range]),
+input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]):not([type=range]):not(.hoja *),
 select, textarea { border-radius: 4px; background: var(--well); border-color: var(--edge); }
 input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
@@ -3114,3 +3114,287 @@ button.st-pill:active, .buff:active { transform: scale(.95); }
   .top-actions { gap: 4px; }
   .top-actions .icon-btn { width: 32px; }
 }
+
+/* ============================================================
+   Hoja de personaje (hoja.js): la de 2024, con la piel de la mesa.
+   Las mismas cajas en el mismo sitio que la oficial: marco con doble
+   filete y remates en las esquinas, títulos en versalitas con su raya,
+   escudo de la CA, óvalo del nivel, círculos de competencia y rombos.
+   Las cajas de texto llevan el papel cuadriculado de la hoja.
+   ============================================================ */
+.modal.sheet-modal { width: min(1120px, 100%); max-height: min(94vh, 94dvh); }
+.hoja {
+  --hj-line: color-mix(in srgb, var(--accent) 55%, var(--edge-2));
+  --hj-faint: color-mix(in srgb, var(--accent) 22%, transparent);
+  --hj-paper: color-mix(in srgb, var(--accent) 7%, transparent);
+  --hj-bg: color-mix(in srgb, var(--stone-2) 70%, var(--pitch));
+  container-type: inline-size; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; color: var(--vellum);
+}
+.hoja input, .hoja select, .hoja textarea { background: transparent; border: 0; border-radius: 0; color: var(--vellum); min-width: 0; }
+.hoja input:focus, .hoja select:focus, .hoja textarea:focus { outline: none; background: var(--accent-wash); }
+.hoja input:focus-visible, .hoja select:focus-visible, .hoja textarea:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+.hoja input[type=number] { -moz-appearance: textfield; }
+.hoja input[type=number]::-webkit-inner-spin-button, .hoja input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.hoja select option { background: var(--stone-2); }
+
+/* La franja de la mesa, aparte de la hoja */
+.hj-mesa { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; align-items: start; padding: 12px 14px;
+  border: 1px dashed var(--edge-2); border-radius: 12px; background: var(--well); }
+.hj-portrait { display: grid; gap: 8px; justify-items: center; grid-row: span 2; }
+.hj-portrait .avatar { width: 72px; height: 72px; font-size: 22px; border-radius: 12px; }
+.hj-mesa-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 12px; }
+.hj-mesa-fields .field input { width: 100%; background: var(--stone); border: 1px solid var(--edge); border-radius: 6px; padding: 7px 10px; }
+.hj-mesa-fields .hj-color input { height: 36px; padding: 2px; }
+.hj-mesa .small-note { margin: 0; }
+
+/* La página */
+.hj-page {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 18px;
+  border: 1px solid var(--edge); border-radius: 14px;
+  background:
+    radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 60%),
+    var(--stone);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(255, 255, 255, .02);
+}
+
+/* La caja: doble filete y un remate en cada esquina */
+.hj-box, .hj-abil {
+  position: relative; border: 1.5px solid var(--hj-line); border-radius: 12px; background: var(--hj-bg);
+  padding: 8px 10px 10px; min-width: 0;
+}
+.hj-box::before, .hj-abil::before { content: ""; position: absolute; inset: 3px; border: 1px solid var(--hj-faint); border-radius: 10px; pointer-events: none; }
+.hj-box::after, .hj-abil::after {
+  content: ""; position: absolute; inset: -5px; pointer-events: none;
+  background:
+    radial-gradient(circle, var(--hj-line) 2.4px, transparent 3px) 0 0 / 10px 10px no-repeat,
+    radial-gradient(circle, var(--hj-line) 2.4px, transparent 3px) 100% 0 / 10px 10px no-repeat,
+    radial-gradient(circle, var(--hj-line) 2.4px, transparent 3px) 0 100% / 10px 10px no-repeat,
+    radial-gradient(circle, var(--hj-line) 2.4px, transparent 3px) 100% 100% / 10px 10px no-repeat;
+}
+.hj-box h3, .hj-abil h4, .hj-shield h3 {
+  margin: 0 0 6px; padding-bottom: 5px; border-bottom: 1px solid var(--hj-line);
+  font: 700 11px/1.15 var(--sans); letter-spacing: .08em; text-transform: uppercase; text-align: center; color: var(--vellum);
+}
+.hj-sub { margin: 12px 0 6px; font: 700 10px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+/* Línea con su rótulo debajo, como en la cabecera de la hoja */
+.hj-line { display: grid; gap: 2px; min-width: 0; }
+.hj-line input, .hj-line select { border-bottom: 1px solid var(--hj-line); padding: 3px 2px; font-size: 14px; width: 100%; }
+.hj-line > span { font: 600 10px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.hj-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+/* Papel cuadriculado */
+.hj-grid-paper, .hj-feats .hj-feat-list:empty, [data-grid] {
+  background-image: linear-gradient(var(--hj-paper) 1px, transparent 1px), linear-gradient(90deg, var(--hj-paper) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+.hoja textarea { width: 100%; resize: vertical; padding: 6px 8px; font: 13px/1.5 var(--sans); }
+.hj-grid-paper { min-height: 64px; border-radius: 4px; }
+
+/* ---------- Cabecera ---------- */
+.hj-head { display: grid; grid-template-columns: minmax(0, 2.6fr) 96px 92px minmax(0, 1.5fr) minmax(0, .85fr) minmax(0, .8fr); gap: 10px; align-items: stretch; }
+.hj-ident { display: grid; gap: 8px; padding-top: 10px; }
+.hj-ident .hj-name { font: 700 20px/1.2 var(--sans); }
+.hj-oval {
+  display: grid; grid-template-rows: 1fr 1fr; align-content: center; padding: 10px 12px;
+  border: 1.5px solid var(--hj-line); border-radius: 50%; background: var(--hj-bg); box-shadow: inset 0 0 0 4px var(--stone), inset 0 0 0 5px var(--hj-faint);
+}
+.hj-oval label { display: grid; justify-items: center; gap: 1px; }
+.hj-oval label + label { border-top: 1px solid var(--hj-line); padding-top: 3px; }
+.hj-oval input { width: 100%; text-align: center; font: 700 18px/1.1 var(--sans); padding: 0; }
+.hj-oval label + label input { font-size: 13px; font-weight: 600; }
+.hj-oval span { font: 600 10px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+/* El escudo de la CA */
+.hj-shield {
+  position: relative; display: grid; justify-items: center; align-content: start; gap: 2px; padding: 10px 8px 26px; min-height: 120px;
+  background: var(--hj-line); clip-path: polygon(0 0, 100% 0, 100% 64%, 50% 100%, 0 64%);
+}
+.hj-shield::before { content: ""; position: absolute; inset: 1.5px; background: var(--hj-bg); clip-path: polygon(0 0, 100% 0, 100% 64%, 50% 100%, 0 64%); z-index: 0; }
+.hj-shield > * { position: relative; z-index: 1; }
+.hj-shield h3 { border: 0; padding: 0; margin: 0; font-size: 10px; }
+.hj-shield input { width: 60px; text-align: center; font: 700 26px/1.1 var(--sans); }
+.hj-shield-on { display: grid; justify-items: center; gap: 2px; }
+.hj-shield-on small { font: 600 10px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+/* Puntos de golpe, dados de golpe y muerte */
+.hj-hp-grid { display: grid; grid-template-columns: 1.2fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px 10px; }
+.hj-hp-cur { grid-row: span 2; border-right: 1px solid var(--hj-faint); padding-right: 8px; }
+.hj-hp label, .hj-hd label { display: grid; gap: 2px; align-content: end; }
+.hj-hp input, .hj-hd input { border-bottom: 1px solid var(--hj-line); text-align: center; font: 700 16px/1.2 var(--sans); padding: 2px; width: 100%; }
+.hj-hp-cur input { font-size: 30px; border: 0; }
+.hj-hp span, .hj-hd span { font: 600 10px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); text-align: center; }
+.hj-hd { display: grid; grid-template-rows: auto 1fr 1fr; gap: 4px; }
+.hj-death { display: grid; align-content: start; gap: 6px; }
+.hj-death > div { display: grid; justify-items: center; gap: 3px; }
+.hj-death small { font: 600 10px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.hj-dias { display: inline-flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+
+/* El rombo y el círculo de competencia */
+.hj-dia {
+  width: 12px; height: 12px; padding: 0; flex: none; transform: rotate(45deg); border: 1.5px solid var(--hj-line);
+  border-radius: 2px; background: transparent; cursor: pointer;
+  transition: background-color var(--dur-2) ease, transform var(--dur-1) var(--ease-out), box-shadow var(--dur-2) ease;
+}
+.hj-dia:hover:not(:disabled) { box-shadow: 0 0 0 3px var(--accent-wash); }
+.hj-dia:active:not(:disabled) { transform: rotate(45deg) scale(.85); }
+.hj-dia.on { background: var(--accent); border-color: var(--accent); }
+.hj-dia:disabled { cursor: default; opacity: .9; }
+[data-dia="deathFail"].on { background: var(--blood); border-color: var(--blood); }
+[data-dia="deathOk"].on { background: var(--moss); border-color: var(--moss); }
+.hj-prof {
+  -webkit-appearance: none; appearance: none; width: 12px; height: 12px; margin: 0; flex: none;
+  border: 1.5px solid var(--hj-line); border-radius: 50%; background: transparent; cursor: pointer;
+  transition: background-color var(--dur-2) ease, box-shadow var(--dur-2) ease;
+}
+.hj-prof:checked { background: var(--accent); box-shadow: inset 0 0 0 2px var(--hj-bg); border-color: var(--accent); }
+
+.hj-banner { display: flex; align-items: center; gap: 14px; color: var(--accent-soft); }
+.hj-banner::before, .hj-banner::after { content: ""; flex: 1; height: 7px; border-top: 1px solid var(--hj-line); border-bottom: 1px solid var(--hj-faint); }
+.hj-banner span { font: 700 15px/1 var(--sans); letter-spacing: .22em; text-transform: uppercase; }
+
+/* ---------- Cuerpo de la primera página ---------- */
+.hj-body { display: grid; grid-template-columns: minmax(330px, 36%) minmax(0, 1fr); gap: 12px; align-items: start; }
+.hj-left { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.hj-col { display: grid; gap: 10px; }
+.hj-left .hj-train { grid-column: 1 / -1; }
+.hj-prof-box input { width: 100%; text-align: center; font: 700 26px/1.2 var(--sans); }
+.hj-insp { display: grid; justify-items: center; }
+.hj-insp .hj-dia { width: 20px; height: 20px; margin: 6px 0 4px; }
+/* Característica: el círculo con el modificador y la pestaña de la puntuación */
+.hj-abil { padding: 8px 8px 6px; }
+.hj-abil-top { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; column-gap: 0; padding: 2px 0 8px; }
+.hj-mod {
+  width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%;
+  border: 1.5px solid var(--hj-line); box-shadow: inset 0 0 0 3px var(--hj-bg), inset 0 0 0 4px var(--hj-faint);
+  font: 700 22px/1 var(--sans); background: var(--stone);
+}
+.hj-score { display: grid; justify-items: center; gap: 2px; margin-left: -6px; position: relative; z-index: 1; }
+.hj-score input { width: 42px; height: 28px; text-align: center; font: 700 15px/1 var(--sans); border: 1.5px solid var(--hj-line); border-radius: 6px; background: var(--stone); }
+.hj-score small, .hj-modlbl { font: 600 10px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+.hj-modlbl { margin-top: 4px; grid-column: 1 / -1; text-align: center; }
+.hj-abil ul { list-style: none; margin: 0; padding: 0; display: grid; }
+.hj-abil li { border-top: 1px solid var(--hj-faint); }
+.hj-abil li label { display: grid; grid-template-columns: 12px 28px 1fr; align-items: center; gap: 6px; padding: 4px 2px; cursor: pointer; font-size: 12px; }
+.hj-abil li b { text-align: right; font-size: 12px; border-bottom: 1px solid var(--hj-faint); }
+.hj-abil li.hj-save span { font-weight: 700; }
+.hj-abil li label:hover { background: var(--accent-wash); border-radius: 4px; }
+
+.hj-train { display: grid; gap: 8px; }
+.hj-armor { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--hj-faint); }
+.hj-armor small, .hj-area small, .hj-attune small { font: 600 10px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+.hj-armor > span { display: inline-flex; gap: 7px; align-items: center; }
+.hj-area { display: grid; gap: 3px; }
+
+.hj-right { display: grid; gap: 10px; min-width: 0; }
+.hj-quad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.hj-small { display: grid; align-content: start; }
+.hj-small input, .hj-small select, .hj-small output { width: 100%; text-align: center; font: 700 20px/1.3 var(--sans); padding: 2px; }
+.hj-small select { font-size: 14px; text-align-last: center; }
+
+/* Tablas: armas, conjuros, recursos, equipo */
+.hj-table { display: grid; }
+.hj-tr { display: grid; gap: 8px; align-items: center; min-width: 0; padding: 3px 0; border-bottom: 1px solid var(--hj-faint); }
+.hj-th { font: 600 10px/1.2 var(--sans); letter-spacing: .04em; color: var(--dim); border-bottom-color: var(--hj-line); padding-bottom: 4px; }
+.hj-th > span { text-decoration: underline; text-decoration-color: var(--hj-faint); text-underline-offset: 3px; }
+.hj-weapons .hj-tr { grid-template-columns: minmax(0, 1.6fr) minmax(0, .95fr) minmax(0, 1.25fr) minmax(0, 1.1fr) 58px; }
+.hj-tr input { font-size: 13px; padding: 4px 3px; width: 100%; border-bottom: 1px dotted transparent; }
+.hj-tr input:hover { border-bottom-color: var(--hj-faint); }
+.hj-dmg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.hj-row-tools { display: inline-flex; justify-content: flex-end; gap: 0; }
+.hj-row-tools .icon-btn { width: 28px; height: 28px; }
+.hj-wmore[hidden] { display: none; }
+.hj-wmore { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; padding: 4px 0 6px; }
+.hj-wmore label { display: grid; gap: 2px; font-size: 12px; }
+.hj-wmore small { color: var(--dim); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.hj-wmore select, .hj-wmore input { border: 1px solid var(--edge); border-radius: 6px; padding: 5px 6px; background: var(--stone); }
+.hj-wrow.from-spell { color: var(--arcane-text); }
+.hj-wrow.from-spell .hj-ro { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 4px 3px; min-width: 0; overflow-wrap: anywhere; }
+.hj-add { margin-top: 8px; }
+.hj-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.hj-empty { margin: 10px 2px; color: var(--dim); font-size: 13px; }
+
+/* Rasgos */
+.hj-feat-list { display: grid; gap: 8px; min-height: 28px; }
+.hj-class .hj-feat-list { grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
+.hj-feat { display: grid; gap: 2px; padding: 6px 8px; border-radius: 8px; background: color-mix(in srgb, var(--stone) 70%, transparent); border: 1px solid var(--hj-faint); }
+.hj-feat-head { display: grid; grid-template-columns: 1fr auto; align-items: center; }
+.hj-feat-head input { font-weight: 700; font-size: 13px; padding: 2px; }
+.hj-feat textarea { font-size: 12px; padding: 2px; min-height: 38px; color: color-mix(in srgb, var(--vellum) 85%, var(--dim)); }
+.hj-duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.hj-res { display: grid; }
+.hj-rrow { grid-template-columns: minmax(0, 1fr) 70px 70px 30px; }
+.hj-rrow label { display: grid; gap: 1px; }
+.hj-rrow small { font-size: 10px; color: var(--dim); letter-spacing: .06em; text-transform: uppercase; }
+.hj-rrow input[type=number] { text-align: center; }
+
+/* ---------- Segunda página ---------- */
+.hj-p2 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: start; }
+.hj-p2-left, .hj-p2-right { display: grid; gap: 10px; min-width: 0; }
+.hj-magic-top { display: grid; grid-template-columns: minmax(200px, .85fr) minmax(0, 1.4fr); gap: 10px; align-items: stretch; }
+.hj-cast { display: grid; gap: 6px; align-content: start; }
+.hj-cast-row { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 8px; border-top: 1px solid var(--hj-faint); padding-top: 5px; }
+.hj-cast-row b { font: 700 11px/1.2 var(--sans); letter-spacing: .04em; text-transform: uppercase; }
+.hj-cast-row output, .hj-cast-row input { text-align: center; font: 700 18px/1.2 var(--sans); width: 100%; border: 1.5px solid var(--hj-line); border-radius: 8px; padding: 4px 2px; background: var(--stone); }
+.hj-slot-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 12px; }
+.hj-slot { display: grid; grid-template-columns: 34px 1fr; grid-template-rows: auto auto; align-items: center; gap: 2px 8px; }
+.hj-slot small { grid-column: 1 / -1; }
+.hj-slot .hj-dias { flex-wrap: nowrap; gap: 6px; padding-left: 3px; }
+.hj-slot small { font: 600 10px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+.hj-slot input { text-align: center; border-bottom: 1px solid var(--hj-line); padding: 2px; font: 700 14px/1.2 var(--sans); }
+.hj-slot.is-empty .hj-dias::after { content: "—"; color: var(--edge-2); font-size: 12px; }
+.hj-slot-key { display: none; gap: 22px; justify-content: flex-end; margin: 6px 0 0; font-size: 10px; color: var(--dim); letter-spacing: .06em; text-transform: uppercase; }
+.hj-spells .hj-tr { grid-template-columns: 34px minmax(0, 2fr) minmax(0, 1fr) minmax(0, .9fr) 108px minmax(0, 1fr) 58px; }
+.hj-lv { text-align: center; font-weight: 700; color: var(--accent-soft); }
+.hj-sname { display: grid; gap: 2px; min-width: 0; }
+.hj-sname b { font-size: 13px; }
+.hj-sname .fx-chips { margin-top: 2px; }
+.hj-srow > span { font-size: 12px; min-width: 0; overflow-wrap: anywhere; }
+.hj-crm { display: inline-flex; align-items: center; gap: 4px; }
+.hj-crm i { font-style: normal; font-size: 11px; color: var(--dim); margin-right: 5px; }
+.hj-crm .hj-dia { width: 10px; height: 10px; }
+.hj-snote { color: var(--dim); }
+.hj-items .hj-tr { grid-template-columns: 22px minmax(0, 1fr) 52px 60px 30px; }
+.hj-items .hj-inote { grid-column: 2 / -1; font-size: 12px; color: var(--dim); padding-top: 0; }
+.hj-items input[type=number] { text-align: center; }
+.hj-attune { display: grid; gap: 4px; margin-top: 12px; }
+.hj-attune label { display: grid; grid-template-columns: 14px 1fr; gap: 10px; align-items: center; }
+.hj-attune input { border-bottom: 1px solid var(--hj-line); padding: 4px 2px; font-size: 13px; }
+.hj-coin-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.hj-coin-row label { display: grid; justify-items: center; gap: 3px; }
+.hj-coin-row small { font: 600 10px/1 var(--sans); color: var(--dim); letter-spacing: .06em; }
+.hj-coin-row input { width: 100%; text-align: center; font: 700 14px/1.2 var(--sans); border: 1.5px solid var(--hj-line); border-radius: 6px; padding: 6px 2px; background: var(--stone);
+  clip-path: polygon(0 4px, 50% 0, 100% 4px, 100% calc(100% - 4px), 50% 100%, 0 calc(100% - 4px)); }
+
+/* ---------- Pantallas estrechas: las cajas se apilan ---------- */
+@container (max-width: 900px) {
+  .hj-head { grid-template-columns: minmax(0, 1fr) 96px 92px; }
+  .hj-ident { grid-column: 1 / -1; }
+  .hj-hp { grid-column: 1 / 2; }
+  .hj-body { grid-template-columns: minmax(0, 1fr); }
+  .hj-p2 { grid-template-columns: minmax(0, 1fr); }
+}
+@container (max-width: 640px) {
+  .hoja { gap: 12px; }
+  .hj-page { padding: 12px; }
+  .hj-mesa { grid-template-columns: minmax(0, 1fr); }
+  .hj-portrait { grid-row: auto; grid-template-columns: auto auto; align-items: center; justify-content: start; }
+  .hj-head { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hj-oval { grid-row: span 1; }
+  .hj-hp { grid-column: 1 / -1; }
+  .hj-two { grid-template-columns: minmax(0, 1fr); }
+  .hj-left { grid-template-columns: minmax(0, 1fr); }
+  .hj-quad { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hj-duo, .hj-magic-top { grid-template-columns: minmax(0, 1fr); }
+  .hj-slot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Las tablas, en tarjetas: una fila por cosa */
+  .hj-th { display: none; }
+  .hj-weapons .hj-tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hj-weapons .hj-tr > input[data-w="name"] { grid-column: 1 / -1; font-weight: 700; }
+  .hj-spells .hj-tr { grid-template-columns: 34px 1fr auto; }
+  .hj-spells .hj-srow > span:nth-child(3), .hj-spells .hj-srow > span:nth-child(4), .hj-spells .hj-srow > span:nth-child(6) { grid-column: 2 / 3; color: var(--dim); }
+  .hj-spells .hj-crm { grid-column: 2 / 3; }
+  .hj-row-tools { grid-column: -2 / -1; grid-row: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .hj-dia:active:not(:disabled) { transform: rotate(45deg); } }
+
+/* Ventana de atacar: los conjuros de combate, en su sección */
+.atk-sec { display: flex; align-items: center; gap: 6px; margin: 16px 0 8px; color: var(--arcane-text); }
+.atk.spell b { color: var(--arcane-text); }
+.atk.spell:not(:disabled):hover { border-color: var(--arcane-line); }

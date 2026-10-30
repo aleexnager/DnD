@@ -628,7 +628,7 @@ function bindActions(root) {
       }
       case "attack": {
         const rivals = doc().chars.filter(x => x.id !== c.id && x.hp > 0);
-        return openAttacks(c, { targets: rivals });
+        return openAttacks(c, { targets: rivals, spellCtx: spellCtx() });
       }
       case "spells": return openSpellbook(c, spellCtx());
       case "hitDie": {
