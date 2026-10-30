@@ -1,0 +1,16 @@
+Retratos del bestiario de Mesa
+==============================
+
+Los iconos de esta carpeta son de game-icons.net (https://game-icons.net),
+obra de Lorc, Delapouite y otros autores, publicados bajo licencia
+Creative Commons Attribution 3.0 (https://creativecommons.org/licenses/by/3.0/).
+
+Mesa los ha recoloreado y reencuadrado para usarlos como fichas de mesa
+(tools/retratos-bestiario.mjs). El nombre de cada archivo es el del icono
+original en game-icons.net.
+
+Las fichas de las criaturas (public/js/catalog.js) incluyen material del
+System Reference Document 5.1 («SRD 5.1») de Wizards of the Coast LLC,
+disponible en https://dnd.wizards.com/resources/systems-reference-document.
+El SRD 5.1 está publicado bajo la licencia Creative Commons Attribution 4.0
+International (https://creativecommons.org/licenses/by/4.0/legalcode).

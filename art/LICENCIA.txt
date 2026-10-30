@@ -1,0 +1,9 @@
+Fondo de la entrada de Mesa
+===========================
+
+entrada.svg es una escena dibujada para Mesa (la genera tools/fondo-entrada.mjs).
+
+El dragón que cruza la luna es el icono «wyvern» de Lorc, de game-icons.net
+(https://game-icons.net), publicado bajo licencia Creative Commons Attribution
+3.0 (https://creativecommons.org/licenses/by/3.0/). Mesa lo usa como silueta,
+girado y animado.
