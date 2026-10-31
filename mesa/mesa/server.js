@@ -349,6 +349,32 @@ const handler = async (req, res) => {
       return json(res, 200, { imageId: id, bytes: buf.length });
     }
 
+    /* Traer de internet la foto de una criatura. La descarga el servidor (desde
+       el navegador lo impide la propia web) y se la devuelve al DM, que la
+       encuadra y la sube como cualquier retrato. Solo el DM, solo imágenes y
+       como mucho 12 MB: no es un proxy para otra cosa. */
+    if (p === "/api/fetch-image" && req.method === "GET") {
+      const client = clients.get(url.searchParams.get("token") || "");
+      if (!client || client.role !== "dm") return json(res, 403, { error: "Solo el DM" });
+      let target;
+      try { target = new URL(url.searchParams.get("url") || ""); } catch { return json(res, 400, { error: "Esa dirección no es válida" }); }
+      if (!/^https?:$/.test(target.protocol)) return json(res, 400, { error: "La dirección tiene que empezar por http:// o https://" });
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 15000);
+      try {
+        const r = await fetch(target, { signal: ctrl.signal, redirect: "follow", headers: { Accept: "image/*" } });
+        if (!r.ok) return json(res, 502, { error: `La web contestó ${r.status}: no deja descargar esa imagen` });
+        const mime = String(r.headers.get("content-type") || "").split(";")[0].trim();
+        if (!mime.startsWith("image/")) return json(res, 415, { error: "Esa dirección no es una imagen: copia la dirección de la imagen, no la de la página" });
+        const buf = Buffer.from(await r.arrayBuffer());
+        if (buf.length > 12 * 1024 * 1024) return json(res, 413, { error: "La imagen pesa demasiado (más de 12 MB)" });
+        res.writeHead(200, { "Content-Type": mime, "Content-Length": buf.length, "Cache-Control": "no-store" });
+        return res.end(buf);
+      } catch (err) {
+        return json(res, 502, { error: err.name === "AbortError" ? "La web tarda demasiado en contestar" : "No se pudo descargar la imagen" });
+      } finally { clearTimeout(timer); }
+    }
+
     if (p.startsWith("/img/")) {
       const name = path.basename(p.slice(5));
       const file = path.join(IMAGES, name);

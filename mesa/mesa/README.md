@@ -217,7 +217,7 @@ herramientas, los dieciséis estados con su explicación, las dieciocho
 habilidades, lo que escribe el programa en el registro y **el bestiario que
 viene de fábrica** (también las criaturas ya puestas en el mapa con su número,
 «Hongo chillón 2» sale «Shrieker Fungus 2», en el rótulo del mapa, el globo,
-las tarjetas y el registro), con sus 334 criaturas, sus fichas técnicas, sus rasgos y
+las tarjetas y el registro), con sus 356 criaturas, sus fichas técnicas, sus rasgos y
 sus ataques ("Cimitarra — +4 al ataque — 1d6+2 cortante" sale como "Scimitar —
 +4 to hit — 1d6+2 slashing"). También **los 391 conjuros** (nombre, tiempo,
 alcance, componentes, duración y descripción, en la ficha, la biblioteca, la
@@ -496,8 +496,9 @@ medio, difícil o mortal antes de que empiece.
 
 ## Bestiario
 
-Trae **334 criaturas listas**: **todas las del SRD 5.2.1** (las reglas de
-2024) y cuatro de 2014, de VD 0 a 30. Del
+Trae **356 criaturas listas**: **todas las del SRD 5.2.1** (las reglas de
+2024), cuatro de 2014 y 22 de la casa (ver «Bestiario de la Península» más
+abajo), de VD 0 a 30. Del
 plebeyo, el gato o la rata a la tarasca, pasando por los diez dragones
 cromáticos y metálicos en sus cuatro edades (cría, joven, adulto y anciano) y el
 dragón tortuga, los diablos y demonios (del lémur al diablo de la sima y el
@@ -538,10 +539,50 @@ la silueta dice cuál es. Dragones y elementales llevan el color de su
 elemento. Al ser siluetas se leen igual a 30 píxeles en el móvil que en la
 tele, que es donde un retrato pintado se convierte en una mancha.
 
-Cada criatura puede llevar **su propio retrato**: se sube una vez en el
-bestiario y todas las que invoques salen ya con esa cara, en la tarjeta y en
-su ficha del mapa. El tamaño también viaja, así que un ogro guardado como
-«Grande» ocupa 2×2 en cuanto lo pones en el tablero.
+### Fotos de las criaturas
+
+Los iconos sirven para cualquier partida, pero para que cada monstruo **tenga
+cara** se le puede poner una foto o una ilustración, y desde entonces todas las
+que invoques salen con ella: en la tarjeta, en la ficha redonda del mapa (con
+un aro del color de su tipo, para seguir distinguiendo de un vistazo un
+muerto viviente de un infernal) y en las pantallas de los jugadores y de la
+tele. El tamaño también viaja, así que un ogro guardado como «Grande» ocupa
+2×2 en cuanto lo pones en el tablero.
+
+- **Una a una**: pulsa el retrato de la criatura en el bestiario. Puedes subir
+  un archivo, **pegar** una imagen copiada en el navegador (Ctrl+V), pegar la
+  **dirección web** de una imagen (la descarga el servidor de Mesa) o pulsar
+  **Buscar en internet**, que abre una búsqueda de imágenes con el nombre de la
+  criatura en inglés. Antes de guardar, se arrastra y se acerca la foto para
+  que la cara quede dentro del círculo de la ficha.
+- **De golpe**: el botón **Fotos** del bestiario acepta muchas imágenes (o una
+  carpeta entera) y las reparte solas por el nombre del archivo, en castellano o
+  en inglés: «Goblin.jpg», «Dragón rojo adulto.png», «owlbear.webp»,
+  «Oso lechuza (2).jpg». Dice qué archivos no ha reconocido.
+- **Arrastrando** una imagen encima de una criatura de la lista.
+
+El filtro **Mostrar → Sin foto** enseña las que aún no tienen cara. Quitar la
+foto la devuelve a su icono. Los monstruos que ya están en la mesa estrenan la
+foto nueva al ponérsela.
+
+Las fotos se guardan **en tu partida, en la carpeta de datos de tu ordenador**
+(`data/images`, que no se sube a git): no forman parte de la aplicación ni del
+repositorio. Por eso Mesa no trae ilustraciones de los manuales ni de otras
+webs: la aplicación es pública en GitHub y no se pueden redistribuir. Lo que tú
+pongas para jugar con tus amigos se queda en tu mesa.
+
+### Bestiario de la Península (homebrew)
+
+Además del SRD, Mesa trae **22 criaturas de la casa** inspiradas en el
+folclore de Asturias, Cantabria, Galicia, el País Vasco y Cataluña, con ficha
+de 2024 completa (y su inglés) y equilibradas con las cifras de referencia de
+cada VD: el ventolín, el tentirujo, el trasgu, la pesanta, la xana, la lamiña,
+el busgosu, la guaxa, la lavandera nocturna, el sacamantecas, el mouro, el
+coco, el nuberu, el diaño burlón, el cuegle, la Santa Compaña, el ojáncanu, el
+cuélebre, el basajaun, el gaueko, el herensuge y la Dama de Amboto (VD 0 a 18).
+Llevan la etiqueta **Homebrew** en su ficha y se filtran con **Mostrar →
+Homebrew**. Cada una trae su gancho de folclore en los rasgos: el pelo blanco
+del ojáncanu, el peine de oro de la lamiña, la cruz de la Santa Compaña…
 
 Se elige cantidad y **PV al azar** para que dos goblins no aguanten lo mismo.
 Entran al encuentro numerados (Goblin 1, Goblin 2…) y con su iniciativa
@@ -1293,7 +1334,9 @@ public/
     dice3d.js          dados en 3D: la escena, las caras y quién los ve
     dice3d-core.js     dados en 3D: forma de cada dado, física y numeración
     chips.js           indicadores con icono de ataques y conjuros (alcance, área, estado…)
-    bestiario-datos.js las 334 fichas del bestiario (reglas de 2024), con su inglés
+    bestiario-datos.js las 334 fichas del SRD del bestiario (reglas de 2024), con su inglés
+    bestiario-homebrew.js las 22 criaturas de la casa (folclore de la península)
+    retratos.js        fotos de las criaturas: encuadre, carga en bloque, pegar y traer de internet
     chars-io.js        exportar e importar personajes entre campañas
     forja.js           la forja de mapas: el editor a pantalla completa
     forja-core.js      la forja: geometría del plano, paredes, puertas y generador

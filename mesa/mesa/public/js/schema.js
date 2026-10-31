@@ -511,7 +511,22 @@ export function normalizeBeast(raw = {}) {
 const BASE = CATALOG.map(normalizeBeast);
 export function bestiaryOf(doc) {
   const own = new Map((doc && doc.bestiary || []).map(b => [b.id, b]));
-  return [...BASE.map(b => own.get(b.id) || b), ...[...own.values()].filter(b => !CATALOG_BY_ID.has(b.id))];
+  const list = [...BASE.map(b => own.get(b.id) || b), ...[...own.values()].filter(b => !CATALOG_BY_ID.has(b.id))];
+  /* Las fotos que pone el DM tapan el icono de serie, sin tocar la ficha */
+  const photos = (doc && doc.portraits) || {};
+  return list.map(b => photos[b.id] ? { ...b, avatarId: photos[b.id], photo: true } : b);
+}
+
+/* Fotos de las criaturas: id de la criatura -> imagen subida. Viven en la
+   partida (las imágenes, en la carpeta de datos del DM) y nunca viajan a los
+   jugadores: ven la cara del monstruo en el mapa, no el bestiario. */
+export function normalizePortraits(raw) {
+  const out = {};
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
+  for (const [id, img] of Object.entries(raw).slice(0, 2000)) {
+    if (typeof id === "string" && id.length <= 80 && typeof img === "string" && /^[\w.-]{1,80}$/.test(img)) out[id] = img;
+  }
+  return out;
 }
 export const isBaseBeast = id => CATALOG_BY_ID.has(id);
 
@@ -747,6 +762,7 @@ export function emptyDoc() {
     version: 7,
     chars: [],
     bestiary: [],
+    portraits: {},
     maps: [map],
     session: { ...SESSION_DEFAULTS, combat: { ...SESSION_DEFAULTS.combat, order: [] }, activeMapId: map.id },
     log: [],
@@ -826,6 +842,7 @@ export function migrate(raw) {
     version: 7,
     chars,
     bestiary: ownBeasts(src.bestiary),
+    portraits: normalizePortraits(src.portraits),
     maps,
     session,
     log: Array.isArray(src.log) ? src.log.slice(-150) : [],

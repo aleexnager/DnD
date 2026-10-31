@@ -35,6 +35,7 @@ export function typeOf(sizeType) {
 }
 
 import { BEASTS } from "./bestiario-datos.js";
+import { HOMEBREW } from "./bestiario-homebrew.js";
 
 const art = icon => "bestiario/" + icon + ".svg";
 
@@ -54,7 +55,7 @@ export const crValue = cr => {
 
 /* Lo que no viene escrito en cada ficha se completa aquí: los PX salen del
    VD, el color del tipo y el retrato del icono. */
-export const CATALOG = BEASTS.map(({ icon, ...b }) => ({
+export const CATALOG = [...BEASTS, ...HOMEBREW].map(({ icon, ...b }) => ({
   senses: "", languages: "", resistances: "", traits: "",
   ...b,
   xp: b.xp ?? XP[b.cr] ?? 0,

@@ -54,7 +54,8 @@ export function statBlockHTML(b, opts = {}) {
     <h3 class="mon-name">${esc(b.name)}</h3>
     ${meta ? `<p class="mon-meta">${esc(meta)}</p>` : ""}
     ${b.edition === "2024" ? `<span class="mon-ed" title="Ficha de las reglas de 2024 (SRD 5.2.1)${b.srd ? " · " + esc(b.srd) : ""}">Reglas 2024</span>`
-      : b.edition === "2014" ? `<span class="mon-ed old" title="Esta criatura no está en el SRD de 2024: su ficha es la de 2014">Ficha 2014</span>` : ""}
+      : b.edition === "2014" ? `<span class="mon-ed old" title="Esta criatura no está en el SRD de 2024: su ficha es la de 2014">Ficha 2014</span>`
+      : b.edition === "homebrew" ? `<span class="mon-ed hb" title="Criatura de la casa: diseño propio de Mesa a partir del folclore de la península">Homebrew</span>` : ""}
     <i class="mon-rule"></i>
     <p class="mon-prop mon-ac"><b>CA</b> ${esc(b.ac)} <b>Iniciativa</b> ${sign(init)} (${10 + init})</p>
     ${prop("Puntos de golpe", hp)}

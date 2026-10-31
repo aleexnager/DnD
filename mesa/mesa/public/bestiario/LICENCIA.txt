@@ -20,3 +20,7 @@ al castellano y resumido para la mesa.
 Parte de las fichas se generan (tools/bestiario-srd.mjs) a partir del paquete
 @opencharacter/5e-srd-5.2, que publica el SRD 5.2.1 por campos bajo la misma
 licencia CC BY 4.0.
+
+Las criaturas del «Bestiario de la Península» (public/js/bestiario-homebrew.js)
+son diseño propio de Mesa a partir del folclore popular de la península, que es
+de dominio público.

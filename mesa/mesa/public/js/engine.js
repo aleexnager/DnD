@@ -11,7 +11,7 @@
      absorbImages(d) saca las imágenes incrustadas de una copia antigua
      onPresence()    avisa de que ha cambiado quién está conectado */
 
-import { acOf, normalizeSpell, normalizeLibraryItem, MAX_LIBRARY, emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier, withBuffs, canSneak, canSmite, sneakDice, smiteDice, smiteFoe } from "./schema.js";
+import { acOf, normalizeSpell, normalizeLibraryItem, MAX_LIBRARY, emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizePortraits, bestiaryOf, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier, withBuffs, canSneak, canSmite, sneakDice, smiteDice, smiteFoe } from "./schema.js";
 import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells, partyRoomFrame } from "./los.js";
 import { roll, detail, diceOf, cleanDice } from "./dice.js";
 import { cutWalls, doorAt } from "./freewalls.js";
@@ -850,6 +850,25 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         if (!dm) return "Solo el DM";
         doc.bestiary = (Array.isArray(op.list) ? op.list : []).map(normalizeBeast);
         break;
+      case "portrait.set": {
+        /* { set: { idCriatura: imagen | "" } }. Los monstruos que ya están en la
+           mesa con la cara de antes estrenan la nueva. */
+        if (!dm) return "Solo el DM";
+        const before = { ...(doc.portraits || {}) };
+        const next = { ...before };
+        for (const [id, img] of Object.entries(op.set || {})) { if (img) next[id] = img; else delete next[id]; }
+        doc.portraits = normalizePortraits(next);
+        for (const id of Object.keys(op.set || {})) {
+          const base = bestiaryOf({ bestiary: doc.bestiary }).find(b => b.id === id);
+          const fresh = doc.portraits[id] || (base ? base.avatarId : "");
+          for (const c of doc.chars) {
+            if (c.kind !== "monster" || c.monsterKey !== id) continue;
+            const old = String(c.avatarId || "");
+            if (!old || old.startsWith("bestiario/") || old === before[id] || (base && old === base.avatarId)) c.avatarId = fresh;
+          }
+        }
+        break;
+      }
       case "log.add": {
         const entry = { ...op.entry, id: rid(6), ts: Date.now(), actor: client.name, by: client.role };
         if ("dice" in entry) entry.dice = cleanDice(entry.dice);
