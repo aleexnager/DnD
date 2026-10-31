@@ -826,8 +826,8 @@ const EN = {
   "Commons no tiene más imágenes libres con ese nombre": "Commons has no more free images with that name",
   "Wikimedia Commons no contesta ahora; prueba dentro de un rato": "Wikimedia Commons isn't answering right now; try again in a while",
   "Fotos libres de Wikimedia Commons": "Free photos from Wikimedia Commons", "Tus propias fotos": "Your own photos",
-  "Mesa trae elegida una imagen de dominio público (grabados, láminas y pinturas antiguas) para casi todas las criaturas de serie. Con un clic se ponen a las que todavía no tienen foto; las que ya tienen no se tocan.":
-    "Mesa comes with a public-domain image picked for almost every stock creature (old engravings, plates and paintings). One click gives one to every creature that has no photo yet; those that already have one are left alone.",
+  "Mesa trae elegida una imagen de dominio público (grabados, láminas y pinturas antiguas) para la mayoría de las criaturas de serie. Con un clic se ponen a las que todavía no tienen foto; las que ya tienen no se tocan.":
+    "Mesa comes with a public-domain image picked for most stock creatures (old engravings, plates and paintings). One click gives one to every creature that has no photo yet; those that already have one are left alone.",
   "Buscando fotos…": "Looking for photos…", "Poner 1 foto libre": "Add 1 free photo",
   "Todas las criaturas con foto libre ya tienen cara": "Every creature with a free photo already has a face",
   "Criatura de la casa: diseño propio de Mesa a partir del folclore, que es de dominio público": "House creature: Mesa's own design based on public-domain folklore", "Folclore:": "Folklore:",

@@ -11,7 +11,7 @@
      criatura en el archivo, «Goblin.jpg», «adult red dragon.png»…
    - Arrastrando una foto encima de una criatura del bestiario.
    - Con las fotos libres: Mesa trae preseleccionada una imagen de dominio
-     público de Wikimedia Commons para casi todas las criaturas
+     público de Wikimedia Commons para la mayoría de las criaturas
      (bestiario/fotos-libres.json, ver tools/fotos-libres.mjs). Se ponen
      todas de un clic, y en la ficha de cada una se puede elegir otra o
      buscar más en Commons.
@@ -343,7 +343,7 @@ export function openPhotoBatch() {
   const body = el(`<div class="pt-batch">
     <section class="pt-freebox">
       <h4>${icon("image", 16)}<span>Fotos libres de Wikimedia Commons</span></h4>
-      <p class="prose">Mesa trae elegida una imagen de dominio público (grabados, láminas y pinturas antiguas) para casi todas las criaturas de serie. Con un clic se ponen a las que todavía no tienen foto; las que ya tienen no se tocan.</p>
+      <p class="prose">Mesa trae elegida una imagen de dominio público (grabados, láminas y pinturas antiguas) para la mayoría de las criaturas de serie. Con un clic se ponen a las que todavía no tienen foto; las que ya tienen no se tocan.</p>
       ${toneBox()}
       <div class="pt-free-row"><button type="button" class="btn primary sm" data-b="free" disabled><span>Buscando fotos…</span></button></div>
     </section>

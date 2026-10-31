@@ -113,14 +113,21 @@ figure{margin:0;width:96px}img{width:96px;height:96px;object-fit:cover;display:b
 function publicar() {
   const cand = JSON.parse(fs.readFileSync(CANDIDATES, "utf8"));
   const review = readList(path.join(HERE, "fotos-revision.txt"));
-  const fotos = {};
+  const fotos = {}, usedFirst = new Set();
   for (const [id, list] of Object.entries(cand)) {
     const pick = review.get(id);
     if (pick === "no" || !list.length) continue;
-    /* «id: 2» pone la tercera delante; «id: 2 0» deja solo esas, en ese orden */
+    /* «id: 2 0» deja solo esas candidatas, en ese orden; sin revisar, todas */
     const order = pick ? pick.split(/[\s,]+/).map(Number).filter(i => list[i]) : list.map((_, i) => i);
-    const rest = pick && pick.split(/[\s,]+/).length === 1 ? list.map((_, i) => i).filter(i => !order.includes(i)) : [];
-    fotos[id] = [...order, ...rest].map(i => list[i]).map(c => ({ t: c.thumb, p: c.page, a: c.author, l: c.license }));
+    if (!order.length) continue;
+    /* Que dos criaturas no estrenen la misma imagen: si la elegida ya es la
+       primera de otra, va la siguiente candidata buena; si no queda ninguna,
+       se repite */
+    const picks = order.map(i => list[i]);
+    const fresh = picks.filter(c => !usedFirst.has(c.thumb));
+    const final = fresh.length ? [...fresh, ...picks.filter(c => !fresh.includes(c))] : picks;
+    usedFirst.add(final[0].thumb);
+    fotos[id] = final.map(c => ({ t: c.thumb, p: c.page, a: c.author, l: c.license }));
   }
   fs.writeFileSync(OUT, JSON.stringify({
     fuente: "Wikimedia Commons; solo imágenes de dominio público o CC0",

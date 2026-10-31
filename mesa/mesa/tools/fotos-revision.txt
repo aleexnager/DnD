@@ -1,0 +1,357 @@
+# Revisión a ojo de las candidatas de tools/fotos-candidatas.json (hojas de
+# contactos de tools/fotos-libres.mjs hoja). «id: 2 0» deja la tercera y la
+# primera candidatas, en ese orden; «id: no» deja la criatura con su icono
+# (ninguna candidata era la criatura: rótulos, fotos modernas, texto…).
+
+cat-goblin: 0 2 3
+cat-kobold: no
+cat-bandido: 0 1 3
+cat-guardia: 2 3 1
+cat-lobo: 1 3 2
+cat-esqueleto: 0 3
+cat-zombi: 3 0
+cat-orco: no
+cat-hobgoblin: 1 0
+cat-arana: 0
+cat-oso: 3 1 0
+cat-osgo: 0
+cat-ogro: 0 2 1
+cat-plebeyo: 1 2 3
+cat-chillon: 1 2
+cat-rata-gigante: 0
+cat-estirge: no
+cat-sectario: 1 0
+cat-noble: 0 1 3
+cat-serpiente-venenosa: 0
+cat-acolito: 0 2
+cat-jabali: 1 3 2
+cat-murcielago-gigante: 2 3
+cat-duende: no
+cat-hongo-violeta: no
+cat-ciempies-gigante: 0
+cat-gnoll: 0
+cat-hombre-lagarto: 0
+cat-sahuagin: 0
+cat-sombra: no
+cat-maton: no
+cat-explorador: 0 2
+cat-cocodrilo: 3
+cat-simio: 2 0 1 3
+cat-caballo-guerra: 0
+cat-necrofago: no
+cat-arpia: no
+cat-lobo-terrible: no
+cat-diablillo: no
+cat-quasit: no
+cat-armadura-animada: 0 3
+cat-leon: no
+cat-tigre: 3 0 1
+cat-espia: no
+cat-aguila-gigante: no
+cat-sapo-gigante: 1 0
+cat-pulpo-gigante: 0 1
+cat-gargola: 2 3 0
+cat-grifo: 1
+cat-sacerdote: 2 1 0 3
+cat-fanatico: 1 0 2
+cat-berserker: 3 1 2
+cat-capitan-bandido: no
+cat-centauro: 2 0
+cat-fuego-fatuo: 0 1
+cat-constrictora: 1 3 0
+cat-tiburon: 2
+cat-pegaso: 2 0
+cat-manticora: 1 2
+cat-momia: 3 1
+cat-tumulario: 0
+cat-hombre-lobo: 1 2 0
+cat-veterano: 0 1 2 3
+cat-caballero: 0 1 3
+cat-saga-verde: 3 0
+cat-basilisco: 1 2 3
+cat-sabueso-infernal: 1 3
+cat-minotauro: 0 2
+cat-doppelganger: 0 1
+cat-escorpion-gigante: 1 2
+cat-fantasma: no
+cat-banshee: 1 2
+cat-cria-dragon-rojo: 0
+cat-elefante: 1
+cat-trol: 0 3 2
+cat-gigante-colinas: 3
+cat-elemental-fuego: no
+cat-elemental-tierra: no
+cat-elemental-aire: 1 0
+cat-elemental-agua: 1 0
+cat-espectro: 0
+cat-golem-carne: 0 2
+cat-gladiador: 2
+cat-salamandra: 0 1
+cat-unicornio: 0 1
+cat-mago: no
+cat-medusa: 0 1
+cat-guiverno: 0 3
+cat-mamut: no
+cat-oni: 1 0 2
+cat-tiranosaurio: 3 2 0
+cat-hidra: 0 1
+cat-asesino: no
+cat-gigante-escarcha: 1 0 3
+cat-dragon-verde-joven: 1
+cat-ent: no
+cat-dragon-rojo-joven: 0 3
+cat-golem-piedra: no
+cat-archimago: no
+cat-vampiro: 2 1
+cat-rakshasa: 0
+cat-gusano-purpura: no
+cat-senor-momia: 2 1 3
+cat-dragon-rojo-adulto: 1 0 3
+cat-balor: 0
+cat-liche: no
+cat-kraken: 3 0
+cat-tarasca: 2 1
+cat-aguila: 0
+cat-arana-2: 1
+cat-babuino: 3 1
+cat-buho: 0
+cat-buitre: 1 2
+cat-caballito-de-mar: 2 0
+cat-cabra: no
+cat-cangrejo: 0 3
+cat-chacal: 1 3 2
+cat-ciervo: 3 1
+cat-comadreja: 0
+cat-cuervo: no
+cat-escarabajo-de-fuego-gigante: no
+cat-escorpion: no
+cat-gato: 2
+cat-halcon: 0
+cat-hiena: 1
+cat-homunculo: 0 1
+cat-lagarto: 1
+cat-lemur: 0 1
+cat-murcielago: no
+cat-pirana: 3 2
+cat-pulpo: 0 1 2
+cat-rana: 0 1
+cat-rata: 1 3
+cat-tejon: 2 3
+cat-camello: 3 2
+cat-cangrejo-gigante: 3
+cat-comadreja-gigante: 2 3
+cat-esbirro-goblin: no
+cat-experto-en-escaramuzas-sirenido: 0 1
+cat-guerrero-de-infanteria: 1
+cat-halcon-sangriento: no
+cat-mastin: 0 2
+cat-mula: 1 3
+cat-poni: 0
+cat-serpiente-voladora: no
+cat-alce: 3 1
+cat-arana-lobo-gigante: 3 0
+cat-buho-gigante: 2
+cat-caballo-de-monta: no
+cat-caballo-de-tiro: 3 0
+cat-dretch: 0
+cat-enjambre-de-cuervos: no
+cat-enjambre-de-murcielagos: no
+cat-enjambre-de-ratas: no
+cat-espada-voladora-animada: no
+cat-lagarto-gigante: 0 3
+cat-pantera: 0 3
+cat-picohacha: 0
+cat-pseudodragon: no
+cat-pteranodonte: 2
+cat-rana-gigante: 3
+cat-serpiente-constrictora: 2
+cat-serpiente-venenosa-gigante: 1
+cat-tejon-gigante: no
+cat-avispa-gigante: 0
+cat-caballito-de-mar-gigante: 0
+cat-caballo-de-guerra-esqueleto: 0 1
+cat-cabra-gigante: 0 2
+cat-cocatriz: no
+cat-enjambre-de-insectos: 2
+cat-huargo: 3
+cat-oso-negro: no
+cat-satiro: 2 0
+cat-tiburon-de-arrecife: 0
+cat-buitre-gigante: 3
+cat-cria-de-dragon-de-cobre: 0 2 3
+cat-cria-de-dragon-de-oropel: 2
+cat-driada: no
+cat-enjambre-de-piranas: 2 1
+cat-esfinge-de-las-maravillas: 0
+cat-espectro-2: no
+cat-hiena-gigante: 0
+cat-hipogrifo: no
+cat-jefe-goblin: 0
+cat-perro-del-inframundo: 0
+cat-pirata: 1 0
+cat-alce-gigante: 2
+cat-alfombra-asfixiante-animada: 0 3
+cat-alosaurio: 0 2 3
+cat-arbol-despertado: no
+cat-cria-de-dragon-blanco: no
+cat-cria-de-dragon-de-bronce: 1
+cat-cria-de-dragon-de-plata: 0
+cat-cria-de-dragon-negro: 3 1
+cat-cria-de-dragon-verde: 2
+cat-druida: 0 2 3
+cat-enjambre-de-serpientes-venenosas: 0
+cat-ghast: no
+cat-hombre-rata: 2 0
+cat-jabali-gigante: 0
+cat-merrow: no
+cat-minotauro-esqueleto: no
+cat-oso-polar: 0 2
+cat-plesiosaurio: 1
+cat-rinoceronte: 1 3
+cat-saga-marina: no
+cat-tigre-dientes-de-sable: 1 2 3
+cat-acechador-osgo: 0
+cat-anquilosaurio: no
+cat-capitan-trasgo: no
+cat-cria-de-dragon-azul: 1 0
+cat-cria-de-dragon-de-oro: 2
+cat-diablo-barbado: 0
+cat-enjambre-de-garras-reptantes: 2 0
+cat-familiar-vampirico: no
+cat-lobo-invernal: no
+cat-orca: 1
+cat-pesadilla: no
+cat-arquelon: no
+cat-capitan-de-la-guardia: 1
+cat-couatl: 1 2
+cat-ettin: 0
+cat-hipopotamo: 2 0 1
+cat-hombre-jabali: 0
+cat-hombre-tigre: 2
+cat-incubo: 0 1
+cat-jefe-pendenciero: 3 0
+cat-lamia: 0 2
+cat-sucubo: 0
+cat-cocodrilo-gigante: 3
+cat-diablo-punzante: no
+cat-engendro-vampirico: 0
+cat-gorgon: no
+cat-hombre-oso: no
+cat-saga-nocturna: 0
+cat-tiburon-gigante: 2 1
+cat-triceratops: 3 1
+cat-capitan-pirata: 1 3
+cat-dragon-blanco-joven: 3
+cat-dragon-de-oropel-joven: 3 2
+cat-drana: 3
+cat-quimera: no
+cat-vrock: 0
+cat-dragon-de-cobre-joven: 2 1
+cat-dragon-negro-joven: 1 3
+cat-gigante-de-piedra: no
+cat-simio-gigante: 1 3
+cat-diablo-de-las-cadenas: no
+cat-dragon-de-bronce-joven: 2
+cat-hezrou: 0
+cat-naga-espiritual: 2 0
+cat-diablo-oseo: no
+cat-dragon-azul-joven: 3
+cat-dragon-de-plata-joven: 3
+cat-gigante-de-fuego: no
+cat-gigante-de-las-nubes: 0 1
+cat-glabrezu: 0
+cat-golem-de-arcilla: 0
+cat-deva: no
+cat-dragon-de-oro-joven: 0
+cat-naga-guardiana: 0
+cat-diablo-astado: no
+cat-djinn: no
+cat-esfinge-del-conocimiento: no
+cat-ifrit: 0 3
+cat-roc: 1 3
+cat-erinia: 3
+cat-dragon-blanco-adulto: 1 3
+cat-dragon-de-oropel-adulto: 0 2
+cat-gigante-de-las-tormentas: no
+cat-nalfeshnee: no
+cat-diablo-gelido: 0
+cat-dragon-de-cobre-adulto: 1
+cat-dragon-negro-adulto: 0
+cat-dragon-de-bronce-adulto: 3
+cat-dragon-verde-adulto: 0 1 3
+cat-dragon-azul-adulto: 2
+cat-dragon-de-plata-adulto: 3
+cat-golem-de-hierro: no
+cat-marilith: no
+cat-planetar: 0 2
+cat-dragon-de-oro-adulto: 3
+cat-dragon-tortuga: no
+cat-esfinge-del-valor: 3 2
+cat-diablo-de-la-sima: 0 3 2
+cat-dragon-blanco-anciano: 1
+cat-dragon-de-oropel-anciano: 2
+cat-dragon-de-cobre-anciano: 0
+cat-dragon-negro-anciano: 3
+cat-solar: 2 0
+cat-dragon-de-bronce-anciano: 1
+cat-dragon-verde-anciano: 3
+cat-dragon-azul-anciano: 3
+cat-dragon-de-plata-anciano: 0
+cat-dragon-de-oro-anciano: 3
+cat-dragon-rojo-anciano: 0 3
+hb-trasgu: no
+hb-pesanta: no
+hb-xana: 1 0
+hb-laminia: 0
+hb-busgosu: 0
+hb-guaxa: no
+hb-lavandera: 1
+hb-sacamantecas: 1
+hb-mouro: no
+hb-coco: 0 1
+hb-nuberu: 1
+hb-diano: no
+hb-cuegle: no
+hb-santa-compana: 1 3 0
+hb-ojancanu: no
+hb-cuelebre: 0 1 3
+hb-basajaun: 3 0
+hb-gaueko: no
+hb-herensuge: 0 3
+hb-dama-amboto: no
+hb-jackalope: 0 2
+hb-chupacabras: 0
+hb-selkie: 1
+hb-kappa: 1 2 3
+hb-dokkaebi: no
+hb-jiangshi: no
+hb-curupira: no
+hb-yeti: 0
+hb-rusalka: 1 0
+hb-cadejo: 1 0
+hb-manananggal: 0
+hb-kelpie: 3
+hb-tengu: 0 1 3
+hb-aswang: no
+hb-tikbalang: no
+hb-llorona: 0 3
+hb-bunyip: 0 2 1
+hb-draugr: 0
+hb-jorogumo: 0 1
+hb-krampus: 1 2
+hb-yuki-onna: 1 0
+hb-vetala: no
+hb-kitsune: 2 1
+hb-impundulu: no
+hb-mapinguari: no
+hb-leshy: 0 2
+hb-wendigo: no
+hb-dullahan: 0 2
+hb-lamassu: 2 0
+hb-mokele-mbembe: 0
+hb-gashadokuro: 3 1
+hb-lindworm: 3 1
+hb-taniwha: 0
+hb-grootslang: no
+hb-simurgh: 0 3
+hb-baba-yaga: 1 2 3

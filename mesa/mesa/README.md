@@ -562,7 +562,8 @@ tele. El tamaño también viaja, así que un ogro guardado como «Grande» ocupa
 - **Arrastrando** una imagen encima de una criatura de la lista.
 
 - **Fotos libres, de un clic**: Mesa trae elegida una imagen **de dominio
-  público** de Wikimedia Commons para casi todas las criaturas de serie:
+  público** de Wikimedia Commons para **257 de las 356 criaturas** de serie
+  (revisadas una a una):
   láminas de historia natural para los animales, grabados, xilografías,
   estampas japonesas y pinturas antiguas para los monstruos del folclore y los
   personajes (Doré, Bauer, Bilibin, Hokusai, Charles R. Knight…). En **Fotos →
@@ -589,7 +590,9 @@ pedir permiso) y la aplicación no trae las imágenes, solo **dónde están**
 botón. Con cada foto se guarda su autor, su licencia y su página de Commons,
 que se ven en la ventana de la foto. Las criaturas propias de D&D sin
 equivalente en el arte antiguo (oso lechuza, cubo gelatinoso, mimeto, los
-mephits…) no traen foto libre y se quedan con su icono, salvo que les pongas
+mephits…) y aquellas para las que Commons no tenía nada que se pareciera (el
+wendigo, por ejemplo: todo lo que hay es moderno y con licencia CC BY-SA) no
+traen foto libre y se quedan con su icono, salvo que les pongas
 una tú. La lista se rehace con `node tools/fotos-libres.mjs buscar`, `hoja` y
 `publicar` (qué se busca para cada criatura está en `tools/fotos-consultas.txt`
 y lo descartado al revisarla, en `tools/fotos-revision.txt`).

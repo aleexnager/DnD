@@ -3000,7 +3000,9 @@ button.ac-shield:hover::before { background: var(--stone-2); }
 .mon-abil { background: rgba(130, 32, 0, .06); padding: 4px 0 3px; grid-template-rows: auto auto auto; }
 .mon-abil b { font-weight: 700; font-size: 14px; }
 .mon-abil small { font-size: 11px; color: var(--parch-ink); opacity: .78; }
-.mon-abil small.prof { opacity: 1; font-weight: 700; color: var(--parch-head); }
+.mon-abil small.prof { opacity: 1; font-weight: 700; color: var(--parch-head);
+  /* .prof es también el circulito de competencia de la hoja: aquí no */
+  width: auto; height: auto; border: 0; border-radius: 0; background: none; }
 .mon-abil-key { display: flex; justify-content: flex-end; gap: 10px; font-size: 10px; font-style: italic; opacity: .6; margin: 1px 0 4px !important; }
 
 /* ---------- Indicadores de ataques y conjuros (chips.js) ----------
