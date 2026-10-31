@@ -11,7 +11,7 @@
      absorbImages(d) saca las imágenes incrustadas de una copia antigua
      onPresence()    avisa de que ha cambiado quién está conectado */
 
-import { acOf, normalizeSpell, normalizeLibraryItem, MAX_LIBRARY, emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizePortraits, normalizeCredits, bestiaryOf, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier, withBuffs, canSneak, canSmite, sneakDice, smiteDice, smiteFoe } from "./schema.js";
+import { acOf, normalizeSpell, normalizeLibraryItem, MAX_LIBRARY, emptyDoc, migrate, cellKey, normalizeChar, normalizeBeast, normalizePortraits, bestiaryOf, normalizeMap, normalizeShape, normalizePin, normalizeSound, normalizePortal, normalizeAttack, normalizeDrawing, normalizeWall, MAX_WALLS, modOf, addDice, scaleDice, cantripTier, withBuffs, canSneak, canSmite, sneakDice, smiteDice, smiteFoe } from "./schema.js";
 import { visibleCells, fringeCells, edgesNear, wallsNear, gridDistance, pathCost, occupied, fits, reachableCells, partyRoomFrame } from "./los.js";
 import { roll, detail, diceOf, cleanDice } from "./dice.js";
 import { cutWalls, doorAt } from "./freewalls.js";
@@ -858,14 +858,6 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         const next = { ...before };
         for (const [id, img] of Object.entries(op.set || {})) { if (img) next[id] = img; else delete next[id]; }
         doc.portraits = normalizePortraits(next);
-        /* «credits» dice de dónde sale cada foto libre; una foto sin crédito
-           borra el de la anterior */
-        const credits = { ...(doc.portraitCredits || {}) };
-        for (const id of Object.keys(op.set || {})) {
-          const text = (op.credits || {})[id];
-          if (text) credits[id] = String(text); else delete credits[id];
-        }
-        doc.portraitCredits = normalizeCredits(credits, doc.portraits);
         for (const id of Object.keys(op.set || {})) {
           const base = bestiaryOf({ bestiary: doc.bestiary }).find(b => b.id === id);
           const fresh = doc.portraits[id] || (base ? base.avatarId : "");

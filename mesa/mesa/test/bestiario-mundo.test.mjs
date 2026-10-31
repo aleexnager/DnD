@@ -1,12 +1,10 @@
-/* Las criaturas de la casa (Península y Mundo) y las fotos libres */
+/* Las criaturas de la casa (Península y Mundo) */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CATALOG, typeOf } from "../public/js/catalog.js";
 import { WORLD } from "../public/js/bestiario-mundo.js";
 import { HOMEBREW } from "../public/js/bestiario-homebrew.js";
-import { parseAttackLine, normalizeCredits } from "../public/js/schema.js";
-import { candidateFrom, creditText } from "../public/js/fotos-libres.js";
-import { createEngine } from "../public/js/engine.js";
+import { parseAttackLine } from "../public/js/schema.js";
 
 const mod = s => Math.floor((s - 10) / 2);
 const house = CATALOG.filter(b => b.edition === "homebrew");
@@ -46,32 +44,4 @@ test("los ataques de las criaturas del mundo se tiran de un clic", () => {
   assert.deepEqual(lines.map(a => a.name), ["Garra", "Mordisco", "Aullido del hambre (recarga 5–6)"]);
   assert.equal(lines[0].atk, 9);
   assert.equal(lines[2].save, "wis 15");
-});
-
-const page = (title, license, extra = {}) => ({ title: "File:" + title, imageinfo: [{ thumburl: "https://upload.wikimedia.org/t/" + title + "?utm=x",
-  descriptionurl: "https://commons.wikimedia.org/wiki/File:" + title, width: 800, height: 900, mime: "image/jpeg",
-  extmetadata: { LicenseShortName: { value: license }, Artist: { value: "<a href='x'>Hokusai</a>" } }, ...extra }] });
-
-test("solo valen las fotos de dominio público o CC0, y no las de IA ni los rótulos", () => {
-  const ok = candidateFrom(page("Kappa woodblock print.jpg", "Public domain"));
-  assert.equal(ok.author, "Hokusai");
-  assert.equal(ok.thumb, "https://upload.wikimedia.org/t/Kappa woodblock print.jpg");
-  assert.ok(candidateFrom(page("Kappa.jpg", "CC0")));
-  assert.equal(candidateFrom(page("Kappa.jpg", "CC BY-SA 4.0")), null);
-  assert.equal(candidateFrom(page("Dalle-3 Dragon.jpg", "Public domain")), null);
-  assert.equal(candidateFrom(page("Red Dragon Hotel.jpg", "CC0")), null);
-  assert.equal(candidateFrom(page("Tiny.jpg", "Public domain", { width: 120, height: 120 })), null);
-  assert.equal(creditText(ok), "Hokusai · Public domain · https://commons.wikimedia.org/wiki/File:Kappa woodblock print.jpg");
-});
-
-test("el crédito viaja con la foto y se borra con ella", async () => {
-  const eng = createEngine({ rid: (() => { let n = 0; return () => "id" + n++; })() });
-  const dm = { id: "dm1", name: "DM", role: "dm", charId: null };
-  await eng.run(dm, [{ type: "portrait.set", set: { "hb-kappa": "img1.webp", "cat-goblin": "img2.webp" }, credits: { "hb-kappa": "Hokusai · Public domain" } }]);
-  assert.deepEqual(eng.doc.portraitCredits, { "hb-kappa": "Hokusai · Public domain" });
-  await eng.run(dm, [{ type: "portrait.set", set: { "hb-kappa": "img3.webp" } }]);
-  assert.deepEqual(eng.doc.portraitCredits, {});
-  await eng.run(dm, [{ type: "portrait.set", set: { "cat-goblin": "img4.webp" }, credits: { "cat-goblin": "Batten" } }, { type: "portrait.set", set: { "cat-goblin": "" } }]);
-  assert.deepEqual(eng.doc.portraitCredits, {});
-  assert.deepEqual(normalizeCredits({ a: "x", b: "y", c: 3 }, { a: "1.webp" }), { a: "x" });
 });

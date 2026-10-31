@@ -528,16 +528,6 @@ export function normalizePortraits(raw) {
   }
   return out;
 }
-/* De dónde sale cada foto libre: «Autor · Licencia · dirección», para poder
-   citarla. Solo de las criaturas que tienen foto. */
-export function normalizeCredits(raw, portraits = {}) {
-  const out = {};
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
-  for (const [id, text] of Object.entries(raw).slice(0, 2000)) {
-    if (portraits[id] && typeof text === "string" && text.trim()) out[id] = text.trim().slice(0, 300);
-  }
-  return out;
-}
 export const isBaseBeast = id => CATALOG_BY_ID.has(id);
 
 /* Las copias de antes guardaban el catálogo entero. Lo que está igual que de
@@ -773,7 +763,6 @@ export function emptyDoc() {
     chars: [],
     bestiary: [],
     portraits: {},
-    portraitCredits: {},
     maps: [map],
     session: { ...SESSION_DEFAULTS, combat: { ...SESSION_DEFAULTS.combat, order: [] }, activeMapId: map.id },
     log: [],
@@ -854,7 +843,6 @@ export function migrate(raw) {
     chars,
     bestiary: ownBeasts(src.bestiary),
     portraits: normalizePortraits(src.portraits),
-    portraitCredits: normalizeCredits(src.portraitCredits, normalizePortraits(src.portraits)),
     maps,
     session,
     log: Array.isArray(src.log) ? src.log.slice(-150) : [],

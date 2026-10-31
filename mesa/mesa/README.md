@@ -561,19 +561,6 @@ tele. El tamaño también viaja, así que un ogro guardado como «Grande» ocupa
   «Oso lechuza (2).jpg». Dice qué archivos no ha reconocido.
 - **Arrastrando** una imagen encima de una criatura de la lista.
 
-- **Fotos libres, de un clic**: Mesa trae elegida una imagen **de dominio
-  público** de Wikimedia Commons para **257 de las 356 criaturas** de serie
-  (revisadas una a una):
-  láminas de historia natural para los animales, grabados, xilografías,
-  estampas japonesas y pinturas antiguas para los monstruos del folclore y los
-  personajes (Doré, Bauer, Bilibin, Hokusai, Charles R. Knight…). En **Fotos →
-  Poner N fotos libres** se descargan, se encuadran y se ponen a todas las que
-  aún no tienen foto; las que ya tienen no se tocan. La casilla **Tono de
-  grabado antiguo** les da a todas un sepia suave para que peguen entre sí. En
-  la ventana de la foto de cada criatura salen sus otras candidatas y el botón
-  **Más en Wikimedia Commons**, que busca más imágenes libres con su nombre en
-  inglés; vale también para las criaturas que te inventes.
-
 El filtro **Mostrar → Sin foto** enseña las que aún no tienen cara. Quitar la
 foto la devuelve a su icono. Los monstruos que ya están en la mesa estrenan la
 foto nueva al ponérsela.
@@ -583,19 +570,6 @@ Las fotos se guardan **en tu partida, en la carpeta de datos de tu ordenador**
 repositorio. Por eso Mesa no trae ilustraciones de los manuales ni de otras
 webs: la aplicación es pública en GitHub y no se pueden redistribuir. Lo que tú
 pongas para jugar con tus amigos se queda en tu mesa.
-
-Las fotos libres son solo **de dominio público o CC0** (se pueden usar sin
-pedir permiso) y la aplicación no trae las imágenes, solo **dónde están**
-(`public/bestiario/fotos-libres.json`): las descarga tu Mesa cuando pulsas el
-botón. Con cada foto se guarda su autor, su licencia y su página de Commons,
-que se ven en la ventana de la foto. Las criaturas propias de D&D sin
-equivalente en el arte antiguo (oso lechuza, cubo gelatinoso, mimeto, los
-mephits…) y aquellas para las que Commons no tenía nada que se pareciera (el
-wendigo, por ejemplo: todo lo que hay es moderno y con licencia CC BY-SA) no
-traen foto libre y se quedan con su icono, salvo que les pongas
-una tú. La lista se rehace con `node tools/fotos-libres.mjs buscar`, `hoja` y
-`publicar` (qué se busca para cada criatura está en `tools/fotos-consultas.txt`
-y lo descartado al revisarla, en `tools/fotos-revision.txt`).
 
 ### Criaturas de la casa (homebrew)
 
@@ -1381,8 +1355,7 @@ public/
     bestiario-datos.js las 334 fichas del SRD del bestiario (reglas de 2024), con su inglés
     bestiario-homebrew.js las 22 criaturas de la casa del folclore de la península
     bestiario-mundo.js las 40 criaturas de la casa del folclore del mundo
-    retratos.js        fotos de las criaturas: encuadre, carga en bloque, fotos libres, pegar y traer de internet
-    fotos-libres.js    qué imagen de Wikimedia Commons vale (dominio público o CC0) y su crédito
+    retratos.js        fotos de las criaturas: encuadre, carga en bloque, pegar y traer de internet
     chars-io.js        exportar e importar personajes entre campañas
     forja.js           la forja de mapas: el editor a pantalla completa
     forja-core.js      la forja: geometría del plano, paredes, puertas y generador

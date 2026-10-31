@@ -28,9 +28,3 @@ de dominio público.
 Las criaturas del «Bestiario del mundo» (public/js/bestiario-mundo.js) son
 también diseño propio de Mesa a partir de leyendas de dominio público de los
 cinco continentes; no reproducen fichas de ninguna otra publicación.
-
-fotos-libres.json no contiene imágenes, sino la dirección en Wikimedia Commons
-(https://commons.wikimedia.org) de una imagen por criatura, con su autor y su
-licencia. Solo se eligen imágenes de dominio público o con la dedicación CC0
-(https://creativecommons.org/publicdomain/zero/1.0/), que se pueden usar sin
-permiso. Mesa guarda el crédito de cada una con la foto.
