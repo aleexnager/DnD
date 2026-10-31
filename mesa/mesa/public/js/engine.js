@@ -551,7 +551,7 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
     if (a.save) {
       const [ability, dcText] = a.save.split(" ");
       const dc = Number(dcText) || 10;
-      const dmg = a.damage ? rollT(a.damage) : null;
+      const dmg = a.damage && a.damage !== "0" ? rollT(a.damage) : null;
       push({
         kind: "attack", secret, label: `${attacker.name} · ${a.name}`,
         text: `${a.name}: salvación de ${ABILITY_ES[ability] || ability.toUpperCase()} CD ${dc}${target ? " para " + target.name : ""}` +
@@ -559,6 +559,12 @@ export function createEngine({ rid, absorbImages = async d => d, onPresence = ()
         total: dmg ? dmg.total : 0, detail: dmg ? detail(dmg) : ""
       });
       /* El objetivo tira su salvación: si la supera, la mitad del daño */
+      /* Sin daño (un aliento que duerme, una mirada que asusta) se tira igual la
+         salvación, para que la mesa sepa si el efecto entra */
+      if (target && !dmg) {
+        const sv = rollSave(target, ability);
+        push({ kind: "event", secret, text: `${target.name}: salvación ${sv.total} (${sv.total >= dc ? "la supera" : "falla"})` });
+      }
       if (target && dmg) {
         const sv = rollSave(target, ability);
         const passed = sv.total >= dc;

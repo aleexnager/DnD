@@ -1,0 +1,2046 @@
+{
+ "criaturas": {
+  "Adult Black Dragon": {
+   "nombre": "Dragón negro adulto",
+   "ref": "el dragón",
+   "icono": "spiked-dragon-head",
+   "color": "#7d7f8c"
+  },
+  "Adult Blue Dragon": {
+   "nombre": "Dragón azul adulto",
+   "ref": "el dragón",
+   "icono": "spiked-dragon-head",
+   "color": "#4f84c4"
+  },
+  "Adult Brass Dragon": {
+   "nombre": "Dragón de oropel adulto",
+   "ref": "el dragón",
+   "icono": "spiked-dragon-head",
+   "color": "#c9a24a"
+  },
+  "Adult Bronze Dragon": {
+   "nombre": "Dragón de bronce adulto",
+   "ref": "el dragón",
+   "icono": "spiked-dragon-head",
+   "color": "#b07a3a"
+  },
+  "Adult Copper Dragon": {
+   "nombre": "Dragón de cobre adulto",
+   "ref": "el dragón",
+   "icono": "spiked-dragon-head",
+   "color": "#c27a52"
+  },
+  "Adult Gold Dragon": {
+   "nombre": "Dragón de oro adulto",
+   "ref": "el dragón",
+   "icono": "spiked-dragon-head",
+   "color": "#e0b84a"
+  },
+  "Adult Green Dragon": {
+   "nombre": "Dragón verde adulto",
+   "ref": "el dragón",
+   "icono": "spiked-dragon-head",
+   "color": "#5f9a55"
+  },
+  "Adult Silver Dragon": {
+   "nombre": "Dragón de plata adulto",
+   "ref": "el dragón",
+   "icono": "spiked-dragon-head",
+   "color": "#b9c2cc"
+  },
+  "Adult White Dragon": {
+   "nombre": "Dragón blanco adulto",
+   "ref": "el dragón",
+   "icono": "spiked-dragon-head",
+   "color": "#d3dde6"
+  },
+  "Ancient Black Dragon": {
+   "nombre": "Dragón negro anciano",
+   "ref": "el dragón",
+   "icono": "double-dragon",
+   "color": "#7d7f8c"
+  },
+  "Ancient Blue Dragon": {
+   "nombre": "Dragón azul anciano",
+   "ref": "el dragón",
+   "icono": "double-dragon",
+   "color": "#4f84c4"
+  },
+  "Ancient Brass Dragon": {
+   "nombre": "Dragón de oropel anciano",
+   "ref": "el dragón",
+   "icono": "double-dragon",
+   "color": "#c9a24a"
+  },
+  "Ancient Bronze Dragon": {
+   "nombre": "Dragón de bronce anciano",
+   "ref": "el dragón",
+   "icono": "double-dragon",
+   "color": "#b07a3a"
+  },
+  "Ancient Copper Dragon": {
+   "nombre": "Dragón de cobre anciano",
+   "ref": "el dragón",
+   "icono": "double-dragon",
+   "color": "#c27a52"
+  },
+  "Ancient Gold Dragon": {
+   "nombre": "Dragón de oro anciano",
+   "ref": "el dragón",
+   "icono": "double-dragon",
+   "color": "#e0b84a"
+  },
+  "Ancient Green Dragon": {
+   "nombre": "Dragón verde anciano",
+   "ref": "el dragón",
+   "icono": "double-dragon",
+   "color": "#5f9a55"
+  },
+  "Ancient Red Dragon": {
+   "nombre": "Dragón rojo anciano",
+   "ref": "el dragón",
+   "icono": "double-dragon",
+   "color": "#c9524a"
+  },
+  "Ancient Silver Dragon": {
+   "nombre": "Dragón de plata anciano",
+   "ref": "el dragón",
+   "icono": "double-dragon",
+   "color": "#b9c2cc"
+  },
+  "Ancient White Dragon": {
+   "nombre": "Dragón blanco anciano",
+   "ref": "el dragón",
+   "icono": "double-dragon",
+   "color": "#d3dde6"
+  },
+  "Young Black Dragon": {
+   "nombre": "Dragón negro joven",
+   "ref": "el dragón",
+   "icono": "dragon-head",
+   "color": "#7d7f8c"
+  },
+  "Young Blue Dragon": {
+   "nombre": "Dragón azul joven",
+   "ref": "el dragón",
+   "icono": "dragon-head",
+   "color": "#4f84c4"
+  },
+  "Young Brass Dragon": {
+   "nombre": "Dragón de oropel joven",
+   "ref": "el dragón",
+   "icono": "dragon-head",
+   "color": "#c9a24a"
+  },
+  "Young Bronze Dragon": {
+   "nombre": "Dragón de bronce joven",
+   "ref": "el dragón",
+   "icono": "dragon-head",
+   "color": "#b07a3a"
+  },
+  "Young Copper Dragon": {
+   "nombre": "Dragón de cobre joven",
+   "ref": "el dragón",
+   "icono": "dragon-head",
+   "color": "#c27a52"
+  },
+  "Young Gold Dragon": {
+   "nombre": "Dragón de oro joven",
+   "ref": "el dragón",
+   "icono": "dragon-head",
+   "color": "#e0b84a"
+  },
+  "Young Silver Dragon": {
+   "nombre": "Dragón de plata joven",
+   "ref": "el dragón",
+   "icono": "dragon-head",
+   "color": "#b9c2cc"
+  },
+  "Young White Dragon": {
+   "nombre": "Dragón blanco joven",
+   "ref": "el dragón",
+   "icono": "dragon-head",
+   "color": "#d3dde6"
+  },
+  "Black Dragon Wyrmling": {
+   "nombre": "Cría de dragón negro",
+   "ref": "el dragón",
+   "icono": "dragon-breath",
+   "color": "#7d7f8c"
+  },
+  "Blue Dragon Wyrmling": {
+   "nombre": "Cría de dragón azul",
+   "ref": "el dragón",
+   "icono": "dragon-breath",
+   "color": "#4f84c4"
+  },
+  "Brass Dragon Wyrmling": {
+   "nombre": "Cría de dragón de oropel",
+   "ref": "el dragón",
+   "icono": "dragon-breath",
+   "color": "#c9a24a"
+  },
+  "Bronze Dragon Wyrmling": {
+   "nombre": "Cría de dragón de bronce",
+   "ref": "el dragón",
+   "icono": "dragon-breath",
+   "color": "#b07a3a"
+  },
+  "Copper Dragon Wyrmling": {
+   "nombre": "Cría de dragón de cobre",
+   "ref": "el dragón",
+   "icono": "dragon-breath",
+   "color": "#c27a52"
+  },
+  "Gold Dragon Wyrmling": {
+   "nombre": "Cría de dragón de oro",
+   "ref": "el dragón",
+   "icono": "dragon-breath",
+   "color": "#e0b84a"
+  },
+  "Green Dragon Wyrmling": {
+   "nombre": "Cría de dragón verde",
+   "ref": "el dragón",
+   "icono": "dragon-breath",
+   "color": "#5f9a55"
+  },
+  "Silver Dragon Wyrmling": {
+   "nombre": "Cría de dragón de plata",
+   "ref": "el dragón",
+   "icono": "dragon-breath",
+   "color": "#b9c2cc"
+  },
+  "White Dragon Wyrmling": {
+   "nombre": "Cría de dragón blanco",
+   "ref": "el dragón",
+   "icono": "dragon-breath",
+   "color": "#d3dde6"
+  },
+  "Dragon Turtle": {
+   "nombre": "Dragón tortuga",
+   "ref": "el dragón tortuga",
+   "icono": "tortoise",
+   "color": "#4f8aa8"
+  },
+  "Pseudodragon": {
+   "nombre": "Pseudodragón",
+   "ref": "el pseudodragón",
+   "icono": "dragon-spiral"
+  },
+  "Half-Dragon": {
+   "nombre": "Semidragón",
+   "ref": "el semidragón",
+   "icono": "dragon-shield"
+  },
+  "Allosaurus": {
+   "nombre": "Alosaurio",
+   "ref": "el alosaurio",
+   "icono": "velociraptor"
+  },
+  "Ankylosaurus": {
+   "nombre": "Anquilosaurio",
+   "ref": "el anquilosaurio",
+   "icono": "armadillo-tail"
+  },
+  "Plesiosaurus": {
+   "nombre": "Plesiosaurio",
+   "ref": "el plesiosaurio",
+   "icono": "sea-dragon"
+  },
+  "Pteranodon": {
+   "nombre": "Pteranodonte",
+   "ref": "el pteranodonte",
+   "icono": "spiky-wing"
+  },
+  "Triceratops": {
+   "nombre": "Triceratops",
+   "ref": "el triceratops",
+   "icono": "triceratops-head"
+  },
+  "Archelon": {
+   "nombre": "Arquelón",
+   "ref": "el arquelón",
+   "icono": "sea-turtle"
+  },
+  "Animated Flying Sword": {
+   "nombre": "Espada voladora animada",
+   "ref": "la espada",
+   "icono": "spinning-sword"
+  },
+  "Animated Rug of Smothering": {
+   "nombre": "Alfombra asfixiante animada",
+   "ref": "la alfombra",
+   "icono": "rolled-cloth"
+  },
+  "Shield Guardian": {
+   "nombre": "Guardián escudo",
+   "ref": "el guardián",
+   "icono": "robot-golem"
+  },
+  "Clay Golem": {
+   "nombre": "Gólem de arcilla",
+   "ref": "el gólem",
+   "icono": "stone-bust"
+  },
+  "Iron Golem": {
+   "nombre": "Gólem de hierro",
+   "ref": "el gólem",
+   "icono": "metal-golem-head"
+  },
+  "Homunculus": {
+   "nombre": "Homúnculo",
+   "ref": "el homúnculo",
+   "icono": "spark-spirit"
+  },
+  "Ankheg": {
+   "nombre": "Ankheg",
+   "ref": "el ankheg",
+   "icono": "insect-jaws"
+  },
+  "Awakened Shrub": {
+   "nombre": "Arbusto despertado",
+   "ref": "el arbusto",
+   "icono": "berry-bush"
+  },
+  "Awakened Tree": {
+   "nombre": "Árbol despertado",
+   "ref": "el árbol",
+   "icono": "evil-tree"
+  },
+  "Axe Beak": {
+   "nombre": "Picohacha",
+   "ref": "el picohacha",
+   "icono": "cassowary-head"
+  },
+  "Azer Sentinel": {
+   "nombre": "Centinela azer",
+   "ref": "el azer",
+   "icono": "dwarf-face",
+   "color": "#e0743f"
+  },
+  "Baboon": {
+   "nombre": "Babuino",
+   "ref": "el babuino",
+   "icono": "mandrill-head"
+  },
+  "Badger": {
+   "nombre": "Tejón",
+   "ref": "el tejón",
+   "icono": "badger"
+  },
+  "Giant Badger": {
+   "nombre": "Tejón gigante",
+   "ref": "el tejón",
+   "icono": "badger"
+  },
+  "Bat": {
+   "nombre": "Murciélago",
+   "ref": "el murciélago",
+   "icono": "bat"
+  },
+  "Barbed Devil": {
+   "nombre": "Diablo punzante",
+   "ref": "el diablo",
+   "icono": "daemon-skull"
+  },
+  "Bearded Devil": {
+   "nombre": "Diablo barbado",
+   "ref": "el diablo",
+   "icono": "beard"
+  },
+  "Bone Devil": {
+   "nombre": "Diablo óseo",
+   "ref": "el diablo",
+   "icono": "horned-skull"
+  },
+  "Chain Devil": {
+   "nombre": "Diablo de las cadenas",
+   "ref": "el diablo",
+   "icono": "crossed-chains"
+  },
+  "Horned Devil": {
+   "nombre": "Diablo astado",
+   "ref": "el diablo",
+   "icono": "horned-helm"
+  },
+  "Ice Devil": {
+   "nombre": "Diablo gélido",
+   "ref": "el diablo",
+   "icono": "ice-spear"
+  },
+  "Pit Fiend": {
+   "nombre": "Diablo de la sima",
+   "ref": "el diablo",
+   "icono": "devil-mask"
+  },
+  "Erinyes": {
+   "nombre": "Erinia",
+   "ref": "la erinia",
+   "icono": "evil-wings"
+  },
+  "Lemure": {
+   "nombre": "Lémur",
+   "ref": "el lémur",
+   "icono": "goo-skull"
+  },
+  "Dretch": {
+   "nombre": "Dretch",
+   "ref": "el dretch",
+   "icono": "imp-laugh"
+  },
+  "Glabrezu": {
+   "nombre": "Glabrezu",
+   "ref": "el glabrezu",
+   "icono": "plate-claw"
+  },
+  "Hezrou": {
+   "nombre": "Hezrou",
+   "ref": "el hezrou",
+   "icono": "frog-mouth-helm"
+  },
+  "Marilith": {
+   "nombre": "Marilith",
+   "ref": "la marilith",
+   "icono": "dervish-swords"
+  },
+  "Nalfeshnee": {
+   "nombre": "Nalfeshnee",
+   "ref": "el nalfeshnee",
+   "icono": "pig-face"
+  },
+  "Vrock": {
+   "nombre": "Vrock",
+   "ref": "el vrock",
+   "icono": "bird-mask"
+  },
+  "Succubus": {
+   "nombre": "Súcubo",
+   "ref": "el súcubo",
+   "icono": "sharp-lips"
+  },
+  "Incubus": {
+   "nombre": "Íncubo",
+   "ref": "el íncubo",
+   "icono": "lips"
+  },
+  "Nightmare": {
+   "nombre": "Pesadilla",
+   "ref": "la pesadilla",
+   "icono": "fire-tail"
+  },
+  "Behir": {
+   "nombre": "Behir",
+   "ref": "el behir",
+   "icono": "sea-serpent"
+  },
+  "Black Bear": {
+   "nombre": "Oso negro",
+   "ref": "el oso",
+   "icono": "bear-face"
+  },
+  "Polar Bear": {
+   "nombre": "Oso polar",
+   "ref": "el oso",
+   "icono": "polar-bear"
+  },
+  "Black Pudding": {
+   "nombre": "Pudin negro",
+   "ref": "el pudin",
+   "icono": "dripping-goo"
+  },
+  "Gray Ooze": {
+   "nombre": "Cieno gris",
+   "ref": "el cieno",
+   "icono": "gooey-impact"
+  },
+  "Blink Dog": {
+   "nombre": "Perro intermitente",
+   "ref": "el perro",
+   "icono": "jumping-dog"
+  },
+  "Death Dog": {
+   "nombre": "Perro del inframundo",
+   "ref": "el perro",
+   "icono": "sniffing-dog"
+  },
+  "Mastiff": {
+   "nombre": "Mastín",
+   "ref": "el mastín",
+   "icono": "sitting-dog"
+  },
+  "Blood Hawk": {
+   "nombre": "Halcón sangriento",
+   "ref": "el halcón",
+   "icono": "hawk-emblem"
+  },
+  "Hawk": {
+   "nombre": "Halcón",
+   "ref": "el halcón",
+   "icono": "falcon-moon"
+  },
+  "Bugbear Stalker": {
+   "nombre": "Acechador osgo",
+   "ref": "el osgo",
+   "icono": "brutal-helm"
+  },
+  "Bulette": {
+   "nombre": "Bulette",
+   "ref": "el bulette",
+   "icono": "mole"
+  },
+  "Camel": {
+   "nombre": "Camello",
+   "ref": "el camello",
+   "icono": "camel"
+  },
+  "Cat": {
+   "nombre": "Gato",
+   "ref": "el gato",
+   "icono": "cat"
+  },
+  "Chimera": {
+   "nombre": "Quimera",
+   "ref": "la quimera",
+   "icono": "triple-skulls"
+  },
+  "Chuul": {
+   "nombre": "Chuul",
+   "ref": "el chuul",
+   "icono": "spiked-tentacle"
+  },
+  "Cloaker": {
+   "nombre": "Manto",
+   "ref": "el manto",
+   "icono": "wing-cloak"
+  },
+  "Cloud Giant": {
+   "nombre": "Gigante de las nubes",
+   "ref": "el gigante",
+   "icono": "fluffy-cloud"
+  },
+  "Fire Giant": {
+   "nombre": "Gigante de fuego",
+   "ref": "el gigante",
+   "icono": "anvil-impact"
+  },
+  "Stone Giant": {
+   "nombre": "Gigante de piedra",
+   "ref": "el gigante",
+   "icono": "rock"
+  },
+  "Storm Giant": {
+   "nombre": "Gigante de las tormentas",
+   "ref": "el gigante",
+   "icono": "lightning-storm"
+  },
+  "Cockatrice": {
+   "nombre": "Cocatriz",
+   "ref": "la cocatriz",
+   "icono": "rooster"
+  },
+  "Constrictor Snake": {
+   "nombre": "Serpiente constrictora",
+   "ref": "la serpiente",
+   "icono": "snake"
+  },
+  "Flying Snake": {
+   "nombre": "Serpiente voladora",
+   "ref": "la serpiente",
+   "icono": "snake-tongue"
+  },
+  "Giant Venomous Snake": {
+   "nombre": "Serpiente venenosa gigante",
+   "ref": "la serpiente",
+   "icono": "cobra"
+  },
+  "Couatl": {
+   "nombre": "Couatl",
+   "ref": "el couatl",
+   "icono": "feathered-wing"
+  },
+  "Crab": {
+   "nombre": "Cangrejo",
+   "ref": "el cangrejo",
+   "icono": "crab"
+  },
+  "Giant Crab": {
+   "nombre": "Cangrejo gigante",
+   "ref": "el cangrejo",
+   "icono": "crab-claw"
+  },
+  "Darkmantle": {
+   "nombre": "Mantoscuro",
+   "ref": "el mantoscuro",
+   "icono": "squid"
+  },
+  "Deer": {
+   "nombre": "Ciervo",
+   "ref": "el ciervo",
+   "icono": "deer"
+  },
+  "Elk": {
+   "nombre": "Alce",
+   "ref": "el alce",
+   "icono": "stag-head"
+  },
+  "Giant Elk": {
+   "nombre": "Alce gigante",
+   "ref": "el alce",
+   "icono": "deer-head"
+  },
+  "Deva": {
+   "nombre": "Deva",
+   "ref": "el deva",
+   "icono": "angel-wings"
+  },
+  "Planetar": {
+   "nombre": "Planetar",
+   "ref": "el planetar",
+   "icono": "spiked-halo"
+  },
+  "Solar": {
+   "nombre": "Solar",
+   "ref": "el solar",
+   "icono": "angel-outfit"
+  },
+  "Djinni": {
+   "nombre": "Djinn",
+   "ref": "el djinn",
+   "icono": "djinn"
+  },
+  "Efreeti": {
+   "nombre": "Ifrit",
+   "ref": "el ifrit",
+   "icono": "magic-lamp"
+  },
+  "Draft Horse": {
+   "nombre": "Caballo de tiro",
+   "ref": "el caballo",
+   "icono": "horseshoe"
+  },
+  "Riding Horse": {
+   "nombre": "Caballo de monta",
+   "ref": "el caballo",
+   "icono": "cloaked-figure-on-horseback"
+  },
+  "Pony": {
+   "nombre": "Poni",
+   "ref": "el poni",
+   "icono": "horse-head"
+  },
+  "Mule": {
+   "nombre": "Mula",
+   "ref": "la mula",
+   "icono": "donkey"
+  },
+  "Warhorse Skeleton": {
+   "nombre": "Caballo de guerra esqueleto",
+   "ref": "el caballo",
+   "icono": "animal-skull"
+  },
+  "Drider": {
+   "nombre": "Draña",
+   "ref": "la draña",
+   "icono": "masked-spider"
+  },
+  "Druid": {
+   "nombre": "Druida",
+   "ref": "el druida",
+   "icono": "oak-leaf"
+  },
+  "Dryad": {
+   "nombre": "Dríada",
+   "ref": "la dríada",
+   "icono": "willow-tree"
+  },
+  "Dust Mephit": {
+   "nombre": "Mephit de polvo",
+   "ref": "el mephit",
+   "icono": "dust-cloud",
+   "color": "#b49a72"
+  },
+  "Ice Mephit": {
+   "nombre": "Mephit de hielo",
+   "ref": "el mephit",
+   "icono": "ice-iris",
+   "color": "#a9c7da"
+  },
+  "Magma Mephit": {
+   "nombre": "Mephit de magma",
+   "ref": "el mephit",
+   "icono": "lava",
+   "color": "#e0743f"
+  },
+  "Steam Mephit": {
+   "nombre": "Mephit de vapor",
+   "ref": "el mephit",
+   "icono": "steam",
+   "color": "#9fb4c0"
+  },
+  "Magmin": {
+   "nombre": "Magmin",
+   "ref": "el magmin",
+   "icono": "fluffy-flame",
+   "color": "#e0743f"
+  },
+  "Eagle": {
+   "nombre": "Águila",
+   "ref": "el águila",
+   "icono": "eagle-emblem"
+  },
+  "Ettercap": {
+   "nombre": "Ettercap",
+   "ref": "el ettercap",
+   "icono": "spider-face"
+  },
+  "Ettin": {
+   "nombre": "Ettin",
+   "ref": "el ettin",
+   "icono": "double-face-mask"
+  },
+  "Frog": {
+   "nombre": "Rana",
+   "ref": "la rana",
+   "icono": "frog-foot"
+  },
+  "Giant Frog": {
+   "nombre": "Rana gigante",
+   "ref": "la rana",
+   "icono": "toad-teeth"
+  },
+  "Ghast": {
+   "nombre": "Ghast",
+   "ref": "el ghast",
+   "icono": "dread-skull"
+  },
+  "Giant Ape": {
+   "nombre": "Simio gigante",
+   "ref": "el simio",
+   "icono": "monkey"
+  },
+  "Giant Boar": {
+   "nombre": "Jabalí gigante",
+   "ref": "el jabalí",
+   "icono": "boar-tusks"
+  },
+  "Giant Crocodile": {
+   "nombre": "Cocodrilo gigante",
+   "ref": "el cocodrilo",
+   "icono": "reptile-tail"
+  },
+  "Giant Fire Beetle": {
+   "nombre": "Escarabajo de fuego gigante",
+   "ref": "el escarabajo",
+   "icono": "scarab-beetle"
+  },
+  "Giant Goat": {
+   "nombre": "Cabra gigante",
+   "ref": "la cabra",
+   "icono": "ram-profile"
+  },
+  "Goat": {
+   "nombre": "Cabra",
+   "ref": "la cabra",
+   "icono": "goat"
+  },
+  "Satyr": {
+   "nombre": "Sátiro",
+   "ref": "el sátiro",
+   "icono": "pan-flute"
+  },
+  "Giant Hyena": {
+   "nombre": "Hiena gigante",
+   "ref": "la hiena",
+   "icono": "fangs"
+  },
+  "Hyena": {
+   "nombre": "Hiena",
+   "ref": "la hiena",
+   "icono": "fox"
+  },
+  "Jackal": {
+   "nombre": "Chacal",
+   "ref": "el chacal",
+   "icono": "fox-head"
+  },
+  "Lizard": {
+   "nombre": "Lagarto",
+   "ref": "el lagarto",
+   "icono": "gecko"
+  },
+  "Giant Lizard": {
+   "nombre": "Lagarto gigante",
+   "ref": "el lagarto",
+   "icono": "gecko"
+  },
+  "Owl": {
+   "nombre": "Búho",
+   "ref": "el búho",
+   "icono": "barn-owl"
+  },
+  "Giant Owl": {
+   "nombre": "Búho gigante",
+   "ref": "el búho",
+   "icono": "barn-owl"
+  },
+  "Seahorse": {
+   "nombre": "Caballito de mar",
+   "ref": "el caballito de mar",
+   "icono": "seahorse"
+  },
+  "Giant Seahorse": {
+   "nombre": "Caballito de mar gigante",
+   "ref": "el caballito de mar",
+   "icono": "seahorse"
+  },
+  "Giant Shark": {
+   "nombre": "Tiburón gigante",
+   "ref": "el tiburón",
+   "icono": "shark-bite"
+  },
+  "Reef Shark": {
+   "nombre": "Tiburón de arrecife",
+   "ref": "el tiburón",
+   "icono": "shark-fin"
+  },
+  "Vulture": {
+   "nombre": "Buitre",
+   "ref": "el buitre",
+   "icono": "vulture"
+  },
+  "Giant Vulture": {
+   "nombre": "Buitre gigante",
+   "ref": "el buitre",
+   "icono": "vulture"
+  },
+  "Giant Wasp": {
+   "nombre": "Avispa gigante",
+   "ref": "la avispa",
+   "icono": "wasp-sting"
+  },
+  "Weasel": {
+   "nombre": "Comadreja",
+   "ref": "la comadreja",
+   "icono": "fox-tail"
+  },
+  "Giant Weasel": {
+   "nombre": "Comadreja gigante",
+   "ref": "la comadreja",
+   "icono": "fox-tail"
+  },
+  "Spider": {
+   "nombre": "Araña",
+   "ref": "la araña",
+   "icono": "long-legged-spider"
+  },
+  "Giant Wolf Spider": {
+   "nombre": "Araña lobo gigante",
+   "ref": "la araña",
+   "icono": "hanging-spider"
+  },
+  "Phase Spider": {
+   "nombre": "Araña de fase",
+   "ref": "la araña",
+   "icono": "spider-eye"
+  },
+  "Gibbering Mouther": {
+   "nombre": "Bocón barbotante",
+   "ref": "el bocón",
+   "icono": "carnivore-mouth"
+  },
+  "Goblin Boss": {
+   "nombre": "Jefe goblin",
+   "ref": "el goblin",
+   "icono": "crown"
+  },
+  "Goblin Minion": {
+   "nombre": "Esbirro goblin",
+   "ref": "el goblin",
+   "icono": "bully-minion"
+  },
+  "Gorgon": {
+   "nombre": "Gorgon",
+   "ref": "el gorgon",
+   "icono": "charging-bull"
+  },
+  "Grick": {
+   "nombre": "Grick",
+   "ref": "el grick",
+   "icono": "earth-worm"
+  },
+  "Grimlock": {
+   "nombre": "Grimlock",
+   "ref": "el grimlock",
+   "icono": "sunken-eye"
+  },
+  "Guard Captain": {
+   "nombre": "Capitán de la guardia",
+   "ref": "el capitán",
+   "icono": "visored-helm"
+  },
+  "Warrior Infantry": {
+   "nombre": "Guerrero de infantería",
+   "ref": "el guerrero",
+   "icono": "light-helm"
+  },
+  "Guardian Naga": {
+   "nombre": "Naga guardiana",
+   "ref": "la naga",
+   "icono": "snake-totem"
+  },
+  "Spirit Naga": {
+   "nombre": "Naga espiritual",
+   "ref": "la naga",
+   "icono": "snake-jar"
+  },
+  "Hippogriff": {
+   "nombre": "Hipogrifo",
+   "ref": "el hipogrifo",
+   "icono": "griffin-shield"
+  },
+  "Hippopotamus": {
+   "nombre": "Hipopótamo",
+   "ref": "el hipopótamo",
+   "icono": "buffalo-head"
+  },
+  "Hobgoblin Captain": {
+   "nombre": "Capitán trasgo",
+   "ref": "el trasgo",
+   "icono": "goblin"
+  },
+  "Invisible Stalker": {
+   "nombre": "Acechador invisible",
+   "ref": "el acechador",
+   "icono": "invisible-face",
+   "color": "#a9c7da"
+  },
+  "Killer Whale": {
+   "nombre": "Orca",
+   "ref": "la orca",
+   "icono": "sperm-whale"
+  },
+  "Lamia": {
+   "nombre": "Lamia",
+   "ref": "la lamia",
+   "icono": "sand-snake"
+  },
+  "Merfolk Skirmisher": {
+   "nombre": "Experto en escaramuzas sirénido",
+   "ref": "el sirénido",
+   "icono": "mermaid"
+  },
+  "Merrow": {
+   "nombre": "Merrow",
+   "ref": "el merrow",
+   "icono": "harpoon-trident"
+  },
+  "Minotaur Skeleton": {
+   "nombre": "Minotauro esqueleto",
+   "ref": "el minotauro",
+   "icono": "bull-horns"
+  },
+  "Night Hag": {
+   "nombre": "Saga nocturna",
+   "ref": "la saga",
+   "icono": "witch-flight"
+  },
+  "Sea Hag": {
+   "nombre": "Saga marina",
+   "ref": "la saga",
+   "icono": "angler-fish"
+  },
+  "Octopus": {
+   "nombre": "Pulpo",
+   "ref": "el pulpo",
+   "icono": "octopus"
+  },
+  "Ogre Zombie": {
+   "nombre": "Ogro zombi",
+   "ref": "el ogro",
+   "icono": "raise-zombie"
+  },
+  "Otyugh": {
+   "nombre": "Otyugh",
+   "ref": "el otyugh",
+   "icono": "eyestalk"
+  },
+  "Panther": {
+   "nombre": "Pantera",
+   "ref": "la pantera",
+   "icono": "lynx-head"
+  },
+  "Piranha": {
+   "nombre": "Piraña",
+   "ref": "la piraña",
+   "icono": "piranha"
+  },
+  "Swarm of Piranhas": {
+   "nombre": "Enjambre de pirañas",
+   "ref": "el enjambre",
+   "icono": "school-of-fish"
+  },
+  "Pirate": {
+   "nombre": "Pirata",
+   "ref": "el pirata",
+   "icono": "saber-and-pistol"
+  },
+  "Pirate Captain": {
+   "nombre": "Capitán pirata",
+   "ref": "el capitán",
+   "icono": "pirate-hat"
+  },
+  "Rat": {
+   "nombre": "Rata",
+   "ref": "la rata",
+   "icono": "rat"
+  },
+  "Raven": {
+   "nombre": "Cuervo",
+   "ref": "el cuervo",
+   "icono": "raven"
+  },
+  "Remorhaz": {
+   "nombre": "Remorhaz",
+   "ref": "el remorhaz",
+   "icono": "backbone-shell"
+  },
+  "Rhinoceros": {
+   "nombre": "Rinoceronte",
+   "ref": "el rinoceronte",
+   "icono": "rhinoceros-horn"
+  },
+  "Roc": {
+   "nombre": "Roc",
+   "ref": "el roc",
+   "icono": "bird-claw"
+  },
+  "Roper": {
+   "nombre": "Roper",
+   "ref": "el roper",
+   "icono": "dripping-stone"
+  },
+  "Rust Monster": {
+   "nombre": "Monstruo corrosivo",
+   "ref": "el monstruo",
+   "icono": "rusty-sword"
+  },
+  "Saber-Toothed Tiger": {
+   "nombre": "Tigre dientes de sable",
+   "ref": "el tigre",
+   "icono": "saber-toothed-cat-head"
+  },
+  "Scorpion": {
+   "nombre": "Escorpión",
+   "ref": "el escorpión",
+   "icono": "scorpion-tail"
+  },
+  "Specter": {
+   "nombre": "Espectro",
+   "ref": "el espectro",
+   "icono": "floating-ghost"
+  },
+  "Sphinx of Lore": {
+   "nombre": "Esfinge del conocimiento",
+   "ref": "la esfinge",
+   "icono": "egyptian-sphinx"
+  },
+  "Sphinx of Valor": {
+   "nombre": "Esfinge del valor",
+   "ref": "la esfinge",
+   "icono": "greek-sphinx"
+  },
+  "Sphinx of Wonder": {
+   "nombre": "Esfinge de las maravillas",
+   "ref": "la esfinge",
+   "icono": "egyptian-bird"
+  },
+  "Swarm of Bats": {
+   "nombre": "Enjambre de murciélagos",
+   "ref": "el enjambre",
+   "icono": "moon-bats"
+  },
+  "Swarm of Crawling Claws": {
+   "nombre": "Enjambre de garras reptantes",
+   "ref": "el enjambre",
+   "icono": "severed-hand"
+  },
+  "Swarm of Insects": {
+   "nombre": "Enjambre de insectos",
+   "ref": "el enjambre",
+   "icono": "fly"
+  },
+  "Swarm of Rats": {
+   "nombre": "Enjambre de ratas",
+   "ref": "el enjambre",
+   "icono": "rat"
+  },
+  "Swarm of Ravens": {
+   "nombre": "Enjambre de cuervos",
+   "ref": "el enjambre",
+   "icono": "crow-dive"
+  },
+  "Swarm of Venomous Snakes": {
+   "nombre": "Enjambre de serpientes venenosas",
+   "ref": "el enjambre",
+   "icono": "snake-bite"
+  },
+  "Tough Boss": {
+   "nombre": "Jefe pendenciero",
+   "ref": "el jefe",
+   "icono": "armor-punch"
+  },
+  "Troll Limb": {
+   "nombre": "Extremidad de troll",
+   "ref": "la extremidad",
+   "icono": "grasping-claws"
+  },
+  "Vampire Familiar": {
+   "nombre": "Familiar vampírico",
+   "ref": "el familiar",
+   "icono": "bat-mask"
+  },
+  "Vampire Spawn": {
+   "nombre": "Engendro vampírico",
+   "ref": "el engendro",
+   "icono": "female-vampire"
+  },
+  "Werebear": {
+   "nombre": "Hombre oso",
+   "ref": "el hombre oso",
+   "icono": "wolverine-claws",
+   "formas": {
+    "Bite": [
+     "solo en forma de oso o híbrida",
+     "Bear or Hybrid Form Only"
+    ],
+    "Handaxe": [
+     "solo en forma humanoide o híbrida",
+     "Humanoid or Hybrid Form Only"
+    ]
+   }
+  },
+  "Wereboar": {
+   "nombre": "Hombre jabalí",
+   "ref": "el hombre jabalí",
+   "icono": "boar-ensign",
+   "formas": {
+    "Gore": [
+     "solo en forma de jabalí o híbrida",
+     "Boar or Hybrid Form Only"
+    ],
+    "Javelin": [
+     "solo en forma humanoide o híbrida",
+     "Humanoid or Hybrid Form Only"
+    ]
+   }
+  },
+  "Wererat": {
+   "nombre": "Hombre rata",
+   "ref": "el hombre rata",
+   "icono": "rat",
+   "formas": {
+    "Bite": [
+     "solo en forma de rata o híbrida",
+     "Rat or Hybrid Form Only"
+    ],
+    "Hand Crossbow": [
+     "solo en forma humanoide o híbrida",
+     "Humanoid or Hybrid Form Only"
+    ]
+   }
+  },
+  "Weretiger": {
+   "nombre": "Hombre tigre",
+   "ref": "el hombre tigre",
+   "icono": "tiger-head",
+   "formas": {
+    "Bite": [
+     "solo en forma de tigre o híbrida",
+     "Tiger or Hybrid Form Only"
+    ],
+    "Longbow": [
+     "solo en forma humanoide o híbrida",
+     "Humanoid or Hybrid Form Only"
+    ]
+   }
+  },
+  "Winter Wolf": {
+   "nombre": "Lobo invernal",
+   "ref": "el lobo",
+   "icono": "wolf-howl"
+  },
+  "Worg": {
+   "nombre": "Huargo",
+   "ref": "el huargo",
+   "icono": "fangs"
+  },
+  "Xorn": {
+   "nombre": "Xorn",
+   "ref": "el xorn",
+   "icono": "triple-claws"
+  }
+ },
+ "nombres": {
+  "Amphibious": "Anfibio",
+  "Legendary Resistance": "Resistencia legendaria",
+  "Multiattack": "Ataque múltiple",
+  "Rend": "Desgarrar",
+  "Spellcasting": "Lanzamiento de conjuros",
+  "Pounce": "Abalanzarse",
+  "Fire Breath": "Aliento de fuego",
+  "Poison Breath": "Aliento venenoso",
+  "Bite": "Mordisco",
+  "Commanding Presence": "Presencia imponente",
+  "Fiery Rays": "Rayos ígneos",
+  "Tunneler": "Tunelador",
+  "Tail": "Cola",
+  "Slam": "Golpe",
+  "Fire Aura": "Aura de fuego",
+  "Illumination": "Iluminación",
+  "Pack Tactics": "Tácticas de manada",
+  "Magic Resistance": "Resistencia mágica",
+  "Constrict": "Constreñir",
+  "Swallow": "Tragar",
+  "Amorphous": "Amorfa",
+  "Split": "Dividirse",
+  "Claw": "Garra",
+  "Abduct": "Secuestrar",
+  "Javelin": "Jabalina",
+  "Scratch": "Arañazo",
+  "Berserk": "Enloquecer",
+  "Immutable Form": "Forma inmutable",
+  "Divine Aid": "Ayuda divina",
+  "Storm Bolt": "Rayo de tormenta",
+  "Hooves": "Cascos",
+  "Sunlight Sensitivity": "Sensibilidad a la luz solar",
+  "Web Walker": "Andar por telarañas",
+  "Parry": "Parada",
+  "Flyby": "Pasada en vuelo",
+  "Standing Leap": "Salto sin carrerilla",
+  "Fist": "Puño",
+  "Bloodied Fury": "Furia herida",
+  "Gore": "Cornada",
+  "Hold Breath": "Contener la respiración",
+  "Rampage": "Desmán",
+  "Sting": "Aguijón",
+  "Scimitar": "Cimitarra",
+  "Shortbow": "Arco corto",
+  "Nimble Escape": "Huida ágil",
+  "Dagger": "Daga",
+  "Trample": "Pisotear",
+  "Pseudopod": "Seudópodo",
+  "Tentacles": "Tentáculos",
+  "Longsword": "Espada larga",
+  "Greatsword": "Espadón",
+  "Longbow": "Arco largo",
+  "Air Form": "Forma de aire",
+  "Pact Blade": "Hoja del pacto",
+  "Coven Magic": "Magia de aquelarre",
+  "Shape-Shift": "Cambiar de forma",
+  "Ink Cloud": "Nube de tinta",
+  "Undead Fortitude": "Tenacidad no muerta",
+  "Tentacle": "Tentáculo",
+  "Ethereal Sight": "Vista etérea",
+  "Rapier": "Estoque",
+  "Pistol": "Pistola",
+  "Mimicry": "Imitación",
+  "Running Leap": "Salto con carrerilla",
+  "Regeneration": "Regeneración",
+  "Incorporeal Movement": "Movimiento incorpóreo",
+  "Life Drain": "Drenar vida",
+  "Roar": "Rugido",
+  "Fiendish Restoration": "Restauración infernal",
+  "Charm": "Hechizar",
+  "Heavy Crossbow": "Ballesta pesada",
+  "Vampire Weakness": "Debilidades de vampiro",
+  "Spear": "Lanza",
+  "Hand Crossbow": "Ballesta de mano",
+  "Earth Glide": "Deslizarse por la tierra",
+  "Charge": "Carga",
+  "Acid Breath": "Aliento de ácido",
+  "Cloud of Insects": "Nube de insectos",
+  "Frightful Presence": "Presencia aterradora",
+  "Lightning Breath": "Aliento de relámpago",
+  "Cloaked Flight": "Vuelo velado",
+  "Sonic Boom": "Estampido sónico",
+  "Tail Swipe": "Coletazo",
+  "Sleep Breath": "Aliento de sueño",
+  "Blazing Light": "Luz abrasadora",
+  "Scorching Sands": "Arenas abrasadoras",
+  "Repulsion Breath": "Aliento de repulsión",
+  "Guiding Light": "Luz guía",
+  "Slowing Breath": "Aliento ralentizador",
+  "Giggling Magic": "Magia risueña",
+  "Mind Jolt": "Sacudida mental",
+  "Weakening Breath": "Aliento debilitador",
+  "Banish": "Desterrar",
+  "Mind Invasion": "Invasión mental",
+  "Noxious Miasma": "Miasma nocivo",
+  "Cold Breath": "Aliento de frío",
+  "Paralyzing Breath": "Aliento paralizante",
+  "Chill": "Escalofrío",
+  "Cold Gale": "Vendaval gélido",
+  "Ice Walk": "Caminar sobre el hielo",
+  "Freezing Burst": "Estallido helado",
+  "Claws": "Garras",
+  "Slash": "Tajo",
+  "Smother": "Asfixiar",
+  "Acid Spray": "Rociada de ácido",
+  "Rake": "Zarpazo",
+  "Beak": "Pico",
+  "Burning Hammer": "Martillo ardiente",
+  "Barbed Hide": "Piel espinosa",
+  "Diabolical Restoration": "Restauración diabólica",
+  "Hurl Flame": "Arrojar llamas",
+  "Beard": "Barba",
+  "Infernal Glaive": "Guja infernal",
+  "Corrosive Form": "Forma corrosiva",
+  "Dissolving Pseudopod": "Seudópodo disolvente",
+  "Infernal Sting": "Aguijón infernal",
+  "Morningstar": "Lucero del alba",
+  "Quick Grapple": "Presa rápida",
+  "Deadly Leap": "Salto letal",
+  "Leap": "Salto",
+  "Jumper": "Saltador",
+  "Chain": "Cadena",
+  "Conjure Infernal Chain": "Conjurar cadena infernal",
+  "Unnerving Gaze": "Mirada inquietante",
+  "Ram": "Embestida",
+  "Sense Magic": "Sentir la magia",
+  "Pincer": "Pinza",
+  "Paralyzing Tentacles": "Tentáculos paralizantes",
+  "Acid Absorption": "Absorción de ácido",
+  "Hasten": "Apresurarse",
+  "Light Sensitivity": "Sensibilidad a la luz",
+  "Attach": "Adherirse",
+  "Moan": "Gemido",
+  "Phantasms": "Fantasmas",
+  "Thunderous Mace": "Maza atronadora",
+  "Thundercloud": "Nube de tormenta",
+  "Petrifying Bite": "Mordisco petrificante",
+  "Shielded Mind": "Mente blindada",
+  "Crush": "Aplastar",
+  "Darkness Aura": "Aura de oscuridad",
+  "Agile": "Ágil",
+  "Exalted Restoration": "Restauración exaltada",
+  "Holy Mace": "Maza sagrada",
+  "Elemental Restoration": "Restauración elemental",
+  "Wishes": "Deseos",
+  "Storm Blade": "Hoja de tormenta",
+  "Create Whirlwind": "Crear torbellino",
+  "Steam Breath": "Aliento de vapor",
+  "Fetid Cloud": "Nube fétida",
+  "Foreleg": "Pata delantera",
+  "Poison Burst": "Estallido de veneno",
+  "Magic of the Spider Queen": "Magia de la Reina Araña",
+  "Vine Staff": "Bastón de enredadera",
+  "Verdant Wisp": "Fuego fatuo verde",
+  "Speak with Beasts and Plants": "Hablar con bestias y plantas",
+  "Vine Lash": "Latigazo de enredadera",
+  "Thorn Burst": "Estallido de espinas",
+  "Death Burst": "Estallido mortal",
+  "Blinding Breath": "Aliento cegador",
+  "Talons": "Garras",
+  "Heated Blade": "Hoja al rojo",
+  "Magic Rope": "Cuerda mágica",
+  "Withering Sword": "Espada marchitadora",
+  "Entangling Rope": "Cuerda enmarañadora",
+  "Web Strand": "Hebra de telaraña",
+  "Reel": "Recoger",
+  "Battleaxe": "Hacha de batalla",
+  "Flame Sword": "Espada flamígera",
+  "Hammer Throw": "Lanzamiento de martillo",
+  "Stench": "Hedor",
+  "Boulder Toss": "Lanzar peñasco",
+  "Bubble Dash": "Carrera de burbujas",
+  "Gouge": "Cornada",
+  "Aberrant Ground": "Suelo aberrante",
+  "Gibbering": "Balbuceo",
+  "Blinding Spittle": "Escupitajo cegador",
+  "Demonic Restoration": "Restauración demoníaca",
+  "Pummel": "Aporrear",
+  "Redirect Attack": "Desviar ataque",
+  "Petrifying Breath": "Aliento petrificante",
+  "Bone Cudgel": "Garrote de hueso",
+  "Celestial Restoration": "Restauración celestial",
+  "Poisonous Spittle": "Escupitajo venenoso",
+  "Draconic Origin": "Origen dracónico",
+  "Dragon’s Breath": "Aliento de dragón",
+  "Aura of Authority": "Aura de autoridad",
+  "Searing Fork": "Tridente abrasador",
+  "Infernal Tail": "Cola infernal",
+  "Ice Spear": "Lanza de hielo",
+  "Ice Wall": "Muro de hielo",
+  "Frost Breath": "Aliento de escarcha",
+  "Succubus Form": "Forma de súcubo",
+  "Restless Touch": "Toque inquieto",
+  "Nightmare": "Pesadilla",
+  "Wind Swipe": "Zarpazo de viento",
+  "Vortex": "Vórtice",
+  "Fire Absorption": "Absorción de fuego",
+  "Bladed Arm": "Brazo de cuchillas",
+  "Fiery Bolt": "Saeta ígnea",
+  "Corrupting Touch": "Toque corruptor",
+  "Hellish Restoration": "Restauración infernal",
+  "Vile Slime": "Baba inmunda",
+  "Touch": "Toque",
+  "Ignited Illumination": "Iluminación ígnea",
+  "Reactive": "Reactivo",
+  "Ocean Spear": "Lanza oceánica",
+  "Harpoon": "Arpón",
+  "Beast of Burden": "Bestia de carga",
+  "Horror Nimbus": "Nimbo de horror",
+  "Pursuit": "Persecución",
+  "Soul Bag": "Bolsa de almas",
+  "Nightmare Haunting": "Acoso de pesadilla",
+  "Confer Fire Resistance": "Otorgar resistencia al fuego",
+  "Ethereal Stride": "Zancada etérea",
+  "Compression": "Compresión",
+  "Tentacle Slam": "Golpe de tentáculo",
+  "Ethereal Jaunt": "Salto etéreo",
+  "Captain's Charm": "Encanto del capitán",
+  "Riposte": "Contraataque",
+  "Enthralling Panache": "Garbo cautivador",
+  "Fear Aura": "Aura de miedo",
+  "Devilish Claw": "Garra diabólica",
+  "Fiery Mace": "Maza ígnea",
+  "Hellfire Spellcasting": "Lanzamiento de conjuros infernal",
+  "Divine Awareness": "Percepción divina",
+  "Radiant Sword": "Espada radiante",
+  "Holy Burst": "Estallido sagrado",
+  "Heat Aura": "Aura de calor",
+  "Swoop": "Picado",
+  "Iron Scent": "Olfato de hierro",
+  "Antennae": "Antenas",
+  "Destroy Metal": "Destruir metal",
+  "Reflexive Antennae": "Antenas reflejas",
+  "Mockery": "Burla",
+  "Vile Appearance": "Aspecto repugnante",
+  "Death Glare": "Mirada mortal",
+  "Illusory Appearance": "Apariencia ilusoria",
+  "Bound": "Vínculo",
+  "Spell Storing": "Almacenar conjuro",
+  "Protection": "Protección",
+  "Flying Sword": "Espada voladora",
+  "Slaying Bow": "Arco asesino",
+  "Blinding Gaze": "Mirada cegadora",
+  "Radiant Teleport": "Teletransporte radiante",
+  "Inscrutable": "Inescrutable",
+  "Mind-Rending Roar": "Rugido desgarramentes",
+  "Arcane Prowl": "Acecho arcano",
+  "Weight of Years": "Peso de los años",
+  "First Roar": "Primer rugido",
+  "Second Roar": "Segundo rugido",
+  "Third Roar": "Tercer rugido",
+  "Burst of Ingenuity": "Arranque de ingenio",
+  "Necrotic Ray": "Rayo necrótico",
+  "Blurred Form": "Forma difusa",
+  "Stone Club": "Garrote de piedra",
+  "Boulder": "Peñasco",
+  "Deflect Missile": "Desviar proyectil",
+  "Storm Sword": "Espada de tormenta",
+  "Thunderbolt": "Rayo",
+  "Lightning Storm": "Tormenta de relámpagos",
+  "Incubus Form": "Forma de íncubo",
+  "Fiendish Touch": "Toque infernal",
+  "Draining Kiss": "Beso drenante",
+  "Swarm": "Enjambre",
+  "Bites": "Mordiscos",
+  "Swarm of Grasping Hands": "Enjambre de manos aferradoras",
+  "Beaks": "Picos",
+  "Cacophony": "Cacofonía",
+  "Warhammer": "Martillo de guerra",
+  "Troll Spawn": "Engendro de troll",
+  "Vampiric Connection": "Conexión vampírica",
+  "Umbral Dagger": "Daga umbría",
+  "Deathless Agility": "Agilidad imperecedera",
+  "Running Water": "Agua corriente",
+  "Stake to the Heart": "Estaca en el corazón",
+  "Sunlight": "Luz del sol",
+  "Shred": "Desgarro",
+  "Spores": "Esporas",
+  "Stunning Screech": "Chillido aturdidor",
+  "Handaxe": "Hacha de mano",
+  "Tusk": "Colmillo",
+  "Prowl": "Merodear",
+  "Treasure Sense": "Olfato para el tesoro"
+ },
+ "equipo": {
+  "Leather Armor": "armadura de cuero",
+  "Scimitar": "cimitarra",
+  "Shield": "escudo",
+  "Shortbow": "arco corto",
+  "Daggers": "dagas",
+  "Light Crossbow": "ballesta ligera",
+  "Chain Shirt": "camisote de mallas",
+  "Spear": "lanza",
+  "Shortsword": "espada corta",
+  "Half Plate Armor": "media armadura",
+  "Longbow": "arco largo",
+  "Longsword": "espada larga",
+  "Hide Armor": "armadura de pieles",
+  "Light Hammers": "martillos ligeros",
+  "Greatclub": "gran clava",
+  "Javelins": "jabalinas",
+  "Club": "garrote",
+  "Sickle": "hoz",
+  "Breastplate": "coraza",
+  "Rapier": "estoque",
+  "Holy Symbol": "símbolo sagrado",
+  "Mace": "maza",
+  "Heavy Crossbow": "ballesta pesada",
+  "Hand Crossbow": "ballesta de mano",
+  "Thieves’ Tools": "herramientas de ladrón",
+  "Greataxe": "gran hacha",
+  "Pistol": "pistola",
+  "Studded Leather Armor": "armadura de cuero tachonado",
+  "Pike": "pica",
+  "Greatsword": "espadón",
+  "Splint Armor": "armadura de bandas",
+  "Plate Armor": "armadura de placas",
+  "Spears": "lanzas",
+  "Wand": "varita",
+  "Component Pouch": "saquillo de componentes",
+  "Javelin": "jabalina",
+  "Morningstar": "lucero del alba",
+  "Battleaxe": "hacha de batalla",
+  "Dagger": "daga",
+  "Chain Mail": "cota de mallas",
+  "Warhammer": "martillo de guerra",
+  "Handaxe": "hacha de mano"
+ },
+ "notas": {
+  "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell": "solo en forma de bestia o humanoide, sin ganar puntos de golpe temporales por el conjuro y sin necesitar concentración ni puntos de golpe temporales para mantenerlo",
+  "included in AC": "ya incluida en su CA",
+  "cast before combat": "lanzado antes del combate",
+  "can create wine instead of water": "puede crear vino en lugar de agua",
+  "lasts 24 hours; ends early if the dryad casts the spell again": "dura 24 horas; termina antes si la dríada vuelve a lanzar el conjuro",
+  "24-hour duration": "duración de 24 horas",
+  "self only, and the hag leaves no tracks while Invisible": "solo sobre sí misma, y no deja huellas mientras es invisible",
+  "can appear as a Large or Medium biped": "puede adoptar la forma de un bípedo grande o mediano",
+  "self only": "solo sobre sí mismo"
+ },
+ "frases": {
+  "{0}–{1}.": "{0}–{1}.",
+  "Half damage only.": "Solo la mitad del daño.",
+  "{C} uses Antennae.": "Usa Antenas.",
+  "{C} has a soul bag.": "Tiene una bolsa de almas.",
+  "Success: Half damage.": "Éxito: la mitad del daño.",
+  "{C} has a magic rope.": "Tiene una cuerda mágica.",
+  "{C} can't shape-shift.": "No puede cambiar de forma.",
+  "Success: {C} disappears.": "Éxito: la cadena desaparece.",
+  "The target does nothing.": "El objetivo no hace nada.",
+  "An attack roll hits {C}.": "Una tirada de ataque impacta a {C}.",
+  "Hit: {0} Piercing damage.": "Impacto: {0} perforante.",
+  "Failure: {0} Cold damage.": "Fallo: {0} frío.",
+  "Failure: {0} Fire damage.": "Fallo: {0} fuego.",
+  "{C} emits a magical roar.": "Emite un rugido mágico.",
+  "{C} adds {0} to the roll.": "Suma {0} a la tirada.",
+  "{C} has these weaknesses:": "Tiene estas debilidades:",
+  "{C} explodes when it dies.": "Explota al morir.",
+  "Success: Half damage only.": "Éxito: solo la mitad del daño.",
+  "Failure: {0} Force damage.": "Fallo: {0} fuerza.",
+  "On a {0}, {C} goes berserk.": "Con un {0}, enloquece.",
+  "{C} knows if it hears a lie.": "Sabe si oye una mentira.",
+  "Failure: {0} Radiant damage.": "Fallo: {0} radiante.",
+  "one creature in {C}'s space.": "una criatura en el espacio de {C}.",
+  "Otherwise, {C} withers away.": "Si no, se marchita.",
+  "one creature Grappled by {C}.": "una criatura agarrada por {C}.",
+  "{C} can breathe air and water.": "Puede respirar aire y agua.",
+  "each creature Grappled by {C}.": "cada criatura agarrada por {C}.",
+  "The stored spell is then lost.": "Después, el conjuro almacenado se pierde.",
+  "Failure: The target is cursed.": "Fallo: el objetivo queda maldito.",
+  "Failure: {0} Bludgeoning damage.": "Fallo: {0} contundente.",
+  "{C} can breathe only underwater.": "Solo puede respirar bajo el agua.",
+  "{C} has the Invisible condition.": "Es invisible.",
+  "{0} ({1} – {2}) Piercing damage.": "{0} ({1} – {2}) perforante.",
+  "each creature in a {0}-foot Cone.": "cada criatura en un cono de {0} pies.",
+  "On a {0}, {C} turns into a Troll.": "Con un {0}, se convierte en un troll.",
+  "Constitution Saving Throw: DC {0}.": "Salvación de Constitución: CD {0}.",
+  "The spell's duration is {0} hours.": "El conjuro dura {0} horas.",
+  "{C} is magically bound to an amulet.": "Está vinculado mágicamente a un amuleto.",
+  "{C} can hold its breath for {0} hour.": "Puede aguantar la respiración {0} hora.",
+  "The target gains {0} Exhaustion level.": "El objetivo gana {0} nivel de agotamiento.",
+  "{C} splits into two new Black Puddings.": "Se divide en dos nuevos pudines negros.",
+  "{C} takes the Disengage or Hide action.": "Realiza la acción de Destrabarse o de Esconderse.",
+  "{C} takes the Dash or Disengage action.": "Realiza la acción de Correr o de Destrabarse.",
+  "{C} can hold its breath for {0} minutes.": "Puede aguantar la respiración {0} minutos.",
+  "{C} can create a new bag after {0} days.": "Puede crear una bolsa nueva al cabo de {0} días.",
+  "one creature {C} can see within {0} feet.": "una criatura que vea a {0} pies o menos.",
+  "{C} takes the Dash and Disengage actions.": "Realiza las acciones de Correr y Destrabarse.",
+  ", and the target has the Prone condition.": ", y el objetivo queda derribado.",
+  ", or {0} Poison damage if {C} is Bloodied.": ", o {0} veneno si {C} está maltrecho.",
+  "{C} senses magic within {0} feet of itself.": "Percibe la magia a {0} pies o menos de sí.",
+  "After {0} minute, it succeeds automatically.": "Al cabo de {0} minuto, la supera automáticamente.",
+  "{C} can smother only one creature at a time.": "Solo puede asfixiar a una criatura a la vez.",
+  "one creature Charmed by {C} within {0} feet.": "una criatura encantada por {C} a {0} pies o menos.",
+  ", or {0} Piercing damage if {C} is Bloodied.": ", o {0} perforante si {C} está maltrecho.",
+  "Melee Attack Roll: +{0} to hit, reach {1} ft.": "Tirada de ataque cuerpo a cuerpo: +{0} al ataque, alcance {1} pies.",
+  "{C} makes two Javelin or Morningstar attacks.": "Hace dos ataques de Jabalina o Lucero del alba.",
+  "one Large or smaller creature in {C}'s space.": "una criatura grande o más pequeña en el espacio de {C}.",
+  "Hit: {0} Slashing damage plus {1} Fire damage.": "Impacto: {0} cortante más {1} fuego.",
+  "Hit: {0} Slashing damage plus {1} Acid damage.": "Impacto: {0} cortante más {1} ácido.",
+  "{C} conjures a fiery chain to bind a creature.": "Conjura una cadena ígnea para atar a una criatura.",
+  "{C} can enter an enemy's space and stop there.": "Puede entrar en el espacio de un enemigo y quedarse allí.",
+  "Failure: The target receives an infernal wound.": "Fallo: el objetivo sufre una herida infernal.",
+  "Otherwise, the target takes {0} Psychic damage.": "Si no, el objetivo recibe {0} psíquico.",
+  "Failure: The target has the Poisoned condition.": "Fallo: el objetivo queda envenenado.",
+  "Whenever {C} starts its turn Bloodied, roll {0}.": "Siempre que empiece su turno maltrecho, tira {0}.",
+  "This effect lasts until the end of its next turn.": "Este efecto dura hasta el final de su siguiente turno.",
+  "The touch destroys a {0}-foot Cube of the object.": "El toque destruye un cubo de {0} pies del objeto.",
+  "The spell has no effect but is stored within {C}.": "El conjuro no tiene efecto y queda almacenado en {C}.",
+  "{C} sets itself ablaze or extinguishes its flames.": "Se prende fuego o apaga sus llamas.",
+  "{C} can take one Reaction on every turn of combat.": "Puede realizar una reacción en cada turno del combate.",
+  "If {C} isn't destroyed within {0} hours, roll {1}.": "Si no es destruida en {0} horas, tira {1}.",
+  ", or {0} Piercing damage if the target is Bloodied.": ", o {0} perforante si el objetivo está maltrecho.",
+  "The bag turns to dust if reduced to {0} Hit Points.": "La bolsa se convierte en polvo si queda a {0} puntos de golpe.",
+  "{C} uncannily has the same senses as a whole troll.": "Extrañamente, tiene los mismos sentidos que un troll entero.",
+  "The weapon is destroyed if the penalty reaches -{0}.": "El arma queda destruida si el penalizador llega a -{0}.",
+  "This choice affects other aspects of the stat block.": "Esta elección afecta a otros aspectos de la ficha.",
+  "one Frightened creature {C} can see within {0} feet.": "una criatura asustada que vea a {0} pies o menos.",
+  "The target has the Blinded condition for {0} minute.": "El objetivo queda cegado {0} minuto.",
+  "each creature in a {0}-foot-long, {1}-foot-wide Line.": "cada criatura en una línea de {0} pies de largo y {1} de ancho.",
+  "{C} swallows the target, which is no longer Grappled.": "Se traga al objetivo, que deja de estar agarrado.",
+  "First Failure: The target has the Poisoned condition.": "Primer fallo: el objetivo queda envenenado.",
+  "If the creature has {0} Hit Points or fewer, it dies.": "Si la criatura tiene {0} puntos de golpe o menos, muere.",
+  "each creature in an {0}-foot-long, {1}-foot-wide Line.": "cada criatura en una línea de {0} pies de largo y {1} de ancho.",
+  "The target has the Grappled condition (escape DC {0}).": "El objetivo queda agarrado (escapar CD {0}).",
+  "While Poisoned, the target has the Paralyzed condition.": "Mientras esté envenenado, el objetivo queda paralizado.",
+  "{C} can detach itself by spending {0} feet of movement.": "Puede soltarse gastando {0} pies de movimiento.",
+  "First Failure: The target has the Restrained condition.": "Primer fallo: el objetivo queda apresado.",
+  "{C} has a {0} percent chance of knowing the Wish spell.": "Tiene un {0} % de probabilidades de conocer el conjuro Deseo.",
+  "{C} swallows a Small or smaller target it is grappling.": "Se traga a un objetivo pequeño o más pequeño que tenga agarrado.",
+  "A creature {C} can see makes an attack roll against it.": "Una criatura que vea hace una tirada de ataque contra él.",
+  "The target has the Frightened condition for {0} minute.": "El objetivo queda asustado {0} minuto.",
+  "The target has the Unconscious condition for {0} minute.": "El objetivo queda inconsciente {0} minuto.",
+  "each enemy in a {0}-foot Emanation originating from {C}.": "cada enemigo en una emanación de {0} pies con origen en {C}.",
+  "The target has the Unconscious condition for {0} minutes.": "El objetivo queda inconsciente {0} minutos.",
+  "The whirlwind lasts until {C}'s Concentration on it ends.": "El torbellino dura hasta que termine su concentración en él.",
+  "While bearing it, {C} can use the Entangling Rope action.": "Mientras la lleve, puede usar la acción Cuerda enmarañadora.",
+  "{C} is hit by a melee attack roll while holding a weapon.": "Recibe un impacto de una tirada de ataque cuerpo a cuerpo mientras empuña un arma.",
+  "The bag has AC {0}, HP {1}, and Resistance to all damage.": "La bolsa tiene CA {0}, {1} PG y resistencia a todo el daño.",
+  "On a successful save, {C} drops to {0} Hit Point instead.": "Si supera la salvación, en su lugar queda a {0} punto de golpe.",
+  "{C} can't regain Hit Points or gain Temporary Hit Points.": "No puede recuperar puntos de golpe ni ganar puntos de golpe temporales.",
+  "one Large or smaller creature {C} can see within {0} feet.": "una criatura grande o más pequeña que vea a {0} pies o menos.",
+  "{C} jumps up to {0} feet by spending {1} feet of movement.": "Salta hasta {0} pies gastando {1} pies de movimiento.",
+  "The target is immune to this ghast's Stench for {0} hours.": "El objetivo es inmune al Hedor de este ghast durante {0} horas.",
+  "{C} hurls a boulder at a point it can see within {0} feet.": "Lanza un peñasco a un punto que vea a {0} pies o menos.",
+  "one creature within {0} feet that has the Prone condition.": "una criatura a {0} pies o menos que esté derribada.",
+  "Any equipment it is wearing or carrying isn't transformed.": "El equipo que lleve puesto o cargue no se transforma.",
+  "Only a Wish spell can prevent this trait from functioning.": "Solo un conjuro de Deseo puede impedir que este rasgo funcione.",
+  "At the end of this movement, {C} can take the Hide action.": "Al final de este movimiento, puede realizar la acción de Esconderse.",
+  "one Medium or smaller creature {C} can see within {0} feet.": "una criatura mediana o más pequeña que vea a {0} pies o menos.",
+  "each creature in a {0}-foot Emanation originating from {C}.": "cada criatura en una emanación de {0} pies con origen en {C}.",
+  "The armor is destroyed if the penalty reduces its AC to {0}.": "La armadura queda destruida si el penalizador reduce su CA a {0}.",
+  "While in Bright Light, {C} has Disadvantage on attack rolls.": "Mientras esté bajo luz brillante, tiene desventaja en las tiradas de ataque.",
+  ", and the target has the Grappled condition (escape DC {0}).": ", y el objetivo queda agarrado (escapar CD {0}).",
+  ", plus {0} Slashing damage if the attack roll had Advantage.": ", más {0} cortante si la tirada de ataque tenía ventaja.",
+  ", plus {0} Piercing damage if the attack roll had Advantage.": ", más {0} perforante si la tirada de ataque tenía ventaja.",
+  "{0} damage of the type chosen for the Draconic Origin trait.": "{0} del tipo elegido en el rasgo Origen dracónico.",
+  "While Poisoned, the target also has the Paralyzed condition.": "Mientras esté envenenado, el objetivo también queda paralizado.",
+  "{C} can burrow through nonmagical, unworked earth and stone.": "Puede excavar a través de tierra y piedra no mágicas y sin trabajar.",
+  "{C} moves up to half its Speed, and it makes one Rend attack.": "Se mueve hasta la mitad de su velocidad y hace un ataque de Desgarrar.",
+  "{C} has Advantage on melee attack rolls while it is Bloodied.": "Tiene ventaja en las tiradas de ataque cuerpo a cuerpo mientras está maltrecho.",
+  "{C} makes two Pincer attacks and uses Pummel or Spellcasting.": "Hace dos ataques de Pinza y usa Aporrear o Lanzamiento de conjuros.",
+  "{C} chooses a Small or Medium ally within {0} feet of itself.": "Elige a un aliado pequeño o mediano a {0} pies o menos de sí.",
+  "Dexterity Saving Throw: DC {0}, the creature with the object.": "Salvación de Destreza: CD {0}, la criatura que lleva el objeto.",
+  "{C} regains {0} Hit Points at the start of each of its turns.": "Recupera {0} puntos de golpe al principio de cada uno de sus turnos.",
+  "If {C} fails a saving throw, it can choose to succeed instead.": "Si falla una salvación, puede decidir superarla.",
+  "Response—Wisdom Saving Throw: DC {0}, the triggering creature.": "Respuesta: salvación de Sabiduría CD {0}, la criatura desencadenante.",
+  "Being underwater doesn't grant Resistance to this Fire damage.": "Estar bajo el agua no da resistencia a este daño de fuego.",
+  "{C} teleports up to {0} feet to an unoccupied space it can see.": "Se teletransporta hasta {0} pies a un espacio libre que vea.",
+  "{C} conjures a whirlwind at a point it can see within {0} feet.": "Conjura un torbellino en un punto que vea a {0} pies o menos.",
+  "{C} makes three Radiant Sword attacks or uses Holy Burst twice.": "Hace tres ataques de Espada radiante o usa Estallido sagrado dos veces.",
+  "Any previously stored spell is lost when a new spell is stored.": "Al almacenar un conjuro nuevo, se pierde el que hubiera almacenado antes.",
+  "It otherwise takes {0} Piercing damage plus {1} Radiant damage.": "Si no, recibe {0} perforante más {1} radiante.",
+  "It takes {0} Force damage if it ends its turn inside an object.": "Recibe {0} fuerza si acaba su turno dentro de un objeto.",
+  "{C} takes {0} Acid damage if it ends its turn in running water.": "Recibe {0} ácido si acaba su turno en agua corriente.",
+  "{C} takes {0} Radiant damage if it starts its turn in sunlight.": "Recibe {0} radiante si empieza su turno bajo la luz del sol.",
+  "{C} regains all expended uses at the start of each of its turns.": "Recupera todos los usos al principio de cada uno de sus turnos.",
+  "The target is swallowed by {C}, and the Grappled condition ends.": "{C} se traga al objetivo y deja de estar agarrado.",
+  "With a {0}-foot running start, {C} can Long Jump up to {1} feet.": "Con {0} pies de carrerilla, puede hacer un salto de longitud de hasta {1} pies.",
+  "{C} moves up to its Speed without provoking Opportunity Attacks.": "Se mueve hasta su velocidad sin provocar ataques de oportunidad.",
+  ", and the target is pushed up to {0} feet straight away from {C}.": ", y el objetivo es empujado hasta {0} pies en línea recta alejándose de {C}.",
+  ", or {0} Piercing damage if {C} had Advantage on the attack roll.": ", o {0} perforante si {C} tenía ventaja en la tirada de ataque.",
+  "If the target is a Large or smaller creature, {C} attaches to it.": "Si el objetivo es una criatura grande o más pequeña, se adhiere a ella.",
+  "Magical Darkness fills a {0}-foot Emanation originating from {C}.": "Una oscuridad mágica llena una emanación de {0} pies con origen en {C}.",
+  "plus {0} damage of the type chosen for the Draconic Origin trait.": "más {0} del tipo elegido en el rasgo Origen dracónico.",
+  "A creature ends its turn within {0} feet of {C} while underwater.": "Una criatura acaba su turno a {0} pies o menos de {C} estando bajo el agua.",
+  "The target is immune to this hag's Vile Appearance for {0} hours.": "El objetivo es inmune al Aspecto repugnante de esta saga durante {0} horas.",
+  "{C} can't take this action again until the start of its next turn.": "No puede repetir esta acción hasta el principio de su siguiente turno.",
+  ", and the target's Speed is halved until the end of its next turn.": ", y la velocidad del objetivo se reduce a la mitad hasta el final de su siguiente turno.",
+  "The target dies if it is reduced to {0} Hit Points by this attack.": "El objetivo muere si este ataque lo deja a {0} puntos de golpe.",
+  "Its body is then absorbed into {C}, leaving only equipment behind.": "Después, {C} absorbe su cuerpo y solo queda el equipo.",
+  "Another creature {C} can see ends its move within {0} feet of {C}.": "Otra criatura que vea termina su movimiento a {0} pies o menos de {C}.",
+  "—or {0} Piercing damage if {C} is Bloodied—plus {1} Poison damage.": "(o {0} perforante si {C} está maltrecho) más {1} veneno.",
+  "While doing so, {C} doesn't disturb the material it moves through.": "Al hacerlo, no altera el material por el que se mueve.",
+  "The target is immune to this cloaker's Moan for the next {0} hours.": "El objetivo es inmune al Gemido de este manto durante las {0} horas siguientes.",
+  "If the bag is destroyed, any souls the bag is holding are released.": "Si la bolsa queda destruida, se liberan las almas que contenga.",
+  "Other than its size, its game statistics are the same in each form.": "Su perfil es el mismo en todas sus formas, salvo el tamaño.",
+  "{C} can't enter a residence without an invitation from an occupant.": "No puede entrar en una vivienda sin la invitación de alguien que viva en ella.",
+  "Emptying a flask of Holy Water on the target ends the effect early.": "Vaciar un frasco de agua bendita sobre el objetivo termina antes el efecto.",
+  "{C} needn't spend extra movement to move a creature it is grappling.": "No necesita gastar movimiento adicional para mover a una criatura que tenga agarrada.",
+  "The spell ends early if {C} starts or ends its turn in Bright Light.": "El conjuro termina antes si empieza o acaba su turno bajo luz brillante.",
+  "{C} makes three Withering Sword attacks and can use Entangling Rope.": "Hace tres ataques de Espada marchitadora y puede usar Cuerda enmarañadora.",
+  "{C} makes one Fiendish Touch attack and uses Charm or Draining Kiss.": "Hace un ataque de Toque infernal y usa Hechizar o Beso drenante.",
+  "Hit: {0} Piercing damage, or {1} Piercing damage if {C} is Bloodied.": "Impacto: {0} perforante, o {1} perforante si {C} está maltrecho.",
+  "Its game statistics, other than its size, are the same in each form.": "Su perfil es el mismo en todas sus formas, salvo el tamaño.",
+  "Success: The target is immune to this wererat's curse for {0} hours.": "Éxito: el objetivo es inmune a la maldición de este hombre rata durante {0} horas.",
+  "The penalty can be removed by casting the Mending spell on the armor.": "El penalizador se puede quitar lanzando el conjuro Reparar sobre la armadura.",
+  "If the target is a creature, it is subjected to the following effect.": "Si el objetivo es una criatura, sufre el siguiente efecto.",
+  "Darkvision can't penetrate this area, and no light can illuminate it.": "La visión en la oscuridad no penetra esta zona y ninguna luz puede iluminarla.",
+  "Once {C} has cast it three times, {C} can't do so again for {0} days.": "Cuando lo haya lanzado tres veces, no podrá volver a hacerlo durante {0} días.",
+  "The target has the Poisoned condition until the end of its next turn.": "El objetivo queda envenenado hasta el final de su siguiente turno.",
+  "Success: The target is immune to this pit fiend's aura for {0} hours.": "Éxito: el objetivo es inmune al aura de este diablo de la sima durante {0} horas.",
+  "If the target is a creature, it must make the following saving throw.": "Si el objetivo es una criatura, tiene que hacer la siguiente salvación.",
+  "If the target is a Humanoid, it is subjected to the following effect.": "Si el objetivo es humanoide, sufre el siguiente efecto.",
+  "Success: The target is immune to this werebear's curse for {0} hours.": "Éxito: el objetivo es inmune a la maldición de este hombre oso durante {0} horas.",
+  "Success: The target is immune to this wereboar's curse for {0} hours.": "Éxito: el objetivo es inmune a la maldición de este hombre jabalí durante {0} horas.",
+  "The penalty can be removed by casting the Mending spell on the weapon.": "El penalizador se puede quitar lanzando el conjuro Reparar sobre el arma.",
+  "It can replace the Claw attack with a use of Fire Breath if available.": "Puede cambiar el ataque de Garra por un uso de Aliento de fuego si está disponible.",
+  "The target has the Blinded condition until the end of {C}'s next turn.": "El objetivo queda cegado hasta el final del siguiente turno de {C}.",
+  "The target is immune to this nalfeshnee's Horror Nimbus for {0} hours.": "El objetivo es inmune al Nimbo de horror de este nalfeshnee durante {0} horas.",
+  "{C} can grant Resistance to Fire damage to a rider while it is on {C}.": "Puede dar resistencia al daño de fuego a su jinete mientras lo monte.",
+  "{C} makes two Tentacle attacks, uses Reel, and makes two Bite attacks.": "Hace dos ataques de Tentáculo, usa Recoger y hace dos ataques de Mordisco.",
+  "If the target has {0} Hit Points or fewer, it drops to {1} Hit Points.": "Si el objetivo tiene {0} puntos de golpe o menos, cae a {1} puntos de golpe.",
+  "Success: The target is immune to this weretiger's curse for {0} hours.": "Éxito: el objetivo es inmune a la maldición de este hombre tigre durante {0} horas.",
+  "The rope has AC {0}, HP {1}, and Immunity to Poison and Psychic damage.": "La cuerda tiene CA {0}, {1} PG e inmunidad al daño de veneno y psíquico.",
+  "The target has the Poisoned condition until the start of its next turn.": "El objetivo queda envenenado hasta el principio de su siguiente turno.",
+  "{C} can mimic simple sounds it has heard, such as a whisper or chitter.": "Puede imitar sonidos sencillos que haya oído, como un susurro o un chasquido.",
+  "While the target has any Exhaustion levels, it appears {0} years older.": "Mientras tenga algún nivel de agotamiento, aparenta {0} años más.",
+  ", and the target's Speed is {0} until the end of the target's next turn.": ", y la velocidad del objetivo es {0} hasta el final de su siguiente turno.",
+  "If the target is a Huge or smaller creature, it has the Prone condition.": "Si el objetivo es una criatura enorme o más pequeña, queda derribado.",
+  "A creature that hits {C} with a melee attack roll takes {0} Acid damage.": "Una criatura que lo impacte con una tirada de ataque cuerpo a cuerpo recibe {0} ácido.",
+  "In {0} minute, {C} can eat through {1} feet of nonmagical wood or metal.": "En {0} minuto, puede corroer {1} pies de madera o metal no mágicos.",
+  "Failure: {0} Bludgeoning damage, and the target has the Prone condition.": "Fallo: {0} contundente, y el objetivo queda derribado.",
+  "{C} can communicate with Beasts and Plants as if they shared a language.": "Puede comunicarse con bestias y plantas como si compartieran un idioma.",
+  "{C} adds {0} to its AC against that attack, possibly causing it to miss.": "Suma {0} a su CA contra ese ataque, con lo que puede que falle.",
+  "The target has the Charmed condition until the start of {C}'s next turn.": "El objetivo queda encantado hasta el principio del siguiente turno de {C}.",
+  "Wisdom Saving Throw: DC {0}, any enemy that starts its turn in the aura.": "Salvación de Sabiduría: CD {0}, cualquier enemigo que empiece su turno en el aura.",
+  "Dexterity Saving Throw: DC {0}, each creature in {C}'s destination space.": "Salvación de Destreza: CD {0}, cada criatura en el espacio de destino de {C}.",
+  "Dexterity Saving Throw: DC {0}, one creature {C} can see within {1} feet.": "Salvación de Destreza: CD {0}, una criatura que vea a {1} pies o menos.",
+  "The target has the Frightened condition until the end of {C}'s next turn.": "El objetivo queda asustado hasta el final del siguiente turno de {C}.",
+  "If the target is a Large or smaller creature, it has the Prone condition.": "Si el objetivo es una criatura grande o más pequeña, queda derribado.",
+  "{C} pulls each creature Grappled by it up to {0} feet straight toward it.": "Atrae en línea recta hasta {0} pies hacia sí a cada criatura que tenga agarrada.",
+  "{C} can pinpoint the location of ferrous metal within {0} feet of itself.": "Localiza con precisión el metal ferroso a {0} pies o menos de sí.",
+  "The target has the Frightened condition until the start of its next turn.": "El objetivo queda asustado hasta el principio de su siguiente turno.",
+  "The target has the Deafened condition until the start of {C}'s next turn.": "El objetivo queda ensordecido hasta el principio del siguiente turno de {C}.",
+  "If the target is a Medium or smaller creature, it has the Prone condition.": "Si el objetivo es una criatura mediana o más pequeña, queda derribado.",
+  "At the end of {C}'s next turn, the swallowed target takes {0} Acid damage.": "Al final del siguiente turno de {C}, el objetivo tragado recibe {0} ácido.",
+  "{C} can eat through {0}-inch-thick, nonmagical metal or wood in {1} round.": "Puede corroer metal o madera no mágicos de {0} pulgada de grosor en {1} asalto.",
+  "{C} teleports from the Material Plane to the Ethereal Plane or vice versa.": "Se teletransporta del plano material al plano etéreo o al revés.",
+  "While in sunlight, it has Disadvantage on attack rolls and ability checks.": "Bajo la luz del sol, tiene desventaja en las tiradas de ataque y en las pruebas de característica.",
+  ", and the target has the Deafened condition until the end of its next turn.": ", y el objetivo queda ensordecido hasta el final de su siguiente turno.",
+  ", and the target takes a -{0} penalty to AC until the end of its next turn.": ", y el objetivo sufre un penalizador de -{0} a la CA hasta el final de su siguiente turno.",
+  "Failure: The target has the Frightened condition until the end of its turn.": "Fallo: el objetivo queda asustado hasta el final de su turno.",
+  "Success: The target is immune to this devil's Unnerving Gaze for {0} hours.": "Éxito: el objetivo es inmune a la Mirada inquietante de este diablo durante {0} horas.",
+  "If no creature is near enough to move to and attack, {C} attacks an object.": "Si no hay ninguna criatura lo bastante cerca para moverse hasta ella y atacarla, ataca a un objeto.",
+  "While in sunlight, {C} has Disadvantage on ability checks and attack rolls.": "Bajo la luz del sol, tiene desventaja en las pruebas de característica y en las tiradas de ataque.",
+  "If that damage doesn't kill it, {C} disgorges it, causing it to exit Prone.": "Si ese daño no lo mata, lo regurgita y sale derribado.",
+  ", and the target has the Poisoned condition until the end of its next turn.": ", y el objetivo queda envenenado hasta el final de su siguiente turno.",
+  "{C} babbles incoherently while it doesn't have the Incapacitated condition.": "Balbucea de forma incoherente mientras no esté incapacitado.",
+  "The target has the Petrified condition instead of the Restrained condition.": "El objetivo queda petrificado en lugar de apresado.",
+  "If it dies, {C} returns to life in {0} days and regains all its Hit Points.": "Si muere, vuelve a la vida en {0} días con todos sus puntos de golpe.",
+  "{C} has Advantage on saving throws against spells and other magical effects.": "Tiene ventaja en las salvaciones contra conjuros y otros efectos mágicos.",
+  "{C} can move the whirlwind up to {0} feet at the start of each of its turns.": "Puede mover el torbellino hasta {0} pies al principio de cada uno de sus turnos.",
+  ", and the target has the Blinded condition until the end of {C}'s next turn.": ", y el objetivo queda cegado hasta el final del siguiente turno de {C}.",
+  "The spear magically returns to {C}'s hand immediately after a ranged attack.": "La lanza vuelve mágicamente a su mano justo después de un ataque a distancia.",
+  "To do so, the wearer must cast the spell on {C} while within {0} feet of it.": "Para ello, el portador tiene que lanzar el conjuro sobre {C} estando a {0} pies o menos.",
+  "While it has the Poisoned condition, the target has the Paralyzed condition.": "Mientras esté envenenado, el objetivo queda paralizado.",
+  ", and the target has the Stunned condition until the end of {C}'s next turn.": ", y el objetivo queda aturdido hasta el final del siguiente turno de {C}.",
+  "Nonmagical armor worn by the target takes a -{0} penalty to the AC it offers.": "La armadura no mágica que lleve el objetivo sufre un penalizador de -{0} a la CA que da.",
+  ", and the target has the Poisoned condition until the end of {C}'s next turn.": ", y el objetivo queda envenenado hasta el final del siguiente turno de {C}.",
+  "This effect lasts while {C} maintains Concentration on it, up to {0} minutes.": "Este efecto dura mientras mantenga la concentración, hasta {0} minutos.",
+  "The ground in a {0}-foot Emanation originating from {C} is Difficult Terrain.": "El suelo en una emanación de {0} pies con origen en {C} es terreno difícil.",
+  "{C} must finish a Long Rest before using this trait to cast that spell again.": "Tiene que terminar un descanso largo antes de volver a lanzar ese conjuro con este rasgo.",
+  "While holding or carrying the bag, {C} can use its Nightmare Haunting action.": "Mientras sostenga o lleve la bolsa, puede usar su acción Acoso de pesadilla.",
+  "each creature that isn't currently affected by this breath in a {0}-foot Cone.": "cada criatura en un cono de {0} pies que no esté ya afectada por este aliento.",
+  "Subsequent Failures: The Poisoned target's Hit Point maximum decreases by {0}.": "Fallos posteriores: el máximo de puntos de golpe del objetivo envenenado baja {0}.",
+  "each creature in a {0}-foot-radius Sphere centered on a point within {1} feet.": "cada criatura en una esfera de {0} pies de radio centrada en un punto a {1} pies o menos.",
+  ", and the target has the Blinded condition until the start of {C}'s next turn.": ", y el objetivo queda cegado hasta el principio del siguiente turno de {C}.",
+  ", and the target has the Stunned condition until the start of {C}'s next turn.": ", y el objetivo queda aturdido hasta el principio del siguiente turno de {C}.",
+  "Success: Half damage, and the target is pushed {0} feet straight away from {C}.": "Éxito: la mitad del daño, y el objetivo es empujado {0} pies en línea recta alejándose de {C}.",
+  "{C}'s jump distance is determined using its Dexterity rather than its Strength.": "Usa su Destreza en lugar de su Fuerza para calcular la distancia de salto.",
+  ", and the target has the Poisoned condition until the start of {C}'s next turn.": ", y el objetivo queda envenenado hasta el principio del siguiente turno de {C}.",
+  "any creature that starts its turn in a {0}-foot Emanation originating from {C}.": "cualquier criatura que empiece su turno en una emanación de {0} pies con origen en {C}.",
+  "Failure: The target has the Paralyzed condition until the end of its next turn.": "Fallo: el objetivo queda paralizado hasta el final de su siguiente turno.",
+  "The penalty can be removed by casting the Mending spell on the armor or weapon.": "El penalizador se puede quitar lanzando el conjuro Reparar sobre la armadura o el arma.",
+  "{C} dies only if it starts its turn with {0} Hit Points and doesn't regenerate.": "Solo muere si empieza su turno con {0} puntos de golpe y no se regenera.",
+  "This trait otherwise works like the Detect Magic spell but isn't itself magical.": "Por lo demás, este rasgo funciona como el conjuro Detectar magia, pero no es mágico.",
+  "On each of its turns while berserk, {C} attacks the nearest creature it can see.": "En cada uno de sus turnos mientras esté enloquecido, ataca a la criatura más cercana que vea.",
+  ", and the target has the Incapacitated condition until the end of its next turn.": ", y el objetivo queda incapacitado hasta el final de su siguiente turno.",
+  "{C} doesn't provoke an Opportunity Attack when it moves out of an enemy's reach.": "No provoca ataques de oportunidad al salir del alcance de un enemigo.",
+  "If {C} casts the spell for the creature, {C} suffers none of the spell's stress.": "Si lanza el conjuro para la criatura, no sufre el desgaste del conjuro.",
+  "{C} doesn't provoke an Opportunity Attack when it flies out of an enemy's reach.": "No provoca ataques de oportunidad al salir volando del alcance de un enemigo.",
+  "If the target is a non-Undead creature, it is subjected to the following effect.": "Si el objetivo es una criatura que no es un muerto viviente, sufre el siguiente efecto.",
+  "No magic can observe {C} remotely or detect its thoughts without its permission.": "Ninguna magia puede observarlo a distancia ni detectar sus pensamientos sin su permiso.",
+  ", and the target's Speed decreases by {0} feet until the end of {C}'s next turn.": ", y la velocidad del objetivo baja {0} pies hasta el final del siguiente turno de {C}.",
+  "The target's Hit Point maximum decreases by an amount equal to the damage taken.": "El máximo de puntos de golpe del objetivo baja tanto como el daño recibido.",
+  "{C} moves up to its Speed or Burrow Speed straight toward an enemy it can sense.": "Se mueve hasta su velocidad o su velocidad de excavar en línea recta hacia un enemigo que perciba.",
+  "While wounded, the target loses {0} Hit Points at the start of each of its turns.": "Mientras esté herido, el objetivo pierde {0} puntos de golpe al principio de cada uno de sus turnos.",
+  "{C} shape-shifts into a Small or Medium Humanoid, or it returns to its true form.": "Se transforma en un humanoide pequeño o mediano, o vuelve a su forma verdadera.",
+  "{C} or another creature within {0} feet makes an ability check or a saving throw.": "Él u otra criatura a {0} pies o menos hace una prueba de característica o una salvación.",
+  "{C} shape-shifts into a Medium or Small Humanoid, or it returns to its true form.": "Se transforma en un humanoide mediano o pequeño, o vuelve a su forma verdadera.",
+  "If {C} takes Acid or Fire damage, this trait doesn't function on {C}'s next turn.": "Si recibe daño de ácido o de fuego, este rasgo no funciona en su siguiente turno.",
+  "At the start of each of its turns, the Restrained target takes {0} Thunder damage.": "Al principio de cada uno de sus turnos, el objetivo apresado recibe {0} trueno.",
+  "Failure: The target has the Frightened condition until the start of its next turn.": "Fallo: el objetivo queda asustado hasta el principio de su siguiente turno.",
+  "It can replace one Fireball with Hold Monster (level {0} version) or Wall of Fire.": "Puede cambiar una Bola de fuego por Inmovilizar monstruo (versión de nivel {0}) o Muro de fuego.",
+  "{C} makes one Claws attack and one Tail attack, or it makes two Hurl Flame attacks.": "Hace un ataque de Garras y uno de Cola, o dos ataques de Arrojar llamas.",
+  "{C} counts as one size larger for the purpose of determining its carrying capacity.": "Cuenta como una categoría de tamaño mayor para calcular su capacidad de carga.",
+  "{C} can move through other creatures and objects as if they were Difficult Terrain.": "Puede moverse a través de otras criaturas y objetos como si fueran terreno difícil.",
+  "{C} can move across and climb icy surfaces without needing to make an ability check.": "Puede moverse por superficies heladas y trepar por ellas sin hacer pruebas de característica.",
+  "{C} casts the Misty Step spell, using the same spellcasting ability as Spellcasting.": "Lanza el conjuro Paso brumoso con la misma característica que en Lanzamiento de conjuros.",
+  ", and the target has the Incapacitated condition until the start of {C}'s next turn.": ", y el objetivo queda incapacitado hasta el principio del siguiente turno de {C}.",
+  "While Deafened, the target also has Disadvantage on ability checks and attack rolls.": "Mientras esté ensordecido, el objetivo también tiene desventaja en las pruebas de característica y en las tiradas de ataque.",
+  "{C} sheds Bright Light in a {0}-foot radius and Dim Light for an additional {1} feet.": "Emite luz brillante en un radio de {0} pies y luz tenue {1} pies más allá.",
+  "The whirlwind fills a {0}-foot-radius, {1}-foot-high Cylinder centered on that point.": "El torbellino llena un cilindro de {0} pies de radio y {1} de alto centrado en ese punto.",
+  "{C} and that ally swap places, and the ally becomes the target of the attack instead.": "Intercambia su sitio con ese aliado, que pasa a ser el objetivo del ataque.",
+  ", and {C} has Advantage on the next attack roll it makes before the end of this turn.": ", y {C} tiene ventaja en la siguiente tirada de ataque que haga antes del final de este turno.",
+  "While Poisoned, the target takes {0} Poison damage at the start of each of its turns.": "Mientras esté envenenado, el objetivo recibe {0} veneno al principio de cada uno de sus turnos.",
+  "{C} can pinpoint the location of precious metals and stones within {0} feet of itself.": "Localiza con precisión los metales y las piedras preciosas a {0} pies o menos de sí.",
+  "The target is pushed up to {0} feet straight away from {C} and has the Prone condition.": "El objetivo es empujado hasta {0} pies en línea recta alejándose de {C} y queda derribado.",
+  "Additionally, Difficult Terrain composed of ice or snow doesn't cost it extra movement.": "Además, el terreno difícil de hielo o nieve no le cuesta movimiento adicional.",
+  "Trigger: A creature {C} can see starts its turn within {0} feet of {C} and can see {C}.": "Desencadenante: una criatura que {C} vea empieza su turno a {0} pies o menos de él y puede verlo.",
+  "{C} makes two Slam attacks, or it makes three Slam attacks if it used Hasten this turn.": "Hace dos ataques de Golpe, o tres si ha usado Apresurarse en este turno.",
+  "On a miss, {C} makes one Rapier attack against the triggering creature if within range.": "Si falla, hace un ataque de Estoque contra la criatura desencadenante si está a su alcance.",
+  "each enemy in a {0}-foot-radius Sphere centered on a point {C} can see within {1} feet.": "cada enemigo en una esfera de {0} pies de radio centrada en un punto que vea a {1} pies o menos.",
+  "While underwater, {C} moves up to its Swim Speed without provoking Opportunity Attacks.": "Bajo el agua, se mueve hasta su velocidad de nadar sin provocar ataques de oportunidad.",
+  "Melee Attack Roll: +{0} (with Advantage if the target is Grappled by {C}), reach {1} ft.": "Tirada de ataque cuerpo a cuerpo: +{0} (con ventaja si el objetivo está agarrado por {C}), alcance {1} pies.",
+  "If the target is a flammable object that isn't being worn or carried, it starts burning.": "Si el objetivo es un objeto inflamable que nadie lleva puesto ni carga, empieza a arder.",
+  "Nonmagical ammunition is destroyed immediately after hitting {C} and dealing any damage.": "La munición no mágica queda destruida justo después de impactarle y hacer su daño.",
+  "{C} can see {0} feet into the Ethereal Plane while on the Material Plane and vice versa.": "Desde el plano material puede ver {0} pies dentro del plano etéreo, y al revés.",
+  "Failure: The target rolls {0} to determine what it does during the current turn: {1}–{2}.": "Fallo: el objetivo tira {0} para decidir qué hace en el turno actual: {1}–{2}.",
+  "each creature in a {0}-foot-radius Sphere centered on a point {C} can see within {1} feet.": "cada criatura en una esfera de {0} pies de radio centrada en un punto que vea a {1} pies o menos.",
+  "Each new pudding is one size smaller than the original pudding and acts on its Initiative.": "Cada pudin nuevo es una categoría de tamaño menor que el original y actúa en su iniciativa.",
+  "An attack roll hits the wearer of {C}'s amulet while the wearer is within {0} feet of {C}.": "Una tirada de ataque impacta al portador del amuleto de {C} mientras está a {0} pies o menos de él.",
+  "each creature in a {0}-foot Emanation originating from {C} (demons succeed automatically).": "cada criatura en una emanación de {0} pies con origen en {C} (los demonios la superan automáticamente).",
+  "The original pudding's Hit Points are divided evenly between the new puddings (round down).": "Los puntos de golpe del pudin original se reparten a partes iguales entre los nuevos (redondeando hacia abajo).",
+  ", and the target's Hit Point maximum decreases by an amount equal to the Acid damage taken.": ", y el máximo de puntos de golpe del objetivo baja tanto como el daño de ácido recibido.",
+  "Dexterity Saving Throw: DC {0}, each creature in a {1}-foot Emanation originating from {C}.": "Salvación de Destreza: CD {0}, cada criatura en una emanación de {1} pies con origen en {C}.",
+  "If the target is a Large or smaller creature, it has the Grappled condition (escape DC {0}).": "Si el objetivo es una criatura grande o más pequeña, queda agarrado (escapar CD {0}).",
+  "While Grappled, the target has the Restrained condition and can't be targeted by {C}'s Tail.": "Mientras esté agarrado, el objetivo queda apresado y no puede ser objetivo de la Cola de {C}.",
+  "While underwater, {C} moves up to half its Swim Speed without provoking Opportunity Attacks.": "Bajo el agua, se mueve hasta la mitad de su velocidad de nadar sin provocar ataques de oportunidad.",
+  "It can move through a space as narrow as {0} inch without expending extra movement to do so.": "Puede pasar por un hueco de solo {0} pulgada de ancho sin gastar movimiento adicional.",
+  "If the target is a creature, its Speed decreases by {0} feet until the end of its next turn.": "Si el objetivo es una criatura, su velocidad baja {0} pies hasta el final de su siguiente turno.",
+  "{C} casts Disguise Self, using Constitution as the spellcasting ability (spell save DC {0}).": "Lanza Disfrazarse con Constitución como característica (CD de salvación {0}).",
+  "A spellcaster who wears {C}'s amulet can cause {C} to store one spell of level {0} or lower.": "Un lanzador de conjuros que lleve el amuleto de {C} puede hacer que almacene un conjuro de nivel {0} o inferior.",
+  ", and the target has the Blinded and Deafened conditions until the start of {C}'s next turn.": ", y el objetivo queda cegado y ensordecido hasta el principio del siguiente turno de {C}.",
+  "{C} can move through a space as narrow as {0} inch without expending extra movement to do so.": "Puede pasar por un hueco de solo {0} pulgada de ancho sin gastar movimiento adicional.",
+  "If the target is a Medium or smaller creature, it has the Grappled condition (escape DC {0}).": "Si el objetivo es una criatura mediana o más pequeña, queda agarrado (escapar CD {0}).",
+  "{C} uses Spellcasting to cast Invisibility on itself, and it can fly up to half its Fly Speed.": "Usa Lanzamiento de conjuros para lanzar Invisibilidad sobre sí mismo y puede volar hasta la mitad de su velocidad de vuelo.",
+  "It repeats the save at the end of each of its turns, ending the effect on itself on a success.": "Repite la salvación al final de cada uno de sus turnos y, si la supera, el efecto termina para él.",
+  "If the target is Large or smaller, {C} moves the target up to {0} feet straight toward itself.": "Si el objetivo es grande o más pequeño, lo mueve hasta {0} pies en línea recta hacia sí.",
+  "Constitution Saving Throw: DC {0}, each creature in a {1}-foot Emanation originating from {C}.": "Salvación de Constitución: CD {0}, cada criatura en una emanación de {1} pies con origen en {C}.",
+  "any Beast or Humanoid that starts its turn within {0} feet of {C} and can see {C}'s true form.": "cualquier bestia o humanoide que empiece su turno a {0} pies o menos de {C} y pueda ver su forma verdadera.",
+  "{C} regains {0} Hit Points at the start of each of its turns if it has at least {1} Hit Point.": "Recupera {0} puntos de golpe al principio de cada uno de sus turnos si le queda al menos {1} punto de golpe.",
+  "{C} emanates an aura in a {0}-foot Emanation while it doesn't have the Incapacitated condition.": "Emite un aura en una emanación de {0} pies mientras no esté incapacitado.",
+  "A hearer can discern the sounds are imitations with a successful DC {0} Wisdom (Insight) check.": "Quien lo oiga puede darse cuenta de que son imitaciones con una prueba de Sabiduría (Perspicacia) CD {0}.",
+  "Attack rolls against {C} are made with Disadvantage unless {C} has the Incapacitated condition.": "Las tiradas de ataque contra él tienen desventaja salvo que esté incapacitado.",
+  "{C} is hit by a ranged attack roll and takes Bludgeoning, Piercing, or Slashing damage from it.": "Recibe el impacto de una tirada de ataque a distancia que le hace daño contundente, perforante o cortante.",
+  "{C} uses Teleport, but its destination space must be within {0} feet of the triggering creature.": "Usa Teletransporte, pero su espacio de destino tiene que estar a {0} pies o menos de la criatura desencadenante.",
+  "{C} can teleport up to {0} feet to an unoccupied space it can see, and it makes one Claw attack.": "Se teletransporta hasta {0} pies a un espacio libre que vea y hace un ataque de Garra.",
+  "The target has Disadvantage on Strength-based D{0} Tests and subtracts {1} from its damage rolls.": "El objetivo tiene desventaja en las pruebas de D{0} basadas en Fuerza y resta {1} a sus tiradas de daño.",
+  "{C} makes one Vine Lash or Thorn Burst attack, and it can use Spellcasting to cast Charm Monster.": "Hace un ataque de Latigazo de enredadera o de Estallido de espinas, y puede usar Lanzamiento de conjuros para lanzar Hechizar monstruo.",
+  "Dexterity Saving Throw: DC {0}, each creature in a {1}-foot-radius Sphere centered on that point.": "Salvación de Destreza: CD {0}, cada criatura en una esfera de {1} pies de radio centrada en ese punto.",
+  "{C} touches a nonmagical metal object within {0} feet of itself that isn't being worn or carried.": "Toca un objeto de metal no mágico a {0} pies o menos de sí que nadie lleve puesto ni cargue.",
+  "Wisdom (Insight) checks made to ascertain its intentions or sincerity are made with Disadvantage.": "Las pruebas de Sabiduría (Perspicacia) para averiguar sus intenciones o su sinceridad se hacen con desventaja.",
+  "If the rope is damaged or destroyed, {C} can fully restore it when finishing a Short or Long Rest.": "Si la cuerda sufre daños o queda destruida, puede repararla por completo al terminar un descanso corto o largo.",
+  "{C} casts Fog Cloud, requiring no spell components and using Charisma as the spellcasting ability.": "Lanza Nube brumosa sin componentes y con Carisma como característica.",
+  "While on the Ethereal Plane, {C} casts Dream, using the same spellcasting ability as Spellcasting.": "Estando en el plano etéreo, lanza Sueño con la misma característica que en Lanzamiento de conjuros.",
+  "It can replace one attack with a use of (A) Sleep Breath or (B) Spellcasting to cast Scorching Ray.": "Puede cambiar un ataque por un uso de Aliento de sueño o de Lanzamiento de conjuros para lanzar Rayo abrasador.",
+  "one Large or smaller creature Grappled by {C} ({C} can have only one creature swallowed at a time).": "una criatura grande o más pequeña agarrada por {C} (solo puede tener tragada a una criatura a la vez).",
+  "{C} casts one of the following spells, using Wisdom as the spellcasting ability (spell save DC {0})": "Lanza uno de estos conjuros con Sabiduría como característica (CD de salvación {0})",
+  ", and the target has Disadvantage on the next attack roll it makes before the end of its next turn.": ", y el objetivo tiene desventaja en la siguiente tirada de ataque que haga antes del final de su siguiente turno.",
+  "The target takes no action or Bonus Action and uses all its movement to move in a random direction.": "El objetivo no realiza acciones ni acciones adicionales y gasta todo su movimiento en moverse en una dirección al azar.",
+  "While ablaze, {C} sheds Bright Light in a {0}-foot radius and Dim Light for an additional {1} feet.": "Mientras arde, emite luz brillante en un radio de {0} pies y luz tenue {1} pies más allá.",
+  "{C} releases ink that fills a {0}-foot Cube centered on itself, and {C} moves up to its Swim Speed.": "Suelta tinta que llena un cubo de {0} pies centrado en sí mismo y se mueve hasta su velocidad de nadar.",
+  "It can replace one attack with a use of (A) Paralyzing Breath or (B) Spellcasting to cast Ice Knife.": "Puede cambiar un ataque por un uso de Aliento paralizante o de Lanzamiento de conjuros para lanzar Cuchillo de hielo.",
+  "The target has the Incapacitated condition until the end of its next turn, when it repeats the save.": "El objetivo queda incapacitado hasta el final de su siguiente turno, cuando repite la salvación.",
+  "Once {C} goes berserk, it continues to be berserk until it is destroyed or it is no longer Bloodied.": "Una vez enloquecido, sigue así hasta que quede destruido o deje de estar maltrecho.",
+  "one Large or smaller creature Grappled by {C} (it can have up to two creatures swallowed at a time).": "una criatura grande o más pequeña agarrada por {C} (puede tener tragadas hasta dos criaturas a la vez).",
+  "If the target is a creature, its Hit Point maximum decreases by an amount equal to the damage taken.": "Si el objetivo es una criatura, su máximo de puntos de golpe baja tanto como el daño recibido.",
+  "Immediately after another creature's turn, {C} can expend a use to take one of the following actions.": "Justo después del turno de otra criatura, puede gastar un uso para realizar una de estas acciones.",
+  "{C} can climb difficult surfaces, including along ceilings, without needing to make an ability check.": "Puede trepar por superficies difíciles, incluso boca abajo por el techo, sin hacer pruebas de característica.",
+  "Strength Saving Throw: DC {0} (a creature makes this save only once per turn, and {C} is unaffected).": "Salvación de Fuerza: CD {0} (cada criatura la hace como mucho una vez por turno, y {C} no se ve afectado).",
+  "Melee Attack Roll: +{0} (with Advantage if the target doesn't have all its Hit Points), reach {1} ft.": "Tirada de ataque cuerpo a cuerpo: +{0} (con ventaja si el objetivo no tiene todos sus puntos de golpe), alcance {1} pies.",
+  "Failure: The object takes a -{0} penalty to the AC it offers (armor) or to its attack rolls (weapon).": "Fallo: el objeto sufre un penalizador de -{0} a la CA que da (armadura) o a sus tiradas de ataque (arma).",
+  ", and the next attack roll made against the target before the start of {C}'s next turn has Advantage.": ", y la siguiente tirada de ataque contra el objetivo antes del principio del siguiente turno de {C} tiene ventaja.",
+  "Failure: While in the whirlwind, the target has the Restrained condition and moves with the whirlwind.": "Fallo: mientras está en el torbellino, el objetivo queda apresado y se mueve con él.",
+  "{C}'s Long Jump is up to {0} feet and its High Jump is up to {1} feet with or without a running start.": "Su salto de longitud llega a {0} pies y su salto de altura a {1} pies, con o sin carrerilla.",
+  "If the target is a creature or a flammable object that isn't being worn or carried, it starts burning.": "Si el objetivo es una criatura o un objeto inflamable que nadie lleva puesto ni carga, empieza a arder.",
+  "At the end of each of its turns, the target repeats the save, ending the effect on itself on a success.": "Al final de cada uno de sus turnos, el objetivo repite la salvación y, si la supera, el efecto termina para él.",
+  "Its game statistics are the same in each form, except its Fly Speed is available only in its true form.": "Su perfil es el mismo en todas sus formas, salvo que solo puede volar en su forma verdadera.",
+  "In addition, {C} halves the damage it takes (round down), and the target takes the same amount of damage.": "Además, recibe la mitad del daño (redondeando hacia abajo) y el objetivo recibe esa misma cantidad.",
+  ", or {0} Bludgeoning damage if {C} moved {1}+ feet straight toward the target immediately before the hit.": ", o {0} contundente si {C} se ha movido {1} pies o más en línea recta hacia el objetivo justo antes de impactar.",
+  "If the target is a Large or smaller creature, {C} pulls the target up to {0} feet straight toward itself.": "Si el objetivo es una criatura grande o más pequeña, lo atrae hasta {0} pies en línea recta hacia sí.",
+  "The Cube is Heavily Obscured for {0} minute or until a strong current or similar effect disperses the ink.": "El cubo queda muy oscuro durante {0} minuto o hasta que una corriente fuerte o algo parecido disperse la tinta.",
+  "Second Failure: The target has the Petrified condition, instead of the Restrained condition, for {0} hours.": "Segundo fallo: el objetivo queda petrificado, en lugar de apresado, durante {0} horas.",
+  "Wisdom Saving Throw: DC {0}, any creature that starts its turn within {1} feet of {C} while it is babbling.": "Salvación de Sabiduría: CD {0}, cualquier criatura que empiece su turno a {1} pies o menos de {C} mientras balbucea.",
+  "Whenever {C} is subjected to Fire damage, it regains a number of Hit Points equal to the Fire damage dealt.": "Siempre que sufra daño de fuego, recupera tantos puntos de golpe como el daño de fuego hecho.",
+  "{C} shape-shifts into a Medium rat-humanoid hybrid or a Small rat, or it returns to its true humanoid form.": "Se transforma en un híbrido mediano de rata y humanoide o en una rata pequeña, o vuelve a su forma humanoide verdadera.",
+  ", and the target has Disadvantage on saving throws to maintain Concentration until the end of its next turn.": ", y el objetivo tiene desventaja en las salvaciones para mantener la concentración hasta el final de su siguiente turno.",
+  "If the target is a Large or smaller creature, it has the Grappled condition (escape DC {0}) from both claws.": "Si el objetivo es una criatura grande o más pequeña, queda agarrado (escapar CD {0}) por las dos garras.",
+  "{C} can burrow through solid rock at half its Burrow Speed and leaves a {0}-foot-diameter tunnel in its wake.": "Puede excavar en roca sólida a la mitad de su velocidad de excavar y deja tras de sí un túnel de {0} pies de diámetro.",
+  "{C} casts the Mirror Image spell, requiring no spell components and using Wisdom as the spellcasting ability.": "Lanza el conjuro Imagen múltiple sin componentes y con Sabiduría como característica.",
+  "When {C} finishes a Long Rest, it can shape-shift into a Succubus, using that stat block instead of this one.": "Al terminar un descanso largo, puede transformarse en súcubo y usar ese perfil en lugar de este.",
+  "The sword magically returns to {C}'s hand or hovers within {0} feet of {C} immediately after a ranged attack.": "La espada vuelve mágicamente a su mano o flota a {0} pies o menos de él justo después de un ataque a distancia.",
+  "When {C} finishes a Long Rest, it can shape-shift into an Incubus, using that stat block instead of this one.": "Al terminar un descanso largo, puede transformarse en íncubo y usar ese perfil en lugar de este.",
+  "If the target is a Large or smaller creature, {C} pushes the target up to {0} feet straight away from itself.": "Si el objetivo es una criatura grande o más pequeña, lo empuja hasta {0} pies en línea recta alejándolo de sí.",
+  "{C} shape-shifts into a Medium boar-humanoid hybrid or a Small boar, or it returns to its true humanoid form.": "Se transforma en un híbrido mediano de jabalí y humanoide o en un jabalí pequeño, o vuelve a su forma humanoide verdadera.",
+  "The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save.": "El objetivo queda incapacitado hasta el final de su siguiente turno, momento en que repite la salvación.",
+  "If the target is a Medium or smaller creature, {C} pushes the target up to {0} feet straight away from itself.": "Si el objetivo es una criatura mediana o más pequeña, lo empuja hasta {0} pies en línea recta alejándolo de sí.",
+  "one creature within {0} feet that is willing or that has the Grappled, Incapacitated, or Restrained condition.": "una criatura a {0} pies o menos que lo consienta o que esté agarrada, incapacitada o apresada.",
+  "{C} shape-shifts into a Large tiger-humanoid hybrid or a Large tiger, or it returns to its true humanoid form.": "Se transforma en un híbrido grande de tigre y humanoide o en un tigre grande, o vuelve a su forma humanoide verdadera.",
+  "Damaging the tentacle deals no damage to {C}, and a destroyed tentacle regrows at the start of {C}'s next turn.": "Dañar el tentáculo no le hace daño, y un tentáculo destruido vuelve a crecer al principio de su siguiente turno.",
+  "Armor is destroyed if the penalty reduces its AC to {0}, and a weapon is destroyed if its penalty reaches -{1}.": "La armadura queda destruida si el penalizador reduce su CA a {0}, y el arma, si su penalizador llega a -{1}.",
+  "If the target is a creature and doesn't already have an infernal wound, it is subjected to the following effect.": "Si el objetivo es una criatura y no tiene ya una herida infernal, sufre el siguiente efecto.",
+  "{C} casts Cure Wounds, Lesser Restoration, or Remove Curse, using the same spellcasting ability as Spellcasting.": "Lanza Curar heridas, Restablecimiento menor o Levantar maldición con la misma característica que en Lanzamiento de conjuros.",
+  "each creature in a {0}-foot-radius, {1}-foot-high Cylinder originating from a point {C} can see within {2} feet.": "cada criatura en un cilindro de {0} pies de radio y {1} de alto con origen en un punto que vea a {2} pies o menos.",
+  "{C} casts one of the following spells, requiring no spell components and using Wisdom as the spellcasting ability": "Lanza uno de estos conjuros sin componentes y con Sabiduría como característica",
+  "Only {C} can serve as the spell's messenger, and the target must be a creature {C} can see on the Material Plane.": "Solo {C} puede ser el mensajero del conjuro, y el objetivo tiene que ser una criatura que vea en el plano material.",
+  "{C} shape-shifts into a Large bear-humanoid hybrid form or a Large bear, or it returns to its true humanoid form.": "Se transforma en un híbrido grande de oso y humanoide o en un oso grande, o vuelve a su forma humanoide verdadera.",
+  "This effect ends for the target if it takes damage or a creature within {0} feet of it takes an action to wake it.": "El efecto termina para el objetivo si recibe daño o si una criatura a {0} pies o menos usa una acción para despertarlo.",
+  "The target has the Grappled condition (escape DC {0}), and it has the Restrained condition until the grapple ends.": "El objetivo queda agarrado (escapar CD {0}) y apresado mientras dure la presa.",
+  ", and the target is cursed for {0} hour. Until the curse ends, the target has the Charmed and Poisoned conditions.": ", y el objetivo queda maldito durante {0} hora. Mientras dure la maldición, el objetivo queda encantado y envenenado.",
+  "{C} targets one nonmagical metal object—armor or a weapon—worn or carried by a creature within {0} feet of itself.": "Elige un objeto de metal no mágico (una armadura o un arma) que lleve puesto o cargue una criatura a {0} pies o menos de sí.",
+  "If the target is a Medium or smaller creature, it has the Grappled condition (escape DC {0}) from one of two claws.": "Si el objetivo es una criatura mediana o más pequeña, queda agarrado (escapar CD {0}) por una de sus dos pinzas.",
+  "{C} casts Fear, requiring no Material components and using Charisma as the spellcasting ability (spell save DC {0}).": "Lanza Miedo sin componentes materiales y con Carisma como característica (CD de salvación {0}).",
+  "If the target is a Large or smaller creature, it has the Grappled condition (escape DC {0}) from one of two pincers.": "Si el objetivo es una criatura grande o más pequeña, queda agarrado (escapar CD {0}) por una de sus dos pinzas.",
+  "At the end of each of {C}'s turns, each creature in a {0}-foot Emanation originating from {C} takes {1} Fire damage.": "Al final de cada uno de sus turnos, cada criatura en una emanación de {0} pies con origen en {C} recibe {1} fuego.",
+  "Dexterity Saving Throw: DC {0}, each creature in a {1}-foot Emanation originating from {C} at its destination space.": "Salvación de Destreza: CD {0}, cada criatura en una emanación de {1} pies con origen en {C} en su espacio de destino.",
+  "While {C} is attached, the target has the Blinded condition, and {C} can't make Attach attacks against other targets.": "Mientras está adherido, el objetivo queda cegado y {C} no puede hacer ataques de Adherirse contra otros objetivos.",
+  "If the target is a Medium or smaller creature, it has the Grappled condition (escape DC {0}) from one of two pincers.": "Si el objetivo es una criatura mediana o más pequeña, queda agarrado (escapar CD {0}) por una de sus dos pinzas.",
+  "If the target is a Medium or smaller creature, it has the Grappled condition (escape DC {0}) from all four tentacles.": "Si el objetivo es una criatura mediana o más pequeña, queda agarrado (escapar CD {0}) por sus cuatro tentáculos.",
+  "It can replace one attack with a use of (A) Slowing Breath or (B) Spellcasting to cast Mind Spike (level {0} version).": "Puede cambiar un ataque por un uso de Aliento ralentizador o de Lanzamiento de conjuros para lanzar Púa mental (versión de nivel {0}).",
+  "Whenever it roars, the roar has a different effect, as detailed below (the sequence resets when it takes a Long Rest):": "Cada vez que ruge, el rugido tiene un efecto distinto, según se detalla abajo (la secuencia se reinicia al terminar un descanso largo):",
+  "It can replace one attack with a use of (A) Sleep Breath or (B) Spellcasting to cast Scorching Ray (level {0} version).": "Puede cambiar un ataque por un uso de Aliento de sueño o de Lanzamiento de conjuros para lanzar Rayo abrasador (versión de nivel {0}).",
+  "If the target is a Medium or smaller creature, it has the Grappled condition (escape DC {0}) from one of two tentacles.": "Si el objetivo es una criatura mediana o más pequeña, queda agarrado (escapar CD {0}) por uno de sus dos tentáculos.",
+  "If {C} is within {0} feet of the amulet's wearer, half of any damage the wearer takes (round up) is transferred to {C}.": "Si está a {0} pies o menos del portador del amuleto, la mitad del daño que este reciba (redondeando hacia arriba) se transfiere a {C}.",
+  ", or {0} Necrotic damage if {C} is Bloodied. If the target is a Medium or smaller creature, it has the Prone condition.": ", o {0} necrótico si {C} está maltrecho. Si el objetivo es una criatura mediana o más pequeña, queda derribado.",
+  "It can replace one attack with a use of (A) Paralyzing Breath or (B) Spellcasting to cast Ice Knife (level {0} version).": "Puede cambiar un ataque por un uso de Aliento paralizante o de Lanzamiento de conjuros para lanzar Cuchillo de hielo (versión de nivel {0}).",
+  "{C} spends {0} feet of movement to jump to a space within {1} feet that contains one or more Large or smaller creatures.": "Gasta {0} pies de movimiento para saltar a un espacio a {1} pies o menos en el que haya una o más criaturas grandes o más pequeñas.",
+  "{C} can occupy another creature's space and vice versa, and {C} can move through any opening large enough for a Tiny bat.": "Puede ocupar el espacio de otra criatura y al revés, y puede pasar por cualquier abertura por la que quepa un murciélago diminuto.",
+  "{C} can occupy another creature's space and vice versa, and {C} can move through any opening large enough for a Tiny rat.": "Puede ocupar el espacio de otra criatura y al revés, y puede pasar por cualquier abertura por la que quepa una rata diminuta.",
+  "If the cursed target drops to {0} Hit Points, it instead becomes a Wererat under the GM's control and has {1} Hit Points.": "Si el objetivo maldito cae a {0} puntos de golpe, en su lugar se convierte en un hombre rata a las órdenes del DM con {1} puntos de golpe.",
+  "It can replace one attack with a use of (A) Repulsion Breath or (B) Spellcasting to cast Guiding Bolt (level {0} version).": "Puede cambiar un ataque por un uso de Aliento de repulsión o de Lanzamiento de conjuros para lanzar Saeta guía (versión de nivel {0}).",
+  "It can replace one attack with a use of (A) Spellcasting to cast Guiding Bolt (level {0} version) or (B) Weakening Breath.": "Puede cambiar un ataque por un uso de Lanzamiento de conjuros para lanzar Saeta guía (versión de nivel {0}) o de Aliento debilitador.",
+  "While {C} is Large or Medium and has {0}+ Hit Points, it becomes Bloodied or is subjected to Lightning or Slashing damage.": "Mientras es grande o mediano y tiene {0} puntos de golpe o más, queda maltrecho o recibe daño de relámpago o cortante.",
+  "While {C} is on the same plane of existence as its master, the two of them can communicate telepathically with each other.": "Mientras esté en el mismo plano de existencia que su amo, los dos pueden comunicarse telepáticamente.",
+  "If the cursed target drops to {0} Hit Points, it instead becomes a Werebear under the GM's control and has {1} Hit Points.": "Si el objetivo maldito cae a {0} puntos de golpe, en su lugar se convierte en un hombre oso a las órdenes del DM con {1} puntos de golpe.",
+  "If the cursed target drops to {0} Hit Points, it instead becomes a Wereboar under the GM's control and has {1} Hit Points.": "Si el objetivo maldito cae a {0} puntos de golpe, en su lugar se convierte en un hombre jabalí a las órdenes del DM con {1} puntos de golpe.",
+  "The rope turns to dust if reduced to {0} Hit Points, if it is {1}+ feet away from {C} for {2} hour or more, or if {C} dies.": "La cuerda se convierte en polvo si queda a {0} puntos de golpe, si está a {1} pies o más de {C} durante {2} hora o más, o si {C} muere.",
+  "{C} can occupy another creature's space and vice versa, and {C} can move through any opening large enough for a Tiny raven.": "Puede ocupar el espacio de otra criatura y al revés, y puede pasar por cualquier abertura por la que quepa un cuervo diminuto.",
+  "{C} can occupy another creature's space and vice versa, and {C} can move through any opening large enough for a Tiny snake.": "Puede ocupar el espacio de otra criatura y al revés, y puede pasar por cualquier abertura por la que quepa una serpiente diminuta.",
+  "If the cursed target drops to {0} Hit Points, it instead becomes a Weretiger under the GM's control and has {1} Hit Points.": "Si el objetivo maldito cae a {0} puntos de golpe, en su lugar se convierte en un hombre tigre a las órdenes del DM con {1} puntos de golpe.",
+  "The target repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success.": "Si sigue apresado, el objetivo repite la salvación al final de su siguiente turno y, si la supera, el efecto termina para él.",
+  "If {C} knows it, {C} can cast it only on behalf of a non-genie creature who communicates a wish in a way {C} can understand.": "Si lo conoce, solo puede lanzarlo en nombre de una criatura que no sea un genio y que le exprese un deseo de forma que pueda entenderlo.",
+  "While Poisoned, the creature can take either an action or a Bonus Action on its turn, not both, and it can't take Reactions.": "Mientras esté envenenada, la criatura puede realizar una acción o una acción adicional en su turno, no las dos, y no puede realizar reacciones.",
+  "{C} casts the Sleep spell, requiring no spell components and using Charisma as the spellcasting ability (spell save DC {0}).": "Lanza el conjuro Dormir sin componentes y con Carisma como característica (CD de salvación {0}).",
+  "{C} pulls one creature within {0} feet of itself that is Restrained by its Web Strand up to {1} feet straight toward itself.": "Atrae hasta {1} pies en línea recta hacia sí a una criatura a {0} pies o menos que esté apresada por su Hebra de telaraña.",
+  "If the target takes damage from the Dream spell, the target's Hit Point maximum decreases by an amount equal to that damage.": "Si el objetivo recibe daño del conjuro Sueño, su máximo de puntos de golpe baja tanto como ese daño.",
+  "{C} can occupy another creature's space and vice versa, and {C} can move through any opening large enough for a Tiny insect.": "Puede ocupar el espacio de otra criatura y al revés, y puede pasar por cualquier abertura por la que quepa un insecto diminuto.",
+  "{C}'s thoughts can't be read by any means, and other creatures can communicate with it telepathically only if it allows them.": "Sus pensamientos no se pueden leer de ningún modo, y otras criaturas solo pueden comunicarse telepáticamente con él si lo permite.",
+  "{C} can occupy another creature's space and vice versa, and {C} can move through any opening large enough for a Tiny piranha.": "Puede ocupar el espacio de otra criatura y al revés, y puede pasar por cualquier abertura por la que quepa una piraña diminuta.",
+  "{C} is destroyed if a weapon that deals Piercing damage is driven into {C}'s heart while {C} has the Incapacitated condition.": "Queda destruido si le clavan en el corazón un arma que haga daño perforante mientras está incapacitado.",
+  "At the start of each of its turns, {C} deals {0} Piercing damage to any creature it is grappling or any creature grappling it.": "Al principio de cada uno de sus turnos, hace {0} perforante a cualquier criatura que tenga agarrada o que lo tenga agarrado.",
+  "If {C} dies, it returns to life in {0} days and regains all its Hit Points unless Dispel Evil and Good is cast on its remains.": "Si muere, vuelve a la vida en {0} días con todos sus puntos de golpe, salvo que se lance Disipar el mal y el bien sobre sus restos.",
+  "{C} casts Cure Wounds, Invisibility, Lesser Restoration, or Remove Curse, using the same spellcasting ability as Spellcasting.": "Lanza Curar heridas, Invisibilidad, Restablecimiento menor o Levantar maldición con la misma característica que en Lanzamiento de conjuros.",
+  "{C} can occupy another creature's space and vice versa, and {C} can move through any opening large enough for a Tiny creature.": "Puede ocupar el espacio de otra criatura y al revés, y puede pasar por cualquier abertura por la que quepa una criatura diminuta.",
+  "The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both.": "El objetivo no puede realizar reacciones, su velocidad se reduce a la mitad y en su turno puede realizar una acción o una acción adicional, no las dos.",
+  "If this damage reduces the target to {0} Hit Points, the target becomes Stable, and it has the Poisoned condition for {1} hour.": "Si este daño deja al objetivo a {0} puntos de golpe, queda estable y envenenado durante {1} hora.",
+  "If {C} has a Climb Speed, {C} can climb difficult surfaces, including along ceilings, without needing to make an ability check.": "Si tiene velocidad de trepar, puede trepar por superficies difíciles, incluso boca abajo por el techo, sin hacer pruebas de característica.",
+  "If the target is a Medium or smaller creature, {C} can give it the Grappled condition (escape DC {0}) instead of dealing damage.": "Si el objetivo es una criatura mediana o más pequeña, puede dejarla agarrada (escapar CD {0}) en lugar de hacerle daño.",
+  "{C} ignores movement restrictions caused by webs, and {C} knows the location of any other creature in contact with the same web.": "Ignora las restricciones de movimiento causadas por telarañas y sabe dónde está cualquier otra criatura que toque la misma telaraña.",
+  "{C} and up to three willing creatures within {0} feet of it teleport to the Ethereal Plane from the Material Plane or vice versa.": "Junto con hasta tres criaturas voluntarias a {0} pies o menos, se teletransporta del plano material al plano etéreo o al revés.",
+  "If {C} has a creature Grappled, {C} flies up to half its Fly Speed without provoking Opportunity Attacks and drops that creature.": "Si tiene una criatura agarrada, vuela hasta la mitad de su velocidad de vuelo sin provocar ataques de oportunidad y la suelta.",
+  "If the target is reduced to {0} Hit Points by this attack, the target becomes Stable but has the Poisoned condition for {1} hour.": "Si este ataque deja al objetivo a {0} puntos de golpe, queda estable pero envenenado durante {1} hora.",
+  ", and the target has the Poisoned condition until the start of {C}'s next turn. While Poisoned, the target can't regain Hit Points.": ", y el objetivo queda envenenado hasta el principio del siguiente turno de {C}. Mientras esté envenenado, no puede recuperar puntos de golpe.",
+  "{C} casts Cure Wounds (level {0} version), Lesser Restoration, or Remove Curse, using the same spellcasting ability as Spellcasting.": "Lanza Curar heridas (versión de nivel {0}), Restablecimiento menor o Levantar maldición con la misma característica que en Lanzamiento de conjuros.",
+  "The target has the Poisoned condition and repeats the save at the end of each of its turns, ending the effect on itself on a success.": "El objetivo queda envenenado y repite la salvación al final de cada uno de sus turnos; si la supera, el efecto termina para él.",
+  "{C} casts one of the following spells, requiring no spell components and using Wisdom as the spellcasting ability (spell save DC {0})": "Lanza uno de estos conjuros sin componentes y con Sabiduría como característica (CD de salvación {0})",
+  "If {C} dies, a swallowed creature is no longer Restrained and can escape from the corpse by using {0} feet of movement, exiting Prone.": "Si muere, la criatura tragada deja de estar apresada y puede escapar del cadáver gastando {0} pies de movimiento; sale derribada.",
+  "Failure: {0} Fire damage, and the target has the Restrained condition until the end of {C}'s next turn, at which point {C} disappears.": "Fallo: {0} fuego, y el objetivo queda apresado hasta el final del siguiente turno de {C}, momento en que la cadena desaparece.",
+  "{C} casts one of the following spells, requiring no Material components and using Charisma as spellcasting ability (spell save DC {0})": "Lanza uno de estos conjuros sin componentes materiales y con Carisma como característica (CD de salvación {0})",
+  "Whenever {C} is subjected to Acid damage, it takes no damage and instead regains a number of Hit Points equal to the Acid damage dealt.": "Siempre que sufra daño de ácido, no recibe daño y en su lugar recupera tantos puntos de golpe como el daño de ácido hecho.",
+  "The tentacle can be damaged, freeing a creature it has Grappled when destroyed (AC {0}, HP {1}, Immunity to Poison and Psychic damage).": "Se puede dañar el tentáculo, que suelta a la criatura que tenga agarrada al quedar destruido (CA {0}, {1} PG, inmunidad al daño de veneno y psíquico).",
+  "Whenever the whirlwind enters a creature's space or a creature enters the whirlwind, that creature is subjected to the following effect.": "Siempre que el torbellino entre en el espacio de una criatura o una criatura entre en el torbellino, esa criatura sufre el siguiente efecto.",
+  "The target makes a melee attack against a randomly determined creature within its reach or does nothing if it can't make such an attack.": "El objetivo hace un ataque cuerpo a cuerpo contra una criatura al azar a su alcance, o no hace nada si no puede hacer ese ataque.",
+  "{C} casts one of the following spells, requiring no Material components and using Wisdom as the spellcasting ability (spell save DC {0})": "Lanza uno de estos conjuros sin componentes materiales y con Sabiduría como característica (CD de salvación {0})",
+  "{C} casts Bless, Lesser Restoration, or Sanctuary, requiring no spell components and using the same spellcasting ability as Spellcasting.": "Lanza Bendecir, Restablecimiento menor o Santuario sin componentes y con la misma característica que en Lanzamiento de conjuros.",
+  ", and the target is cursed for {0} hours or until {C} dies. Until the curse ends, the target gains no benefit from finishing Short Rests.": ", y el objetivo queda maldito durante {0} horas o hasta que {C} muera. Mientras dure la maldición, no obtiene ningún beneficio de terminar descansos cortos.",
+  "{C} casts one of the following spells, requiring no Material components and using Charisma as the spellcasting ability (spell save DC {0})": "Lanza uno de estos conjuros sin componentes materiales y con Carisma como característica (CD de salvación {0})",
+  "The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success.": "El objetivo queda paralizado y repite la salvación al final de cada uno de sus turnos; si la supera, el efecto termina para él.",
+  "Immediately after dealing damage to a creature that was already Bloodied, {C} can move up to half its Speed, and it makes one Bite attack.": "Justo después de hacer daño a una criatura que ya estaba maltrecha, puede moverse hasta la mitad de su velocidad y hacer un ataque de Mordisco.",
+  "The spell fails and is wasted if the target is under the effect of the Protection from Evil and Good spell or within a Magic Circle spell.": "El conjuro falla y se pierde si el objetivo está bajo el efecto del conjuro Protección contra el mal y el bien o dentro de un Círculo mágico.",
+  "{C} reduces the damage it takes from the attack by {0}, and if that damage is reduced to {1}, {C} can redirect some of the attack's force.": "Reduce en {0} el daño que recibe del ataque y, si así lo deja en {1}, puede devolver parte de la fuerza del ataque.",
+  "The target's Hit Point maximum decreases by an amount equal to the Necrotic damage taken, and {C} regains Hit Points equal to that amount.": "El máximo de puntos de golpe del objetivo baja tanto como el daño necrótico recibido, y {C} recupera esa misma cantidad de puntos de golpe.",
+  ", and the target has the Poisoned condition until the start of {C}'s next turn. Until this poison ends, the target can't regain Hit Points.": ", y el objetivo queda envenenado hasta el principio del siguiente turno de {C}. Mientras dure este veneno, no puede recuperar puntos de golpe.",
+  "{C} casts Darkness, Faerie Fire, or Web, requiring no Material components and using Wisdom as the spellcasting ability (spell save DC {0}).": "Lanza Oscuridad, Fuego feérico o Telaraña sin componentes materiales y con Sabiduría como característica (CD de salvación {0}).",
+  "{C} is related to a type of dragon associated with one of the following damage types (GM's choice): Acid, Cold, Fire, Lightning, or Poison.": "Está emparentado con un tipo de dragón asociado a uno de estos tipos de daño (a elección del DM): ácido, frío, fuego, relámpago o veneno.",
+  ", and the target has the Frightened condition for {0} minute, until it takes damage, or until it ends its turn with {C} out of line of sight.": ", y el objetivo queda asustado durante {0} minuto, hasta que reciba daño o hasta que acabe su turno sin tener a {C} a la vista.",
+  "Any nonmagical weapon takes a cumulative -{0} penalty to attack rolls immediately after dealing damage to {C} and coming into contact with it.": "Cualquier arma no mágica sufre un penalizador acumulativo de -{0} a las tiradas de ataque justo después de hacerle daño y entrar en contacto con él.",
+  "{C} casts one of the following spells, requiring no Material components and using Intelligence as the spellcasting ability (spell save DC {0})": "Lanza uno de estos conjuros sin componentes materiales y con Inteligencia como característica (CD de salvación {0})",
+  "If the spell kills the target, its soul is trapped in {C}'s soul bag, and the target can't be raised from the dead until its soul is released.": "Si el conjuro mata al objetivo, su alma queda atrapada en la bolsa de almas de {C} y no puede volver a la vida hasta que su alma quede libre.",
+  "{C} casts Wall of Ice (level {0} version), requiring no spell components and using Intelligence as the spellcasting ability (spell save DC {1}).": "Lanza Muro de hielo (versión de nivel {0}) sin componentes y con Inteligencia como característica (CD de salvación {1}).",
+  "{C} casts Dominate Person (level {0} version), requiring no spell components and using Charisma as the spellcasting ability (spell save DC {1}).": "Lanza Dominar persona (versión de nivel {0}) sin componentes y con Carisma como característica (CD de salvación {1}).",
+  "The wearer gains a +{0} bonus to AC, including against the triggering attack and possibly causing it to miss, until the start of {C}'s next turn.": "El portador obtiene un bonificador de +{0} a la CA, también contra el ataque desencadenante (con lo que puede que falle), hasta el principio del siguiente turno de {C}.",
+  "{C} casts Fireball (level {0} version) twice, requiring no Material components and using Charisma as the spellcasting ability (spell save DC {1}).": "Lanza Bola de fuego (versión de nivel {0}) dos veces, sin componentes materiales y con Carisma como característica (CD de salvación {1}).",
+  "The target has the Grappled condition (escape DC {0}) from one of six tentacles, and the target has the Poisoned condition until the grapple ends.": "El objetivo queda agarrado (escapar CD {0}) por uno de sus seis tentáculos, y envenenado mientras dure la presa.",
+  "{C} casts one of the following spells, requiring no Somatic or Material components and using Wisdom as the spellcasting ability (spell save DC {0})": "Lanza uno de estos conjuros sin componentes somáticos ni materiales y con Sabiduría como característica (CD de salvación {0})",
+  "While grappling the target, {C} can't take this action, {C} halves the damage it takes (round down), and the target takes the same amount of damage.": "Mientras tenga agarrado al objetivo, no puede realizar esta acción, recibe la mitad del daño (redondeando hacia abajo) y el objetivo recibe esa misma cantidad.",
+  "The target or a creature within {0} feet of it can take an action to try to detach {C}, doing so by succeeding on a DC {1} Strength (Athletics) check.": "El objetivo o una criatura a {0} pies o menos de él puede usar una acción para intentar soltarlo, con una prueba de Fuerza (Atletismo) CD {1}.",
+  ", and the target is pushed up to {0} feet straight away from {C} and has Disadvantage on the next attack roll it makes before the end of its next turn.": ", y el objetivo es empujado hasta {0} pies en línea recta alejándose de {C} y tiene desventaja en la siguiente tirada de ataque que haga antes del final de su siguiente turno.",
+  "If the target is a Large or smaller creature and {C} moved {0}+ feet straight toward it immediately before the hit, the target has the Prone condition.": "Si el objetivo es una criatura grande o más pequeña y {C} se ha movido {0} pies o más en línea recta hacia ella justo antes de impactar, queda derribado.",
+  "If {C} dies, any swallowed creature no longer has the Restrained condition and can escape from the corpse by using {0} feet of movement, exiting Prone.": "Si muere, las criaturas tragadas dejan de estar apresadas y pueden escapar del cadáver gastando {0} pies de movimiento; salen derribadas.",
+  "If the target is a Large or smaller creature, it has the Grappled condition (escape DC {0}), and it has the Restrained condition until the grapple ends.": "Si el objetivo es una criatura grande o más pequeña, queda agarrado (escapar CD {0}) y apresado mientras dure la presa.",
+  "{C} can cast the spell stored with any parameters set by the original caster, requiring no spell components and using the caster's spellcasting ability.": "Puede lanzar el conjuro almacenado con los parámetros que fijó el lanzador original, sin componentes y con la característica de lanzamiento de ese lanzador.",
+  "If {C} dies outside Mount Celestia, its body disappears, and it gains a new body instantly, reviving with all its Hit Points somewhere in Mount Celestia.": "Si muere fuera del Monte Celestia, su cuerpo desaparece y obtiene al instante un cuerpo nuevo, con todos sus puntos de golpe, en algún lugar del Monte Celestia.",
+  "If {C} dies outside the Abyss, its body dissolves into ichor, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Abyss.": "Si muere fuera del Abismo, su cuerpo se disuelve en icor y obtiene al instante un cuerpo nuevo, con todos sus puntos de golpe, en algún lugar del Abismo.",
+  "{C} casts one of the following spells, requiring no Somatic or Material components and using Intelligence as the spellcasting ability (spell save DC {0})": "Lanza uno de estos conjuros sin componentes somáticos ni materiales y con Inteligencia como característica (CD de salvación {0})",
+  "Until the end of its next turn, the target rolls {0} whenever it makes an ability check or attack roll and subtracts the number rolled from the D{1} Test.": "Hasta el final de su siguiente turno, el objetivo tira {0} siempre que hace una prueba de característica o una tirada de ataque y resta el resultado de la prueba de D{1}.",
+  ", and the target has the Restrained condition until the rope is destroyed, {C} uses a Bonus Action to release the target, or {C} uses Entangling Rope again.": ", y el objetivo queda apresado hasta que la cuerda quede destruida, {C} use una acción adicional para soltarlo o vuelva a usar Cuerda enmarañadora.",
+  "While {C} and its vampire master are on the same plane of existence, {C} can communicate with {C} telepathically, and {C} can perceive through {C}'s senses.": "Mientras el familiar y su amo vampiro estén en el mismo plano de existencia, pueden comunicarse telepáticamente, y el vampiro puede percibir a través de los sentidos del familiar.",
+  "The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success.": "El objetivo queda apresado y, si sigue apresado, repite la salvación al final de su siguiente turno; si la supera, el efecto termina para él.",
+  "While swallowed, the target isn't Grappled but has the Blinded and Restrained conditions, and it has Total Cover against attacks and other effects outside {C}.": "Mientras está tragado, el objetivo no está agarrado, pero queda cegado y apresado, y tiene cobertura total contra los ataques y otros efectos de fuera de {C}.",
+  "Until the grapple ends, the target has the Blinded and Restrained conditions, is suffocating, and takes {0} Bludgeoning damage at the start of each of its turns.": "Mientras dure la presa, el objetivo queda cegado y apresado, se asfixia y recibe {0} contundente al principio de cada uno de sus turnos.",
+  "If damage reduces {C} to {0} Hit Points, it makes a Constitution saving throw (DC {1} plus the damage taken) unless the damage is Radiant or from a Critical Hit.": "Si el daño lo deja a {0} puntos de golpe, hace una salvación de Constitución (CD {1} más el daño recibido), salvo que el daño sea radiante o de un golpe crítico.",
+  "The target has the Restrained condition until the web is destroyed (AC {0}; HP {1}; Vulnerability to Fire damage; Immunity to Bludgeoning, Poison, and Psychic damage).": "El objetivo queda apresado hasta que se destruya la telaraña (CA {0}; {1} PG; vulnerabilidad al daño de fuego; inmunidad al daño contundente, de veneno y psíquico).",
+  "If the target is a Huge or smaller creature, it has the Grappled condition (escape DC {0}) from both talons, and it has the Restrained condition until the grapple ends.": "Si el objetivo es una criatura enorme o más pequeña, queda agarrado (escapar CD {0}) por las dos garras, y apresado mientras dure la presa.",
+  "{C} casts one of the following spells, requiring no Material components and using Charisma as the spellcasting ability (spell save DC {0}, +{1} to hit with spell attacks)": "Lanza uno de estos conjuros sin componentes materiales y con Carisma como característica (CD de salvación {0}, +{1} al ataque con conjuros)",
+  "If {C} dies outside the Nine Hells, its body disappears in sulfurous smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Nine Hells.": "Si muere fuera de los Nueve Infiernos, su cuerpo desaparece en humo sulfuroso y obtiene al instante un cuerpo nuevo, con todos sus puntos de golpe, en algún lugar de los Nueve Infiernos.",
+  "Until the end of its next turn, the target can't take a Bonus Action or Reaction, its Speed decreases by {0} feet, and it can move or take one action on its turn, not both.": "Hasta el final de su siguiente turno, el objetivo no puede realizar acciones adicionales ni reacciones, su velocidad baja {0} pies y en su turno puede moverse o realizar una acción, no las dos cosas.",
+  "At the end of each of {C}'s turns, each creature of {C}'s choice in a {0}-foot Emanation originating from {C} takes {1} Fire damage unless {C} has the Incapacitated condition.": "Al final de cada uno de sus turnos, cada criatura que elija en una emanación de {0} pies con origen en {C} recibe {1} fuego, salvo que {C} esté incapacitado.",
+  "If the target is a Large or smaller creature, it has the Grappled condition (escape DC {0}) from one of two chains, and it has the Restrained condition until the grapple ends.": "Si el objetivo es una criatura grande o más pequeña, queda agarrado (escapar CD {0}) por una de sus dos cadenas, y apresado mientras dure la presa.",
+  "While in a {0}-foot Emanation originating from {C}, {C} and its allies have Advantage on attack rolls and saving throws, provided {C} doesn't have the Incapacitated condition.": "En una emanación de {0} pies con origen en {C}, él y sus aliados tienen ventaja en las tiradas de ataque y en las salvaciones, siempre que {C} no esté incapacitado.",
+  "{C} has Advantage on an attack roll against a creature if at least one of {C}'s allies is within {0} feet of the creature and the ally doesn't have the Incapacitated condition.": "Tiene ventaja en las tiradas de ataque contra una criatura si al menos un aliado suyo está a {0} pies o menos de ella y no está incapacitado.",
+  "If within {0} feet of a Large or bigger tree, {C} teleports to an unoccupied space within {1} feet of a second Large or bigger tree that is within {2} feet of the previous tree.": "Si está a {0} pies o menos de un árbol grande o mayor, se teletransporta a un espacio libre a {1} pies o menos de un segundo árbol grande o mayor que esté a {2} pies o menos del primero.",
+  "If {C} dies outside the Elemental Plane of Air, its body dissolves into mist, and it gains a new body in {0} days, reviving with all its Hit Points somewhere on the Plane of Air.": "Si muere fuera del plano elemental del Aire, su cuerpo se disuelve en niebla y obtiene un cuerpo nuevo en {0} días, con todos sus puntos de golpe, en algún lugar del plano del Aire.",
+  "If the target is Huge or smaller and {C} moved {0}+ feet straight toward it immediately before the hit, the target takes an extra {1} Piercing damage and has the Prone condition.": "Si el objetivo es enorme o más pequeño y {C} se ha movido {0} pies o más en línea recta hacia él justo antes de impactar, recibe {1} perforante adicional y queda derribado.",
+  "If {C} dies outside the Elemental Plane of Fire, its body dissolves into ash, and it gains a new body in {0} days, reviving with all its Hit Points somewhere on the Plane of Fire.": "Si muere fuera del plano elemental del Fuego, su cuerpo se disuelve en ceniza y obtiene un cuerpo nuevo en {0} días, con todos sus puntos de golpe, en algún lugar del plano del Fuego.",
+  "While {C} and its amulet are on the same plane of existence, the amulet's wearer can telepathically call {C} to travel to it, and {C} knows the distance and direction to the amulet.": "Mientras esté en el mismo plano de existencia que su amuleto, el portador puede llamarlo telepáticamente para que acuda, y sabe a qué distancia y en qué dirección está el amuleto.",
+  "If the target has {0} Hit Points or fewer, it has the Unconscious condition for {1} hour, until it takes damage, or until a creature within {2} feet of it takes an action to wake it.": "Si el objetivo tiene {0} puntos de golpe o menos, queda inconsciente durante {1} hora, hasta que reciba daño o hasta que una criatura a {2} pies o menos use una acción para despertarlo.",
+  "If target is a Large or smaller creature and {C} moved {0}+ feet straight toward it immediately before the hit, the target takes an extra {1} Piercing damage and has the Prone condition.": "Si el objetivo es una criatura grande o más pequeña y {C} se ha movido {0} pies o más en línea recta hacia ella justo antes de impactar, recibe {1} perforante adicional y queda derribado.",
+  "If the target is a Large or smaller creature and {C} moved {0}+ feet straight toward it immediately before the hit, the target takes an extra {1} Piercing damage and has the Prone condition.": "Si el objetivo es una criatura grande o más pequeña y {C} se ha movido {0} pies o más en línea recta hacia ella justo antes de impactar, recibe {1} perforante adicional y queda derribado.",
+  "If the target is a Medium or smaller creature and {C} moved {0}+ feet straight toward it immediately before the hit, the target takes an extra {1} Piercing damage and has the Prone condition.": "Si el objetivo es una criatura mediana o más pequeña y {C} se ha movido {0} pies o más en línea recta hacia ella justo antes de impactar, recibe {1} perforante adicional y queda derribado.",
+  "If the target is a Huge or smaller creature and {C} moved {0}+ feet straight toward it immediately before the hit, the target takes an extra {1} Bludgeoning damage and has the Prone condition.": "Si el objetivo es una criatura enorme o más pequeña y {C} se ha movido {0} pies o más en línea recta hacia ella justo antes de impactar, recibe {1} contundente adicional y queda derribado.",
+  "If {C} dies in the Nine Hells, it revives with all its Hit Points in {0} days unless it is killed by a creature under the effects of a Bless spell or its remains are sprinkled with Holy Water.": "Si muere en los Nueve Infiernos, revive con todos sus puntos de golpe en {0} días, salvo que lo mate una criatura bajo los efectos del conjuro Bendecir o que rocíen sus restos con agua bendita.",
+  "If the target is a Large or smaller creature and {C} moved {0}+ feet straight toward it immediately before the hit, the target takes an extra {1} Bludgeoning damage and has the Prone condition.": "Si el objetivo es una criatura grande o más pequeña y {C} se ha movido {0} pies o más en línea recta hacia ella justo antes de impactar, recibe {1} contundente adicional y queda derribado.",
+  "While Poisoned, the target's Hit Point maximum doesn't return to normal when finishing a Long Rest, and it repeats the save every {0} hours that elapse, ending the effect on itself on a success.": "Mientras esté envenenado, su máximo de puntos de golpe no se recupera al terminar un descanso largo, y repite la salvación cada {0} horas; si la supera, el efecto termina para él.",
+  "If the target is a Large or smaller creature and {C} moved {0}+ feet straight toward it immediately before the hit, the target has the Prone condition, and {C} can make one Bite attack against it.": "Si el objetivo es una criatura grande o más pequeña y {C} se ha movido {0} pies o más en línea recta hacia ella justo antes de impactar, queda derribado y {C} puede hacerle un ataque de Mordisco.",
+  "While swallowed, a creature has the Blinded and Restrained conditions, has Total Cover against attacks and other effects outside {C}, and takes {0} Acid damage at the start of each of {C}'s turns.": "Mientras está tragada, una criatura queda cegada y apresada, tiene cobertura total contra los ataques y otros efectos de fuera de {C} y recibe {0} ácido al principio de cada turno de {C}.",
+  "While swallowing the target, {C} can't use Bite, and if {C} dies, the swallowed target is no longer Restrained and can escape from the corpse using {0} feet of movement, exiting with the Prone condition.": "Mientras tiene tragado al objetivo, no puede usar Mordisco y, si muere, el objetivo deja de estar apresado y puede escapar del cadáver gastando {0} pies de movimiento; sale derribado.",
+  ", and the target has the Grappled condition (escape DC {0}). Until the grapple ends, the target can't cast spells with a Verbal component and takes {1} Thunder damage at the start of each of {C}'s turns.": ", y el objetivo queda agarrado (escapar CD {0}). Mientras dure la presa, no puede lanzar conjuros con componente verbal y recibe {1} trueno al principio de cada turno de {C}.",
+  "While Poisoned, the target can't regain Hit Points and takes {0} Poison damage at the start of each of its turns, and it repeats the save at the end of each of its turns, ending the effect on itself on a success.": "Mientras esté envenenado, el objetivo no puede recuperar puntos de golpe y recibe {0} veneno al principio de cada uno de sus turnos; repite la salvación al final de cada uno de sus turnos y, si la supera, el efecto termina para él.",
+  "A swallowed creature has the Blinded and Restrained conditions, it has Total Cover against attacks and other effects outside {C}, and it takes {0} Acid damage plus {1} Fire damage at the start of each of {C}'s turns.": "Una criatura tragada queda cegada y apresada, tiene cobertura total contra los ataques y otros efectos de fuera de {C} y recibe {0} ácido más {1} fuego al principio de cada turno de {C}.",
+  ", and the target has the Incapacitated condition and is transported to a harmless demiplane until the start of {C}'s next turn, at which point it reappears in an unoccupied space of {C}'s choice within {0} feet of {C}.": ", y el objetivo queda incapacitado y es transportado a un semiplano inofensivo hasta el principio del siguiente turno de {C}, momento en que reaparece en un espacio libre que {C} elija a {0} pies o menos de él.",
+  "The wound closes after {0} minute, after a spell restores Hit Points to the target, or after the target or a creature within {1} feet of it takes an action to stanch the wound, doing so by succeeding on a DC {2} Wisdom (Medicine) check.": "La herida se cierra al cabo de {0} minuto, cuando un conjuro le devuelve puntos de golpe al objetivo o cuando el objetivo o una criatura a {1} pies o menos usa una acción para restañarla con una prueba de Sabiduría (Medicina) CD {2}.",
+  ", and the target has the Poisoned condition for {0} hour. Failure by {1} or More: While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within {2} feet of it takes an action to wake it.": ", y el objetivo queda envenenado durante {0} hora. Si falla por {1} o más, mientras esté envenenado también queda inconsciente, aunque despierta si recibe daño o si una criatura a {2} pies o menos usa una acción para despertarlo.",
+  "If {C} takes {0} damage or more on a single turn from the swallowed creature, {C} must succeed on a DC {1} Constitution saving throw at the end of that turn or regurgitate the creature, which falls in a space within {2} feet of {C} and has the Prone condition.": "Si recibe {0} de daño o más en un solo turno de la criatura tragada, tiene que superar una salvación de Constitución CD {1} al final de ese turno o la regurgita; cae en un espacio a {2} pies o menos de {C} y queda derribada.",
+  "If {C} takes {0} damage or more on a single turn from a creature inside it, {C} must succeed on a DC {1} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, each of which falls in a space within {2} feet of {C} and has the Prone condition.": "Si recibe {0} de daño o más en un solo turno de una criatura que tenga dentro, tiene que superar una salvación de Constitución CD {1} al final de ese turno o regurgita a todas las criaturas tragadas; cada una cae en un espacio a {2} pies o menos de {C} y queda derribada.",
+  "While within {0} feet of at least two hag allies, {C} can cast one of the following spells, requiring no Material components, using the spell's normal casting time, and using Intelligence as the spellcasting ability (spell save DC {1}): Augury, Find Familiar, Identify, Locate Object, Scrying, or Unseen Servant.": "Mientras esté a {0} pies o menos de al menos dos sagas aliadas, puede lanzar uno de estos conjuros sin componentes materiales, con su tiempo de lanzamiento normal y con Inteligencia como característica (CD de salvación {1}): Augurio, Buscar familiar, Identificar, Localizar objeto, Escudriñar o Sirviente invisible.",
+  ", and the target has the Poisoned condition. Whenever the Poisoned target finishes a Long Rest, it is subjected to the following effect. Constitution Saving Throw: DC {0}. Failure: The target's Hit Point maximum decreases by {1} and doesn't return to normal until the Poisoned condition ends on the target. Success: The Poisoned condition ends.": ", y el objetivo queda envenenado. Cada vez que el objetivo envenenado termina un descanso largo, hace una salvación de Constitución CD {0}. Si la falla, su máximo de puntos de golpe baja {1} y no se recupera hasta que deje de estar envenenado; si la supera, deja de estar envenenado.",
+  ", and the target is subjected to the following effect. Constitution Saving Throw: DC {0}. Failure: The target has the Poisoned condition until the end of {C}'s next turn. Failure by {1} or More: The target has the Poisoned condition for {2} minute. While Poisoned, the target has the Unconscious condition, which ends early if the target takes any damage.": ", y el objetivo hace una salvación de Constitución CD {0}. Si la falla, queda envenenado hasta el final del siguiente turno de {C}; si la falla por {1} o más, queda envenenado {2} minuto y, mientras lo esté, inconsciente, aunque despierta si recibe daño.",
+  ", and the target receives an infernal wound if it doesn't have one. While wounded, the target loses {0} Hit Points at the start of each of its turns. The wound closes after {1} minute, after a spell restores Hit Points to the target, or after the target or a creature within {2} feet of it takes an action to stanch the wound, doing so by succeeding on a DC {3} Wisdom (Medicine) check.": ", y el objetivo sufre una herida infernal si no tiene ya una. Mientras esté herido, pierde {0} puntos de golpe al principio de cada uno de sus turnos. La herida se cierra al cabo de {1} minuto, cuando un conjuro le devuelve puntos de golpe o cuando el objetivo o una criatura a {2} pies o menos usa una acción para restañarla con una prueba de Sabiduría (Medicina) CD {3}.",
+  ", and {C} attaches to the target. If the target is a Medium or smaller creature and {C} had Advantage on the attack roll, it covers the target, which has the Blinded condition and is suffocating while {C} is attached in this way. While attached to a target, {C} can attack only the target but has Advantage on its attack rolls. Its Speed becomes {0}, it can't benefit from any bonus to its Speed, and it moves with the target. A creature can take an action to try to detach {C} from itself, doing so with a successful DC {1} Strength (Athletics) check. On its turn, {C} can detach itself by using {2} feet of movement.": ", y {C} se adhiere al objetivo. Si el objetivo es una criatura mediana o más pequeña y el ataque tenía ventaja, lo cubre: queda cegado y se asfixia mientras siga adherido así. Mientras esté adherido, solo puede atacar a ese objetivo, pero con ventaja. Su velocidad pasa a ser {0}, no puede beneficiarse de bonificadores a la velocidad y se mueve con el objetivo. Una criatura puede usar una acción para intentar soltarlo con una prueba de Fuerza (Atletismo) CD {1}. En su turno, puede soltarse gastando {2} pies de movimiento."
+ }
+}

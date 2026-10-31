@@ -1471,6 +1471,7 @@ const PATTERNS = [
   [/^(.+?): (\d+) de daño( (?!y cae$)[^()]+?)?( y cae)?$/,
     (m, who, n, t, down) => `${nm(who)}: ${n} ${dmgTail(t).trim() ? dmgTail(t).trim() + " " : ""}damage${down ? " and goes down" : ""}`],
   [/^(.+?): salvación (\d+)$/, (m, who, n) => `${nm(who)}: save ${n}`],
+  [/^(.+?): salvación (\d+) \((la supera|falla)\)$/, (m, who, n, r) => `${nm(who)}: save ${n} (${r === "falla" ? "fails" : "succeeds"})`],
   [/^(.+?): salvación (\d+) \((la supera|falla)\) · recibe (\d+) de daño( y cae)?$/,
     (m, who, n, r, d, down) => `${nm(who)}: save ${n} (${r === "falla" ? "fails" : "succeeds"}) · takes ${d} damage${down ? " and goes down" : ""}`],
   [/^(.+?): salvación de (\S+) CD (\d+)(?: para (.+?))?(?: · (\d+) de daño(.*))?$/,

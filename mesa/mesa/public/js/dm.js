@@ -1057,6 +1057,13 @@ function toggleDrawer(force) {
     const row = e.target.closest && e.target.closest(".beast[data-id]");
     if (!row || e.target.tagName !== "DETAILS") return;
     if (e.target.open) beastOpen.add(row.dataset.id); else beastOpen.delete(row.dataset.id);
+    /* La ficha se pinta al abrirla: con más de trescientas criaturas, pintarlas
+       todas en cada repintado hacía el bestiario lento */
+    const slot = e.target.querySelector("[data-sheet]");
+    if (e.target.open && slot && !slot.childElementCount) {
+      const beast = bestiaryOf(doc()).find(x => x.id === row.dataset.id);
+      if (beast) slot.innerHTML = statBlockHTML(beast);
+    }
   }, true);
   on(node, "click", "[data-beast]", (e, b) => {
     const action = b.dataset.beast;
@@ -1077,12 +1084,14 @@ const CR_BANDS = [["", "Cualquier VD"], ["0-0.5", "VD 0 a 1/2"], ["1-2", "VD 1 a
 function renderBestiary() {
   const host = $("#beastList");
   if (!host) return;
-  const q = beastQuery.trim().toLowerCase();
+  /* Sin tildes: «dragon» encuentra «dragón» */
+  const q = beastQuery.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const [lo, hi] = beastBand ? beastBand.split("-").map(Number) : [0, Infinity];
   /* Se busca también por el nombre en inglés: «owlbear» encuentra al oso lechuza */
   const words = b => {
     const en = CATALOG_BY_ID.get(b.id);
-    return (b.name + " " + b.sizeType + (en && !b.custom ? " " + en.en.name + " " + en.en.sizeType : "")).toLowerCase();
+    return (b.name + " " + b.sizeType + (b.aka ? " " + b.aka : "") + (en && !b.custom ? " " + en.en.name + " " + en.en.sizeType : ""))
+      .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   };
   const list = bestiaryOf(doc())
     .filter(b => !q || words(b).includes(q))
@@ -1105,7 +1114,7 @@ function renderBestiary() {
       </div>
       <details ${beastOpen.has(b.id) ? "open" : ""}>
         <summary>Ficha</summary>
-        ${statBlockHTML(b)}
+        <div data-sheet>${beastOpen.has(b.id) ? statBlockHTML(b) : ""}</div>
       </details>
       <div class="go">
         <input type="number" min="1" max="20" value="${esc(draft.qty)}" data-qty aria-label="Cantidad">

@@ -28,7 +28,8 @@ export const TYPE_NAMES = Object.keys(TYPE_COLORS);
 
 /* «Muerto viviente mediano» -> «Muerto viviente» */
 export function typeOf(sizeType) {
-  const t = String(sizeType || "").toLowerCase();
+  /* Los enjambres van en plural: «Enjambre mediano de muertos vivientes diminutos» */
+  const t = String(sizeType || "").toLowerCase().replace("muertos vivientes", "muerto viviente");
   return TYPE_NAMES.find(n => t.startsWith(n.toLowerCase()))
     || TYPE_NAMES.find(n => t.includes(n.toLowerCase())) || "";
 }
