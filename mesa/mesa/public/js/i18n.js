@@ -797,6 +797,30 @@ const EN = {
 
   /* Bestiario: filtros y ficha desplegable */
   "Ficha": "Stat block", "Todos los tipos": "All types", "Tipo de criatura": "Creature type",
+  /* Fotos de las criaturas y homebrew */
+  "Fotos": "Photos", "Poner fotos a muchas criaturas de golpe": "Add photos to many creatures at once",
+  "Todas": "All", "Con foto": "With photo", "Sin foto": "No photo", "Homebrew": "Homebrew", "Las mías": "Mine",
+  "Qué criaturas mostrar": "Which creatures to show", "Cambiar la foto": "Change the photo", "Ponerle una foto": "Give it a photo",
+  "Encuadre de la foto": "Photo framing", "Elige, pega o arrastra una foto": "Choose, paste or drop a photo", "Acercar": "Zoom",
+  "Arrastra la foto para que la cara quede dentro del círculo: así se verá en el mapa.": "Drag the photo so the face sits inside the circle: that's how it will look on the map.",
+  "Subir archivo": "Upload file", "Buscar en internet": "Search the web", "Quitar foto": "Remove photo",
+  "Dirección de una imagen (https://…)": "Image address (https://…)", "Dirección de una imagen": "Image address", "Traer": "Fetch",
+  "También puedes copiar una imagen en el navegador y pegarla aquí con Ctrl+V.": "You can also copy an image in your browser and paste it here with Ctrl+V.",
+  "Guardar foto": "Save photo", "Primero elige una foto": "Choose a photo first",
+  "Fotos de las criaturas": "Creature photos", "Poner las fotos": "Add the photos", "Suelta aquí las fotos": "Drop the photos here",
+  "Elegir fotos": "Choose photos", "Elegir carpeta": "Choose folder",
+  "Ponle cara a muchas criaturas de una vez: llama a cada archivo como la criatura, en castellano o en inglés (Goblin.jpg, Dragón rojo adulto.png, owlbear.webp), y suéltalos aquí o elige una carpeta entera.":
+    "Give many creatures a face at once: name each file after the creature, in Spanish or English (Goblin.jpg, Dragón rojo adulto.png, owlbear.webp), and drop them here or choose a whole folder.",
+  "Cada foto se encuadra sola en el círculo de la ficha. Si alguna queda mal, ábrela desde su criatura y muévela. Las fotos se guardan en tu partida, en tu ordenador.":
+    "Each photo is framed in the token circle automatically. If one looks off, open it from its creature and move it. Photos are saved in your game, on your computer.",
+  "No hay ninguna foto con el nombre de una criatura": "No photo is named after a creature",
+  "Quitar todas las fotos": "Remove all photos", "Quitar las fotos": "Remove the photos", "Todas las criaturas vuelven a su icono": "Every creature is back to its icon",
+  "¿Quitar la foto de 1 criatura? Vuelve a su icono.": "Remove the photo of 1 creature? It goes back to its icon.",
+  "La dirección tiene que empezar por http:// o https://": "The address must start with http:// or https://",
+  "Esa dirección no es una imagen: copia la dirección de la imagen, no la de la página": "That address isn't an image: copy the image's address, not the page's",
+  "No se pudo descargar la imagen": "Couldn't download the image", "La web tarda demasiado en contestar": "The website takes too long to answer",
+  "Esa web no deja copiar la imagen desde aquí: guárdala y súbela, o cópiala y pégala con Ctrl+V": "That website won't let the image be copied from here: save it and upload it, or copy it and paste it with Ctrl+V",
+  "Criatura de la casa: diseño propio de Mesa a partir del folclore, que es de dominio público": "House creature: Mesa's own design based on public-domain folklore", "Folclore:": "Folklore:",
   "Cualquier VD": "Any CR", "Valor de desafío": "Challenge rating",
   "VD 0 a 1/2": "CR 0 to 1/2", "VD 1 a 2": "CR 1 to 2", "VD 3 a 4": "CR 3 to 4", "VD 5 a 8": "CR 5 to 8",
   "VD 9 a 16": "CR 9 to 16", "VD 17 o más": "CR 17 or higher",
@@ -1270,7 +1294,7 @@ const EN = {
 for (const b of CATALOG) {
   const pair = (es, en) => { if (es && en && !(es in EN)) EN[es] = en; };
   pair(b.name, b.en.name);
-  for (const k of ["sizeType", "alignment", "senses", "languages", "resistances", "vulnerabilities", "immunities", "skills", "gear", "speedText"]) pair(b[k], b.en[k]);
+  for (const k of ["origin", "sizeType", "alignment", "senses", "languages", "resistances", "vulnerabilities", "immunities", "skills", "gear", "speedText"]) pair(b[k], b.en[k]);
   /* «Feérico pequeño (goblinoide), caótico neutral» va en una sola línea */
   if (b.sizeType && b.alignment && b.en.sizeType && b.en.alignment) pair(`${b.sizeType}, ${b.alignment}`, `${b.en.sizeType}, ${b.en.alignment}`);
   for (const k of ["traits", "actions", "bonus", "reactions", "legendary"]) {
@@ -1337,6 +1361,16 @@ const nm = w => {
   return EN[k] || (m && EN[m[1]] ? `${EN[m[1]]} ${m[2]}` : w);
 };
 const PATTERNS = [
+  [/^Foto de (.+)$/, (m, b) => `Photo of ${nm(b)}`],
+  [/^(.+) ya tiene cara$/, (m, b) => `${nm(b)} has a face now`],
+  [/^¿Quitar las fotos de (\d+) criaturas\? Todas vuelven a su icono\.$/, "Remove the photos of $1 creatures? They all go back to their icons."],
+  [/^(.+) vuelve a su icono$/, (m, b) => `${nm(b)} is back to its icon`],
+  [/^1 foto reconocida$/, "1 photo recognised"], [/^(\d+) fotos reconocidas$/, "$1 photos recognised"],
+  [/^(\d+) sin criatura$/, "$1 without a creature"],
+  [/^Sin criatura \(cambia el nombre del archivo\): (.+)$/, "No creature (rename the file): $1"],
+  [/^Poniendo fotos: (\d+) de (\d+)…$/, "Adding photos: $1 of $2…"],
+  [/^(\d+) criaturas? tienen? cara( · (\d+) no se pudieron leer)?$/, (m, n, t, f) => `${n} ${n === "1" ? "creature has" : "creatures have"} a face${f ? ` · ${f} couldn't be read` : ""}`],
+  [/^La web contestó (\d+): no deja descargar esa imagen$/, "The website answered $1: it won't let that image be downloaded"],
   /* La ficha de criatura de 2024 */
   [/^(\S+) \(([\d.,]+) PX; BC ([+−-]\d+)\)$/, "$1 (XP $2; PB $3)"],
   [/^Ficha de las reglas de 2024 \(SRD 5\.2\.1\)(?: · (.+))?$/, (m, n) => "2024 rules stat block (SRD 5.2.1)" + (n ? " · " + n : "")],
@@ -1471,6 +1505,7 @@ const PATTERNS = [
   [/^(.+?): (\d+) de daño( (?!y cae$)[^()]+?)?( y cae)?$/,
     (m, who, n, t, down) => `${nm(who)}: ${n} ${dmgTail(t).trim() ? dmgTail(t).trim() + " " : ""}damage${down ? " and goes down" : ""}`],
   [/^(.+?): salvación (\d+)$/, (m, who, n) => `${nm(who)}: save ${n}`],
+  [/^(.+?): salvación (\d+) \((la supera|falla)\)$/, (m, who, n, r) => `${nm(who)}: save ${n} (${r === "falla" ? "fails" : "succeeds"})`],
   [/^(.+?): salvación (\d+) \((la supera|falla)\) · recibe (\d+) de daño( y cae)?$/,
     (m, who, n, r, d, down) => `${nm(who)}: save ${n} (${r === "falla" ? "fails" : "succeeds"}) · takes ${d} damage${down ? " and goes down" : ""}`],
   [/^(.+?): salvación de (\S+) CD (\d+)(?: para (.+?))?(?: · (\d+) de daño(.*))?$/,

@@ -345,10 +345,16 @@ const ABILITY_WORDS = {
 export function parseAttackLine(line) {
   const text = String(line || "").trim();
   if (!text) return null;
-  const dice = text.match(/(\d*d\d+(?:\s*[+-]\s*\d+)?)/i);
+  /* «1d6+2» o «d8»; no «D20», que en el texto es «prueba de D20» y no una tirada */
+  const save = text.match(/CD\s*(\d+)\s*(?:de\s+)?(fuerza|destreza|constituci[oó]n|inteligencia|sabidur[ií]a|carisma)/i);
+  /* En una salvación, el daño es la fórmula que lleva su tipo detrás («Fallo:
+     13d10 fuego»); «resta 1d10 a sus tiradas de daño» es un penalizador */
+  const typed = save && text.match(new RegExp(`(\\d+[dD]\\d+(?:\\s*[+-]\\s*\\d+)?)\\s+(?:de\\s+)?(?:${DAMAGE_WORDS.join("|")})\\b`, "i"));
+  const anyDice = text.match(/(\d+[dD]\d+(?:\s*[+-]\s*\d+)?|\bd\d+(?:\s*[+-]\s*\d+)?)/);
+  /* Lo que escribe la gente a mano («CD 13 Destreza, 3d6») no siempre lleva el tipo */
+  const dice = save ? (typed || (/\s—\s/.test(text) ? null : anyDice)) : anyDice;
   const hit = text.match(/([+-]\s*\d+)\s*(?:al ataque|to hit)/i)
     || text.match(/^[^.:]{2,40}[.:]\s*([+-]\s*\d+)/);
-  const save = text.match(/CD\s*(\d+)\s*(?:de\s+)?(fuerza|destreza|constituci[oó]n|inteligencia|sabidur[ií]a|carisma)/i);
   if (!dice && !save) return null;
   /* En el formato del bestiario («Tragar — … 3d6 de ácido por turno») una línea
      sin bonificador ni CD describe un efecto, no un ataque que tirar. */
@@ -365,8 +371,9 @@ export function parseAttackLine(line) {
   return normalizeAttack({
     name,
     atk: hit ? Number(hit[1].replace(/\s+/g, "")) : 0,
-    damage: dice ? dice[1].replace(/\s+/g, "") : "",
-    type,
+    /* Una salvación sin daño (dormir, ralentizar) no tira daño: «0», no el 1d6 por defecto */
+    damage: dice ? dice[1].replace(/\s+/g, "") : save ? "0" : "",
+    type: dice ? type : "",   // sin daño no hay tipo (la «Fuerza» de la CD no es daño de fuerza)
     range: range.slice(0, 40),
     save: save ? `${ABILITY_WORDS[save[2].toLowerCase()] || "dex"} ${save[1]}` : "",
     cond: cond ? COND_STEMS[cond[1].toLowerCase()] : "",
@@ -504,7 +511,22 @@ export function normalizeBeast(raw = {}) {
 const BASE = CATALOG.map(normalizeBeast);
 export function bestiaryOf(doc) {
   const own = new Map((doc && doc.bestiary || []).map(b => [b.id, b]));
-  return [...BASE.map(b => own.get(b.id) || b), ...[...own.values()].filter(b => !CATALOG_BY_ID.has(b.id))];
+  const list = [...BASE.map(b => own.get(b.id) || b), ...[...own.values()].filter(b => !CATALOG_BY_ID.has(b.id))];
+  /* Las fotos que pone el DM tapan el icono de serie, sin tocar la ficha */
+  const photos = (doc && doc.portraits) || {};
+  return list.map(b => photos[b.id] ? { ...b, avatarId: photos[b.id], photo: true } : b);
+}
+
+/* Fotos de las criaturas: id de la criatura -> imagen subida. Viven en la
+   partida (las imágenes, en la carpeta de datos del DM) y nunca viajan a los
+   jugadores: ven la cara del monstruo en el mapa, no el bestiario. */
+export function normalizePortraits(raw) {
+  const out = {};
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
+  for (const [id, img] of Object.entries(raw).slice(0, 2000)) {
+    if (typeof id === "string" && id.length <= 80 && typeof img === "string" && /^[\w.-]{1,80}$/.test(img)) out[id] = img;
+  }
+  return out;
 }
 export const isBaseBeast = id => CATALOG_BY_ID.has(id);
 
@@ -740,6 +762,7 @@ export function emptyDoc() {
     version: 7,
     chars: [],
     bestiary: [],
+    portraits: {},
     maps: [map],
     session: { ...SESSION_DEFAULTS, combat: { ...SESSION_DEFAULTS.combat, order: [] }, activeMapId: map.id },
     log: [],
@@ -819,6 +842,7 @@ export function migrate(raw) {
     version: 7,
     chars,
     bestiary: ownBeasts(src.bestiary),
+    portraits: normalizePortraits(src.portraits),
     maps,
     session,
     log: Array.isArray(src.log) ? src.log.slice(-150) : [],

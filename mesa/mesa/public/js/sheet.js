@@ -49,7 +49,7 @@ export function attackTableHTML(c) {
           <span class="st-range">${reach.length ? chipsHTML(reach, "reach") : esc(a.range || "—")}</span>
           ${a.save ? `<span class="st-pill dc"><b>CD ${esc(dc)}</b><small>${SAVE_ABBR[ab] || ""}</small></span>`
             : `<button class="st-pill" data-act="atkHit" data-i="${i}" title="Tirar el ataque"><b>${sign(a.atk)}</b></button>`}
-          ${a.damage ? `<button class="st-pill dmg" data-act="atkDmg" data-i="${i}" title="Tirar el daño"><b>${esc(a.damage)}</b></button>` : "<span class=\"st-range\">—</span>"}
+          ${a.damage && a.damage !== "0" ? `<button class="st-pill dmg" data-act="atkDmg" data-i="${i}" title="Tirar el daño"><b>${esc(a.damage)}</b></button>` : "<span class=\"st-range\">—</span>"}
         </div>`;
       }).join("")}
     </div>` : "";
@@ -244,7 +244,7 @@ export function handleSheetAct(c, act, btn, opts = {}) {
     }
     case "atkDmg": {
       const a = attacksOf(c)[+btn.dataset.i];
-      if (a && a.damage) roll(a.damage, `${c.name} · ${a.name} · daño`, "damage");
+      if (a && a.damage && a.damage !== "0") roll(a.damage, `${c.name} · ${a.name} · daño`, "damage");
       return true;
     }
     case "buffToggle": {

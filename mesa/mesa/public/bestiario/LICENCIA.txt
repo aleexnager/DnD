@@ -9,8 +9,22 @@ Mesa los ha recoloreado y reencuadrado para usarlos como fichas de mesa
 (tools/retratos-bestiario.mjs). El nombre de cada archivo es el del icono
 original en game-icons.net.
 
-Las fichas de las criaturas (public/js/catalog.js) incluyen material del
-System Reference Document 5.1 («SRD 5.1») de Wizards of the Coast LLC,
-disponible en https://dnd.wizards.com/resources/systems-reference-document.
-El SRD 5.1 está publicado bajo la licencia Creative Commons Attribution 4.0
-International (https://creativecommons.org/licenses/by/4.0/legalcode).
+Las fichas de las criaturas (public/js/bestiario-datos.js) incluyen material
+del System Reference Document 5.2.1 («SRD 5.2.1») de Wizards of the Coast LLC,
+disponible en https://www.dndbeyond.com/srd, y, para cuatro criaturas que no
+están en él, del System Reference Document 5.1 («SRD 5.1»). Los dos están
+publicados bajo la licencia Creative Commons Attribution 4.0 International
+(https://creativecommons.org/licenses/by/4.0/legalcode). Mesa los ha traducido
+al castellano y resumido para la mesa.
+
+Parte de las fichas se generan (tools/bestiario-srd.mjs) a partir del paquete
+@opencharacter/5e-srd-5.2, que publica el SRD 5.2.1 por campos bajo la misma
+licencia CC BY 4.0.
+
+Las criaturas del «Bestiario de la Península» (public/js/bestiario-homebrew.js)
+son diseño propio de Mesa a partir del folclore popular de la península, que es
+de dominio público.
+
+Las criaturas del «Bestiario del mundo» (public/js/bestiario-mundo.js) son
+también diseño propio de Mesa a partir de leyendas de dominio público de los
+cinco continentes; no reproducen fichas de ninguna otra publicación.

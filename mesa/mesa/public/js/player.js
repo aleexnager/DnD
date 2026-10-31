@@ -441,7 +441,7 @@ function pickArea(pane) {
       const left = slotsLeft(c, a);
       return `<button class="atk" data-area="${i}">
         <b>${esc(a.name)}</b>
-        <small>${esc(shapeLabel(a))}${a.damage ? " · " + esc(a.damage) : ""}${a.type ? " " + esc(a.type) : ""}</small>
+        <small>${esc(shapeLabel(a))}${a.damage && a.damage !== "0" ? " · " + esc(a.damage) : ""}${a.type ? " " + esc(a.type) : ""}</small>
         ${left !== null ? `<span class="slots-left">${left} de nivel ${a.level}</span>` : ""}
       </button>`;
     }).join("")}

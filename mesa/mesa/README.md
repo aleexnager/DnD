@@ -217,7 +217,7 @@ herramientas, los dieciséis estados con su explicación, las dieciocho
 habilidades, lo que escribe el programa en el registro y **el bestiario que
 viene de fábrica** (también las criaturas ya puestas en el mapa con su número,
 «Hongo chillón 2» sale «Shrieker Fungus 2», en el rótulo del mapa, el globo,
-las tarjetas y el registro), con sus 115 criaturas, sus fichas técnicas, sus rasgos y
+las tarjetas y el registro), con sus 396 criaturas, sus fichas técnicas, sus rasgos y
 sus ataques ("Cimitarra — +4 al ataque — 1d6+2 cortante" sale como "Scimitar —
 +4 to hit — 1d6+2 slashing"). También **los 391 conjuros** (nombre, tiempo,
 alcance, componentes, duración y descripción, en la ficha, la biblioteca, la
@@ -496,9 +496,15 @@ medio, difícil o mortal antes de que empiece.
 
 ## Bestiario
 
-Trae **115 criaturas listas** con **las reglas de 2024** (SRD 5.2.1), de VD 0 a 30: del plebeyo y el goblin a la
-tarasca, pasando por necrófagos, oso lechuza, mantícora, trol, elementales,
-gigantes, dragones de cría a adulto, vampiro, liche, balor y kraken. Hay de los
+Trae **396 criaturas listas**: **todas las del SRD 5.2.1** (las reglas de
+2024), cuatro de 2014 y 62 de la casa (ver «Criaturas de la casa» más
+abajo), de VD 0 a 30. Del
+plebeyo, el gato o la rata a la tarasca, pasando por los diez dragones
+cromáticos y metálicos en sus cuatro edades (cría, joven, adulto y anciano) y el
+dragón tortuga, los diablos y demonios (del lémur al diablo de la sima y el
+balor), ángeles (deva, planetar, solar), genios, gólems, gigantes de los seis
+tipos, licántropos, nagas, esfinges, sagas, mephits, enjambres, dinosaurios y
+toda la fauna (más de ochenta bestias). Hay de los
 catorce tipos (humanoides, bestias, muertos vivientes, monstruosidades,
 infernales, feéricos, dragones, gigantes, elementales, constructos, cienos,
 plantas, celestiales y aberraciones), con la **ficha de 2024** completa:
@@ -507,17 +513,24 @@ competentes, marcadas), bonificador por competencia, habilidades, equipo,
 vulnerabilidades, resistencias, inmunidades, sentidos, idiomas, rasgos,
 acciones, **acciones adicionales, reacciones y acciones legendarias**, y sus
 ataques listos para tirar de un clic, alientos y conjuros con salvación
-incluidos. Varias cambian de nombre como en 2024 (Guerrero goblin, Guerrero
-trasgo, Guerrero veterano, Centauro soldado…). Cuatro no están en el SRD de
+incluidos. Llevan los nombres de la traducción oficial de 2024 (Guerrero goblin,
+Mimeto, Gul, Pendenciero, Batidor, Broza movediza, Aparición…); el nombre que
+tenían antes en Mesa sigue sirviendo para buscarlas, así que «mímico» encuentra
+al mimeto. Cuatro no están en el SRD de
 2024 (orco, drow, hombre lagarto y banshee) y conservan su ficha de 2014: lo
 dice una etiqueta en su ficha («Ficha 2014»). Al sacarlas a la mesa, la
 iniciativa se tira con su bonificador de 2024 y sus salvaciones usan su
 competencia.
 
-Arriba del bestiario se busca por nombre (también en inglés: «owlbear»
-encuentra al oso lechuza) y se filtra **por tipo** y **por VD** (0 a 1/2, 1 a
+Arriba del bestiario se busca por nombre, sin tildes y también en inglés
+(«owlbear» encuentra al oso lechuza, «dragon azul» a los cuatro azules) y se filtra **por tipo** y **por VD** (0 a 1/2, 1 a
 2, 3 a 4, 5 a 8, 9 a 16, 17 o más). La lista sale ordenada por desafío, y
-cada criatura despliega su **ficha** sin salir de ella.
+cada criatura despliega su **ficha** sin salir de ella (la ficha se pinta al
+abrirla, así que la lista no se ralentiza aunque sean más de trescientas).
+
+Las salvaciones que no hacen daño (un aliento que duerme, una mirada que
+asusta) se tiran igual desde «Atacar»: Mesa tira la salvación del objetivo y
+apunta si la supera o la falla, sin inventarse daño.
 
 **Todas tienen retrato y todas del mismo estilo**: una silueta en tinta sobre
 el color de su tipo, de modo que en el tablero se distingue de un vistazo un
@@ -526,10 +539,68 @@ la silueta dice cuál es. Dragones y elementales llevan el color de su
 elemento. Al ser siluetas se leen igual a 30 píxeles en el móvil que en la
 tele, que es donde un retrato pintado se convierte en una mancha.
 
-Cada criatura puede llevar **su propio retrato**: se sube una vez en el
-bestiario y todas las que invoques salen ya con esa cara, en la tarjeta y en
-su ficha del mapa. El tamaño también viaja, así que un ogro guardado como
-«Grande» ocupa 2×2 en cuanto lo pones en el tablero.
+### Fotos de las criaturas
+
+Los iconos sirven para cualquier partida, pero para que cada monstruo **tenga
+cara** se le puede poner una foto o una ilustración, y desde entonces todas las
+que invoques salen con ella: en la tarjeta, en la ficha redonda del mapa (con
+un aro del color de su tipo, para seguir distinguiendo de un vistazo un
+muerto viviente de un infernal) y en las pantallas de los jugadores y de la
+tele. El tamaño también viaja, así que un ogro guardado como «Grande» ocupa
+2×2 en cuanto lo pones en el tablero.
+
+- **Una a una**: pulsa el retrato de la criatura en el bestiario. Puedes subir
+  un archivo, **pegar** una imagen copiada en el navegador (Ctrl+V), pegar la
+  **dirección web** de una imagen (la descarga el servidor de Mesa) o pulsar
+  **Buscar en internet**, que abre una búsqueda de imágenes con el nombre de la
+  criatura en inglés. Antes de guardar, se arrastra y se acerca la foto para
+  que la cara quede dentro del círculo de la ficha.
+- **De golpe**: el botón **Fotos** del bestiario acepta muchas imágenes (o una
+  carpeta entera) y las reparte solas por el nombre del archivo, en castellano o
+  en inglés: «Goblin.jpg», «Dragón rojo adulto.png», «owlbear.webp»,
+  «Oso lechuza (2).jpg». Dice qué archivos no ha reconocido.
+- **Arrastrando** una imagen encima de una criatura de la lista.
+
+El filtro **Mostrar → Sin foto** enseña las que aún no tienen cara. Quitar la
+foto la devuelve a su icono. Los monstruos que ya están en la mesa estrenan la
+foto nueva al ponérsela.
+
+Las fotos se guardan **en tu partida, en la carpeta de datos de tu ordenador**
+(`data/images`, que no se sube a git): no forman parte de la aplicación ni del
+repositorio. Por eso Mesa no trae ilustraciones de los manuales ni de otras
+webs: la aplicación es pública en GitHub y no se pueden redistribuir. Lo que tú
+pongas para jugar con tus amigos se queda en tu mesa.
+
+### Criaturas de la casa (homebrew)
+
+Además del SRD, Mesa trae **62 criaturas de la casa** sacadas del folclore,
+con ficha de 2024 completa (y su inglés) y equilibradas con las cifras de
+referencia de cada VD (CA, puntos de golpe, bonificador al ataque, daño por
+asalto y CD). Son diseño propio: de cada leyenda se toma lo que cuenta la
+tradición y se traduce a reglas; no se copia ninguna ficha de otra web (las de
+D&D Wiki, por ejemplo, tienen su propia licencia). Cada ficha dice de dónde
+viene la leyenda («Folclore: Japón»).
+
+**Bestiario del mundo** (40, VD 1/8 a 17): el jackalope, el chupacabras, el
+tokoloshe, la selkie, el kappa, el dokkaebi, el jiangshi, el curupira, el yeti,
+la rusalka, el cadejo negro, la manananggal, el kelpie, el tengu, el aswang, el
+tikbalang, la pontianak, La Llorona, el bunyip, el draugr, la jorōgumo, el
+krampus, la yuki-onna, el vetala, la boitatá, la kitsune, el impundulu, el
+mapinguari, el leshy, el nian, el **wendigo**, el dullahan, el lamassu, el
+mokèlé-mbèmbé, el gashadokuro, el lindworm, el taniwha, la grootslang, el
+simurgh y Baba Yagá. Llevan sus debilidades de la leyenda: el kappa se queda
+quieto si se le vacía el plato de la cabeza, el jiangshi no ve a quien contiene
+la respiración, el wendigo vuelve salvo que se funda su corazón de hielo, el
+dullahan no cruza un umbral con oro y el nian huye del rojo y de los petardos.
+
+**Bestiario de la Península** (22, VD 0 a 18), del folclore de Asturias,
+Cantabria, Galicia, el País Vasco y Cataluña: el ventolín, el tentirujo, el trasgu, la pesanta, la xana, la lamiña,
+el busgosu, la guaxa, la lavandera nocturna, el sacamantecas, el mouro, el
+coco, el nuberu, el diaño burlón, el cuegle, la Santa Compaña, el ojáncanu, el
+cuélebre, el basajaun, el gaueko, el herensuge y la Dama de Amboto (VD 0 a 18).
+Llevan la etiqueta **Homebrew** en su ficha y se filtran con **Mostrar →
+Homebrew**. Cada una trae su gancho de folclore en los rasgos: el pelo blanco
+del ojáncanu, el peine de oro de la lamiña, la cruz de la Santa Compaña…
 
 Se elige cantidad y **PV al azar** para que dos goblins no aguanten lo mismo.
 Entran al encuentro numerados (Goblin 1, Goblin 2…) y con su iniciativa
@@ -549,6 +620,10 @@ editaste y los monstruos que ya estaban en la mesa estrenan retrato.
 
 Las fichas incluyen material del *System Reference Document 5.2.1* (y del 5.1
 para las cuatro de 2014) de Wizards of the Coast, publicado bajo [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+Las 219 que se añadieron después salen del SRD 5.2.1 por campos del paquete
+[@opencharacter/5e-srd-5.2](https://www.npmjs.com/package/@opencharacter/5e-srd-5.2)
+(CC BY 4.0), traducidas con `tools/bestiario-srd.mjs` y la tabla
+`tools/bestiario-srd-es.json`; el guion explica cómo regenerarlas.
 Los retratos son iconos de [game-icons.net](https://game-icons.net) (Lorc,
 Delapouite y otros autores), bajo [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/),
 recoloreados para la mesa con `tools/retratos-bestiario.mjs`. El detalle está
@@ -1277,7 +1352,10 @@ public/
     dice3d.js          dados en 3D: la escena, las caras y quién los ve
     dice3d-core.js     dados en 3D: forma de cada dado, física y numeración
     chips.js           indicadores con icono de ataques y conjuros (alcance, área, estado…)
-    bestiario-datos.js las 115 fichas del bestiario (reglas de 2024), con su inglés
+    bestiario-datos.js las 334 fichas del SRD del bestiario (reglas de 2024), con su inglés
+    bestiario-homebrew.js las 22 criaturas de la casa del folclore de la península
+    bestiario-mundo.js las 40 criaturas de la casa del folclore del mundo
+    retratos.js        fotos de las criaturas: encuadre, carga en bloque, pegar y traer de internet
     chars-io.js        exportar e importar personajes entre campañas
     forja.js           la forja de mapas: el editor a pantalla completa
     forja-core.js      la forja: geometría del plano, paredes, puertas y generador

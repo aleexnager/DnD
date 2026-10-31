@@ -1685,9 +1685,13 @@ export class MapView {
     ctx.fill();
 
     const img = image(c.avatarId);
-    if (img && img.complete && img.naturalWidth) {
+    const ready = img && img.complete && img.naturalWidth;
+    if (ready) {
       ctx.clip();
-      ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+      /* Recortada como «cubrir»: una foto que no es cuadrada no se deforma */
+      const k = Math.max((r * 2) / img.naturalWidth, (r * 2) / img.naturalHeight);
+      const w = img.naturalWidth * k, h = img.naturalHeight * k;
+      ctx.drawImage(img, cx - w / 2, cy - h / 2, w, h);
     } else if (span > 18) {
       ctx.fillStyle = "rgba(10,10,12,.82)";
       ctx.font = `600 ${Math.round(r * 0.9)}px Roboto, system-ui, sans-serif`;
@@ -1696,6 +1700,17 @@ export class MapView {
       ctx.fillText(initials(c.name), cx, cy + 1);
     }
     ctx.restore();
+    /* Un monstruo con foto lleva un aro del color de su tipo: se sigue viendo
+       de un vistazo si es un muerto viviente o un infernal */
+    if (ready && c.kind === "monster" && !String(c.avatarId).startsWith("bestiario/")) {
+      ctx.save();
+      if (memory) ctx.globalAlpha = 0.45;
+      ctx.globalAlpha *= down ? 0.35 : 1;
+      ctx.strokeStyle = c.color || "#c89b4a";
+      ctx.lineWidth = Math.max(1.5, r * 0.12);
+      ctx.beginPath(); ctx.arc(cx, cy, r - ctx.lineWidth / 2, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
 
     if (memory) {
       ctx.save();

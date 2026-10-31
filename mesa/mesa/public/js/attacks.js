@@ -33,7 +33,7 @@ export function attacksOf(c) {
 
 export const attackLabel = a => [
   a.save ? "CD " + a.save.split(" ")[1] : (a.atk >= 0 ? "+" : "") + a.atk,
-  a.damage, a.type,
+  a.damage !== "0" ? a.damage : "", a.type,
   a.level ? "nivel " + a.level : ""
 ].filter(Boolean).join(" · ");
 

@@ -14,7 +14,7 @@
    Todas las rutas son relativas al sitio donde vive Mesa: en GitHub Pages es
    una subcarpeta (/DnD/), no la raíz. */
 
-const VERSION = "mesa-2.20.0";
+const VERSION = "mesa-2.23.0";
 const SHELL_CACHE = VERSION + "-app";
 const IMG_CACHE = "mesa-img";
 const IMG_LIMIT = 80;
@@ -31,9 +31,9 @@ const SHELL = [
   "icons/icon.svg",
   "icons/icon-192.png",
   "js/main.js", "js/net.js", "js/util.js", "js/i18n.js", "js/icons.js",
-  "js/schema.js", "js/catalog.js", "js/bestiario-datos.js", "js/los.js", "js/map.js", "js/dice.js",
+  "js/schema.js", "js/catalog.js", "js/bestiario-datos.js", "js/bestiario-homebrew.js", "js/bestiario-mundo.js", "js/los.js", "js/map.js", "js/dice.js",
   "js/dice-panel.js", "js/attacks.js", "js/attacks-core.js", "js/char-editor.js", "js/hoja.js", "js/chips.js", "js/dice3d.js", "js/dice3d-core.js",
-  "js/dm.js", "js/player.js", "js/screen.js",
+  "js/dm.js", "js/retratos.js", "js/player.js", "js/screen.js",
   "js/engine.js", "js/local.js", "js/local-host.js", "js/local-worker.js",
   "js/spells.js", "js/spellbook.js", "js/statblock.js", "js/sheet.js", "js/list-editor.js", "js/rollable.js", "js/sound-core.js", "js/ambient.js", "js/sound-library.js", "js/creador.js", "js/creador-datos.js", "js/voice.js", "js/portals.js", "js/forja.js", "js/forja-core.js", "js/forja-draw.js", "js/chars-io.js",
   "js/library.js", "js/library-core.js", "js/tour.js", "js/tour-content.js", "js/tour-example.js", "js/libros/reglas.js", "js/libros/jugador.js", "js/libros/conjuros.js", "js/libros/conjuros-lista.js", "js/libros/conjuros-mec.js", "js/libros/conjuros-en.js", "js/libros/jugador-en.js", "js/libros/bestiario.js",
