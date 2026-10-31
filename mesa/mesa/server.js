@@ -362,7 +362,8 @@ const handler = async (req, res) => {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 15000);
       try {
-        const r = await fetch(target, { signal: ctrl.signal, redirect: "follow", headers: { Accept: "image/*" } });
+        /* Wikimedia y otros piden que quien descarga se identifique */
+        const r = await fetch(target, { signal: ctrl.signal, redirect: "follow", headers: { Accept: "image/*", "User-Agent": "Mesa/1.0 (https://github.com/aleexnager/DnD; private tabletop app)" } });
         if (!r.ok) return json(res, 502, { error: `La web contestó ${r.status}: no deja descargar esa imagen` });
         const mime = String(r.headers.get("content-type") || "").split(";")[0].trim();
         if (!mime.startsWith("image/")) return json(res, 415, { error: "Esa dirección no es una imagen: copia la dirección de la imagen, no la de la página" });

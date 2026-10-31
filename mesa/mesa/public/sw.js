@@ -14,7 +14,7 @@
    Todas las rutas son relativas al sitio donde vive Mesa: en GitHub Pages es
    una subcarpeta (/DnD/), no la raíz. */
 
-const VERSION = "mesa-2.22.0";
+const VERSION = "mesa-2.23.0";
 const SHELL_CACHE = VERSION + "-app";
 const IMG_CACHE = "mesa-img";
 const IMG_LIMIT = 80;
@@ -31,7 +31,7 @@ const SHELL = [
   "icons/icon.svg",
   "icons/icon-192.png",
   "js/main.js", "js/net.js", "js/util.js", "js/i18n.js", "js/icons.js",
-  "js/schema.js", "js/catalog.js", "js/bestiario-datos.js", "js/bestiario-homebrew.js", "js/los.js", "js/map.js", "js/dice.js",
+  "js/schema.js", "js/catalog.js", "js/bestiario-datos.js", "js/bestiario-homebrew.js", "js/bestiario-mundo.js", "js/fotos-libres.js", "js/los.js", "js/map.js", "js/dice.js",
   "js/dice-panel.js", "js/attacks.js", "js/attacks-core.js", "js/char-editor.js", "js/hoja.js", "js/chips.js", "js/dice3d.js", "js/dice3d-core.js",
   "js/dm.js", "js/retratos.js", "js/player.js", "js/screen.js",
   "js/engine.js", "js/local.js", "js/local-host.js", "js/local-worker.js",

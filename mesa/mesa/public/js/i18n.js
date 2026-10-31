@@ -807,7 +807,7 @@ const EN = {
   "Dirección de una imagen (https://…)": "Image address (https://…)", "Dirección de una imagen": "Image address", "Traer": "Fetch",
   "También puedes copiar una imagen en el navegador y pegarla aquí con Ctrl+V.": "You can also copy an image in your browser and paste it here with Ctrl+V.",
   "Guardar foto": "Save photo", "Primero elige una foto": "Choose a photo first",
-  "Fotos de las criaturas": "Creature photos", "Poner las fotos": "Add the photos", "Suelta aquí las fotos": "Drop the photos here",
+  "Fotos de las criaturas": "Creature photos", "Poner las fotos": "Add the photos", "Poner tus fotos": "Add your photos", "No se pudo leer la lista de fotos libres": "Couldn't read the free photo list", "Suelta aquí las fotos": "Drop the photos here",
   "Elegir fotos": "Choose photos", "Elegir carpeta": "Choose folder",
   "Ponle cara a muchas criaturas de una vez: llama a cada archivo como la criatura, en castellano o en inglés (Goblin.jpg, Dragón rojo adulto.png, owlbear.webp), y suéltalos aquí o elige una carpeta entera.":
     "Give many creatures a face at once: name each file after the creature, in Spanish or English (Goblin.jpg, Dragón rojo adulto.png, owlbear.webp), and drop them here or choose a whole folder.",
@@ -818,7 +818,19 @@ const EN = {
   "Esa dirección no es una imagen: copia la dirección de la imagen, no la de la página": "That address isn't an image: copy the image's address, not the page's",
   "No se pudo descargar la imagen": "Couldn't download the image", "La web tarda demasiado en contestar": "The website takes too long to answer",
   "Esa web no deja copiar la imagen desde aquí: guárdala y súbela, o cópiala y pégala con Ctrl+V": "That website won't let the image be copied from here: save it and upload it, or copy it and paste it with Ctrl+V",
-  "Criatura de la casa: diseño propio de Mesa a partir del folclore de la península": "House creature: Mesa's own design based on Iberian folklore",
+  "Fotos libres": "Free photos", "Buscando…": "Searching…", "Más en Wikimedia Commons": "More on Wikimedia Commons",
+  "Tono de grabado antiguo, para que todas las fotos peguen": "Old engraving tone, so all photos match",
+  "De dominio público: se pueden usar sin permiso. Mesa guarda el autor y la licencia de cada una.": "Public domain: free to use without permission. Mesa keeps each one's author and licence.",
+  "Foto actual:": "Current photo:", "ver en Commons": "see on Commons",
+  "No hay ninguna preseleccionada para esta criatura: búscala en Commons.": "None is preselected for this creature: search Commons.",
+  "Commons no tiene más imágenes libres con ese nombre": "Commons has no more free images with that name",
+  "Wikimedia Commons no contesta ahora; prueba dentro de un rato": "Wikimedia Commons isn't answering right now; try again in a while",
+  "Fotos libres de Wikimedia Commons": "Free photos from Wikimedia Commons", "Tus propias fotos": "Your own photos",
+  "Mesa trae elegida una imagen de dominio público (grabados, láminas y pinturas antiguas) para casi todas las criaturas de serie. Con un clic se ponen a las que todavía no tienen foto; las que ya tienen no se tocan.":
+    "Mesa comes with a public-domain image picked for almost every stock creature (old engravings, plates and paintings). One click gives one to every creature that has no photo yet; those that already have one are left alone.",
+  "Buscando fotos…": "Looking for photos…", "Poner 1 foto libre": "Add 1 free photo",
+  "Todas las criaturas con foto libre ya tienen cara": "Every creature with a free photo already has a face",
+  "Criatura de la casa: diseño propio de Mesa a partir del folclore, que es de dominio público": "House creature: Mesa's own design based on public-domain folklore", "Folclore:": "Folklore:",
   "Cualquier VD": "Any CR", "Valor de desafío": "Challenge rating",
   "VD 0 a 1/2": "CR 0 to 1/2", "VD 1 a 2": "CR 1 to 2", "VD 3 a 4": "CR 3 to 4", "VD 5 a 8": "CR 5 to 8",
   "VD 9 a 16": "CR 9 to 16", "VD 17 o más": "CR 17 or higher",
@@ -1292,7 +1304,7 @@ const EN = {
 for (const b of CATALOG) {
   const pair = (es, en) => { if (es && en && !(es in EN)) EN[es] = en; };
   pair(b.name, b.en.name);
-  for (const k of ["sizeType", "alignment", "senses", "languages", "resistances", "vulnerabilities", "immunities", "skills", "gear", "speedText"]) pair(b[k], b.en[k]);
+  for (const k of ["origin", "sizeType", "alignment", "senses", "languages", "resistances", "vulnerabilities", "immunities", "skills", "gear", "speedText"]) pair(b[k], b.en[k]);
   /* «Feérico pequeño (goblinoide), caótico neutral» va en una sola línea */
   if (b.sizeType && b.alignment && b.en.sizeType && b.en.alignment) pair(`${b.sizeType}, ${b.alignment}`, `${b.en.sizeType}, ${b.en.alignment}`);
   for (const k of ["traits", "actions", "bonus", "reactions", "legendary"]) {
@@ -1361,12 +1373,14 @@ const nm = w => {
 const PATTERNS = [
   [/^Foto de (.+)$/, (m, b) => `Photo of ${nm(b)}`],
   [/^(.+) ya tiene cara$/, (m, b) => `${nm(b)} has a face now`],
+  [/^Poner (\d+) fotos libres$/, (m, n) => `Add ${n} free photos`],
+  [/^Poniendo fotos libres: (\d+) de (\d+)…$/, (m, a, b) => `Adding free photos: ${a} of ${b}…`],
   [/^(.+) vuelve a su icono$/, (m, b) => `${nm(b)} is back to its icon`],
   [/^1 foto reconocida$/, "1 photo recognised"], [/^(\d+) fotos reconocidas$/, "$1 photos recognised"],
   [/^(\d+) sin criatura$/, "$1 without a creature"],
   [/^Sin criatura \(cambia el nombre del archivo\): (.+)$/, "No creature (rename the file): $1"],
   [/^Poniendo fotos: (\d+) de (\d+)…$/, "Adding photos: $1 of $2…"],
-  [/^(\d+) criaturas? tienen? cara( · (\d+) no se pudieron leer)?$/, (m, n, t, f) => `${n} ${n === "1" ? "creature has" : "creatures have"} a face${f ? ` · ${f} couldn't be read` : ""}`],
+  [/^(\d+) criaturas? tienen? cara( · (\d+) no se pudieron (leer|descargar))?$/, (m, n, t, f, v) => `${n} ${n === "1" ? "creature has" : "creatures have"} a face${f ? ` · ${f} couldn't be ${v === "leer" ? "read" : "downloaded"}` : ""}`],
   [/^La web contestó (\d+): no deja descargar esa imagen$/, "The website answered $1: it won't let that image be downloaded"],
   /* La ficha de criatura de 2024 */
   [/^(\S+) \(([\d.,]+) PX; BC ([+−-]\d+)\)$/, "$1 (XP $2; PB $3)"],

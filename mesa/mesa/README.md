@@ -217,7 +217,7 @@ herramientas, los dieciséis estados con su explicación, las dieciocho
 habilidades, lo que escribe el programa en el registro y **el bestiario que
 viene de fábrica** (también las criaturas ya puestas en el mapa con su número,
 «Hongo chillón 2» sale «Shrieker Fungus 2», en el rótulo del mapa, el globo,
-las tarjetas y el registro), con sus 356 criaturas, sus fichas técnicas, sus rasgos y
+las tarjetas y el registro), con sus 396 criaturas, sus fichas técnicas, sus rasgos y
 sus ataques ("Cimitarra — +4 al ataque — 1d6+2 cortante" sale como "Scimitar —
 +4 to hit — 1d6+2 slashing"). También **los 391 conjuros** (nombre, tiempo,
 alcance, componentes, duración y descripción, en la ficha, la biblioteca, la
@@ -496,8 +496,8 @@ medio, difícil o mortal antes de que empiece.
 
 ## Bestiario
 
-Trae **356 criaturas listas**: **todas las del SRD 5.2.1** (las reglas de
-2024), cuatro de 2014 y 22 de la casa (ver «Bestiario de la Península» más
+Trae **396 criaturas listas**: **todas las del SRD 5.2.1** (las reglas de
+2024), cuatro de 2014 y 62 de la casa (ver «Criaturas de la casa» más
 abajo), de VD 0 a 30. Del
 plebeyo, el gato o la rata a la tarasca, pasando por los diez dragones
 cromáticos y metálicos en sus cuatro edades (cría, joven, adulto y anciano) y el
@@ -561,6 +561,18 @@ tele. El tamaño también viaja, así que un ogro guardado como «Grande» ocupa
   «Oso lechuza (2).jpg». Dice qué archivos no ha reconocido.
 - **Arrastrando** una imagen encima de una criatura de la lista.
 
+- **Fotos libres, de un clic**: Mesa trae elegida una imagen **de dominio
+  público** de Wikimedia Commons para casi todas las criaturas de serie:
+  láminas de historia natural para los animales, grabados, xilografías,
+  estampas japonesas y pinturas antiguas para los monstruos del folclore y los
+  personajes (Doré, Bauer, Bilibin, Hokusai, Charles R. Knight…). En **Fotos →
+  Poner N fotos libres** se descargan, se encuadran y se ponen a todas las que
+  aún no tienen foto; las que ya tienen no se tocan. La casilla **Tono de
+  grabado antiguo** les da a todas un sepia suave para que peguen entre sí. En
+  la ventana de la foto de cada criatura salen sus otras candidatas y el botón
+  **Más en Wikimedia Commons**, que busca más imágenes libres con su nombre en
+  inglés; vale también para las criaturas que te inventes.
+
 El filtro **Mostrar → Sin foto** enseña las que aún no tienen cara. Quitar la
 foto la devuelve a su icono. Los monstruos que ya están en la mesa estrenan la
 foto nueva al ponérsela.
@@ -571,12 +583,41 @@ repositorio. Por eso Mesa no trae ilustraciones de los manuales ni de otras
 webs: la aplicación es pública en GitHub y no se pueden redistribuir. Lo que tú
 pongas para jugar con tus amigos se queda en tu mesa.
 
-### Bestiario de la Península (homebrew)
+Las fotos libres son solo **de dominio público o CC0** (se pueden usar sin
+pedir permiso) y la aplicación no trae las imágenes, solo **dónde están**
+(`public/bestiario/fotos-libres.json`): las descarga tu Mesa cuando pulsas el
+botón. Con cada foto se guarda su autor, su licencia y su página de Commons,
+que se ven en la ventana de la foto. Las criaturas propias de D&D sin
+equivalente en el arte antiguo (oso lechuza, cubo gelatinoso, mimeto, los
+mephits…) no traen foto libre y se quedan con su icono, salvo que les pongas
+una tú. La lista se rehace con `node tools/fotos-libres.mjs buscar`, `hoja` y
+`publicar` (qué se busca para cada criatura está en `tools/fotos-consultas.txt`
+y lo descartado al revisarla, en `tools/fotos-revision.txt`).
 
-Además del SRD, Mesa trae **22 criaturas de la casa** inspiradas en el
-folclore de Asturias, Cantabria, Galicia, el País Vasco y Cataluña, con ficha
-de 2024 completa (y su inglés) y equilibradas con las cifras de referencia de
-cada VD: el ventolín, el tentirujo, el trasgu, la pesanta, la xana, la lamiña,
+### Criaturas de la casa (homebrew)
+
+Además del SRD, Mesa trae **62 criaturas de la casa** sacadas del folclore,
+con ficha de 2024 completa (y su inglés) y equilibradas con las cifras de
+referencia de cada VD (CA, puntos de golpe, bonificador al ataque, daño por
+asalto y CD). Son diseño propio: de cada leyenda se toma lo que cuenta la
+tradición y se traduce a reglas; no se copia ninguna ficha de otra web (las de
+D&D Wiki, por ejemplo, tienen su propia licencia). Cada ficha dice de dónde
+viene la leyenda («Folclore: Japón»).
+
+**Bestiario del mundo** (40, VD 1/8 a 17): el jackalope, el chupacabras, el
+tokoloshe, la selkie, el kappa, el dokkaebi, el jiangshi, el curupira, el yeti,
+la rusalka, el cadejo negro, la manananggal, el kelpie, el tengu, el aswang, el
+tikbalang, la pontianak, La Llorona, el bunyip, el draugr, la jorōgumo, el
+krampus, la yuki-onna, el vetala, la boitatá, la kitsune, el impundulu, el
+mapinguari, el leshy, el nian, el **wendigo**, el dullahan, el lamassu, el
+mokèlé-mbèmbé, el gashadokuro, el lindworm, el taniwha, la grootslang, el
+simurgh y Baba Yagá. Llevan sus debilidades de la leyenda: el kappa se queda
+quieto si se le vacía el plato de la cabeza, el jiangshi no ve a quien contiene
+la respiración, el wendigo vuelve salvo que se funda su corazón de hielo, el
+dullahan no cruza un umbral con oro y el nian huye del rojo y de los petardos.
+
+**Bestiario de la Península** (22, VD 0 a 18), del folclore de Asturias,
+Cantabria, Galicia, el País Vasco y Cataluña: el ventolín, el tentirujo, el trasgu, la pesanta, la xana, la lamiña,
 el busgosu, la guaxa, la lavandera nocturna, el sacamantecas, el mouro, el
 coco, el nuberu, el diaño burlón, el cuegle, la Santa Compaña, el ojáncanu, el
 cuélebre, el basajaun, el gaueko, el herensuge y la Dama de Amboto (VD 0 a 18).
@@ -1335,8 +1376,10 @@ public/
     dice3d-core.js     dados en 3D: forma de cada dado, física y numeración
     chips.js           indicadores con icono de ataques y conjuros (alcance, área, estado…)
     bestiario-datos.js las 334 fichas del SRD del bestiario (reglas de 2024), con su inglés
-    bestiario-homebrew.js las 22 criaturas de la casa (folclore de la península)
-    retratos.js        fotos de las criaturas: encuadre, carga en bloque, pegar y traer de internet
+    bestiario-homebrew.js las 22 criaturas de la casa del folclore de la península
+    bestiario-mundo.js las 40 criaturas de la casa del folclore del mundo
+    retratos.js        fotos de las criaturas: encuadre, carga en bloque, fotos libres, pegar y traer de internet
+    fotos-libres.js    qué imagen de Wikimedia Commons vale (dominio público o CC0) y su crédito
     chars-io.js        exportar e importar personajes entre campañas
     forja.js           la forja de mapas: el editor a pantalla completa
     forja-core.js      la forja: geometría del plano, paredes, puertas y generador
